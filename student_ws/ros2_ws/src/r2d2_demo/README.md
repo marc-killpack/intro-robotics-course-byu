@@ -18,6 +18,7 @@ Open <http://localhost:6080/vnc.html?autoconnect=1&resize=scale>. You should
 see RViz with the robot and a separate **Joint State Publisher** slider window.
 Drag `head_yaw`, `left_leg_tilt`, and `right_leg_tilt`; watch the model move.
 The first startup builds this ROS 2 package automatically.
+In RViz, select **Move Camera** and left-drag in the 3D view to orbit the robot.
 
 In a second terminal, inspect the messages:
 

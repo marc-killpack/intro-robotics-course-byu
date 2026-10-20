@@ -17,6 +17,11 @@ window and watch the model update in RViz. To stop it, run
 `docker compose down`. The [demo README](../student_ws/ros2_ws/src/r2d2_demo/README.md)
 explains the ROS 2 topics involved.
 
+To rotate the view, select **Move Camera** on the RViz toolbar and left-drag
+inside the dark 3D view. Use the mouse wheel to zoom. If you still see an old
+RViz window after an update, run `docker compose restart course` and refresh
+the browser page.
+
 This path uses Mesa software rendering, including on Apple Silicon. It avoids
 host X11 or GPU driver setup for the first RViz exercise. Graphics-heavy
 simulators will need separate evaluation before they are required in class.

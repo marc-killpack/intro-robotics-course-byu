@@ -28,6 +28,8 @@ Visualization Manager:
     Fixed Frame: base_link
     Frame Rate: 30
   Name: root
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
   Transformation:
     Current:
       Class: rviz_default_plugins/TF
