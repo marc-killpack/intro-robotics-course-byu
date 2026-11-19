@@ -27,6 +27,7 @@ request in TASKS.md.
 | [Handout sources](../homework/README.md) | LaTeX handouts, per-assignment faculty notes, PDF build commands | Reading or building handouts |
 | [Assignment designs](../../instructor/NEW_ASSIGNMENT_DRAFTS.md) | HW06--HW10 and week-11 RL lab: outcomes, problems, supplied code | Reviewing later units |
 | [Checkerboard activity](checkerboard-activity.md) | First OpenCV homography exercise (feeds HW08) | Reviewing HW08 |
+| [Position-only branching reading](../readings/position_only_branching.tex) and [example](../../examples/position_only_branching.py) | Simplified planar version of Bodily, Allen, and Killpack (ICRA 2017) for lecture P6 (D9); build with `python docs/homework/build_pdfs.py readings/position_only_branching --render` | Preparing lecture P6 |
 | [Migration inventory](../../instructor/HOMEWORK_MIGRATION.md) | Problem-by-problem ME 537 to intro mapping, with graduate follow-up flags | Reviewing HW02--HW05 provenance |
 | Written keys: [HW02--HW05](../../instructor/FOUNDATION_REFERENCE.md), [HW06](../../instructor/HW06_REFERENCE.md), [HW07](../../instructor/HW07_REFERENCE.md), [HW08](../../instructor/HW08_REFERENCE.md), [HW09](../../instructor/HW09_REFERENCE.md) | Private hand-calculation answers | Checking a handout |
 | **Project** | | |
@@ -114,8 +115,9 @@ checks for Jacobians, RNE, Euler-Lagrange work, and current visualization APIs.
 ### Visualization and environment
 
 ROS threads through the course rather than ending after HW01 (instructor
-decision, Nov 18): mathematics stays plain Python, TF and basic URDF models
-are interleaved into HW01--HW05 to check students' own results, and the
+decision, Nov 18--19): mathematics stays plain Python; HW01 is a basic
+publisher, HW03 adds static TF and HW04 a small URDF to check students' own
+results, a publish/subscribe trajectory node follows the RRT work, and the
 project is a camera / controller / robot node graph (see below). Keep the
 working ROS 2 Jazzy/Docker/browser RViz route for setup and ROS exercises. Explicitly tell students to open the localhost URL. Record the
 known window-stacking issue and explain how to reveal the sliders. Closing
@@ -124,9 +126,11 @@ a browser tab and stopping a container are different operations.
 The instructor requested solid 3D arm models for FK, so the earlier ME 537
 pyqtgraph viewer was adapted to explicit joints and is now the default slider
 viewer (`play_arm`, `play_velocity`). Matplotlib remains for frame sketches,
-activity `--save` images, numerical plots, and a fallback slider viewer.
-Whether to keep both, and how far to trim the ported viewer, is decision D6;
-details are in the [arm prototype notes](arm-prototype.md#viewers).
+activity `--save` images, and numerical plots. Decision D6 (Nov 19):
+pyqtgraph for everything students view interactively; the Matplotlib slider
+player is removed once the pyqtgraph probe passes in the course image; only
+unused code is trimmed from the ported viewer. Details are in the
+[arm prototype notes](arm-prototype.md#viewers).
 
 Use the same Docker image for the foundation Python assignments. It now
 includes NumPy, Matplotlib, and Tk; the mounted package is installed at
@@ -172,10 +176,10 @@ publication license has been invented as an established course policy.
 
 ### Later units: prerequisites the briefs assumed
 
-Planning: supply joint-space goals; introduce IK only through a worked
-example. Vision/servoing: controllers use the first two rows of
-`jacob_planar` with a supplied damped inverse and velocity limiter; no
-singularity theory or spatial Jacobian. A fixed-camera homography applies only
+Planning: students implement basic IK by damped pseudo-inverse first
+(instructor, Nov 19; TASKS D5). Vision/servoing: tool-camera IBVS combines a
+planar interaction matrix with `jacob_planar` and the students' damped solve;
+no singularity theory or spatial Jacobian. A fixed-camera homography applies only
 to one plane and one camera pose. Learning: split data by scene/episode, and
 keep class labels, position estimates, and actions distinct. Details are in
 [semester integration](semester-integration.md#aligning-prerequisites).
@@ -185,9 +189,8 @@ assignment is a separate activity (instructor decision).
 ### Conveyor project and camera progression
 
 Protect weeks 12--14 for integration. Introduce its arm/environment in earlier
-planning and vision work. Practice with a fixed camera in HW09, and support
-either that camera or one fixed near the tool in the project *(working
-interpretation: each team chooses)*. The attached camera pose is computed as
+planning and vision work. Every student learns tool-camera IBVS in HW09
+and uses it for the project's final approach (instructor, Nov 19). The attached camera pose is computed as
 `T_world_camera = T_world_tool @ T_tool_camera`; the scene geometry is shared.
 The moving-camera milestone must use image feedback and the changing camera
 frame rather than treating it as a stationary calibrated view.

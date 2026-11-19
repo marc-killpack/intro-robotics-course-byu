@@ -1,6 +1,6 @@
 # Integrating the three new unit briefs
 
-Faculty working draft, November 17, 2026 (status pointers updated November 18).
+Faculty working draft, November 17, 2026 (calendar revised November 19).
 The instructor's original briefs are preserved in
 [faculty snapshots](../../instructor/briefs/README.md). This document holds the
 **session calendar**, the **prerequisite alignment** between units, and the
@@ -22,7 +22,9 @@ from live ROS lectures and half a session from rotations: use two ROS lectures
 plus HW01's guided setup, and 125 minutes for rotations. Transforms and FK keep
 150 minutes each, Jacobians keep 225 minutes, and weeks 6--14 retain their
 planned allocation. Three meetings bridge adjacent units with 25 minutes for
-each topic. No additional project time is consumed.
+each topic. On November 19 the instructor added one session on inverse
+velocity and IK after the Jacobians, so every later session moves back one
+slot and the project period has 8 sessions (about 2.7 weeks).
 
 | Week | Meeting 1 | Meeting 2 | Meeting 3 |
 | --- | --- | --- | --- |
@@ -31,36 +33,37 @@ each topic. No additional project time is consumed.
 | 3 | Transforms: camera/base points | Transforms / FK: 25 min each | FK: physical joint chains |
 | 4 | FK: spatial, base, and tool cases | FK / Jacobians: 25 min each | Jacobians: planar velocity |
 | 5 | Jacobians: derivation | Jacobians: implementation | Jacobians: interpretation and practice |
-| 6 | Planning P1 | Planning P2 | Planning P3 |
-| 7 | Planning P4 | Planning P5 | Planning P6 |
-| 8 | Camera geometry | Homography and features | Tracking and velocity |
-| 9 | Planar feedback | Camera on tool | Integration and limits |
-| 10 | Supervised perception | PyTorch update | Train and evaluate |
-| 11 | RL as feedback | Policies and SB3 | Evaluate and choose |
-| 12--14 | Project work and milestones | Project work and milestones | Project work and milestones |
+| 6 | Inverse velocity and IK (damped pseudo-inverse) | Planning P1 | Planning P2 |
+| 7 | Planning P3 | Planning P4 | Planning P5 |
+| 8 | Planning P6 | Camera geometry and projection | Homography, segmentation, and shape rules |
+| 9 | Tracking, velocity, and filtering | Servoing: measure-then-move versus image-based | Planar image Jacobian for a tool camera |
+| 10 | Image-based servoing: integration and limits | Supervised learning and the PyTorch training loop | Evaluation: grouped splits and confusion matrix |
+| 11 | Project launch: architecture, scenarios, runner | Project integration: ROS plumbing and RViz debugging | RL: rollouts, reward, episodes |
+| 12 | RL: the policy as a network, PPO intuition, SB3 | Project work | Project help session |
+| 13--14 | Extension or advanced lecture | Extension lecture or project work | Project help session (week 14: demonstrations) |
 
 The arithmetic is 2 ROS + 2.5 rotation + 3 transform + 3 FK + 4.5 Jacobian
-sessions, plus 6 planning + 6 vision/servo + 6 learning/RL + 9 project:
-**42 sessions** in total.
++ 1 IK sessions, plus 6 planning + 6 vision/servo + 2 supervised learning +
+2 project launch + 2 RL + 8 project: **42 sessions** in total (D3, Nov 19:
+the project launches before RL, so RL can be used late in the project). Assignment release and due dates follow these
+sessions, so units no longer begin on a Monday after week 5.
 The guided ROS setup remains part of HW01, so reducing live lecture time does
 not imply less student work. Pilot the early assignments and overlapping
 deadlines; a campus calendar with holidays or exams may require adjustments.
 Optional locomotion/VLA sessions consume project class time and add no homework.
 
-For the project camera, the instructor accepted either requiring a fixed-camera
-baseline plus a wrist-camera comparison or allowing teams to choose. The
-working choice is the more flexible second option: either camera can satisfy
-the project, while everyone practices fixed-camera feedback in HW09. Both
-mounts must be supported; this interpretation is easy to revise. The
+Instructor decisions, November 19 (TASKS.md D5): every student learns
+tool-camera image-based visual servoing (IBVS) in HW09 and the project; the
+project lasts 2.5--3 weeks with 1--2 lectures a week on extensions plus one
+help session; basic IK by damped pseudo-inverse is taught. The
 instructor also chose to allow either learned or rule-based classification in
 the project. The supervised PyTorch exercise remains a separate course activity.
 
 ## Aligning prerequisites
 
-- The planning brief assumes students have seen IK. The current course does
-  not assign an IK implementation. Introduce the goal-to-joint-configuration
-  idea with a worked example, and supply feasible joint-space goals or a
-  tested helper. Do not make general IK an unannounced prerequisite.
+- The planning brief assumes students have seen IK. Students now implement
+  basic IK by damped pseudo-inverse before planning (instructor, Nov 19;
+  placement proposed in TASKS.md D5(f)).
 - The vision brief's controller can use the first two rows of the provided
   3-by-n `jacob_planar`. Supply a damped inverse/velocity limiter, and let
   students formulate and test the feedback law. Treat poor conditioning and

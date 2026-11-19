@@ -23,3 +23,28 @@ conveniences used by later model definitions, not additional parameterizations.
 The visualizer expects each drawn frame's pose in world, even when your
 calculation uses intermediate base/camera frames. Compute the world pose
 before passing it to `add_frame`. No DH modeling is required.
+
+## Problem 4: the same frames in ROS TF
+
+Complete `frame_transforms()` in `frame_broadcaster.py`. Then, in a
+container shell (`docker compose exec course bash`, then `cd /workspace`):
+
+```bash
+python3 -m homework.hw03.frame_broadcaster
+```
+
+Leave it running. In a second container shell:
+
+```bash
+ros2 run tf2_ros tf2_echo base object
+ros2 run tf2_ros tf2_echo base camera
+```
+
+`tf2_echo` may print "frame does not exist" for a second before the first
+result; that is normal. Each result shows a translation and a 4x4 matrix to
+compare with your hand answers. Stop each command with Ctrl+C.
+
+In the RViz window, set **Global Options > Fixed Frame** to `world`, then
+**Add > TF**. A warning about the R2D2 frames is expected: they are a
+separate tree not connected to `world`. The public check
+`test_hw03_frames.py` is skipped until you start `frame_transforms()`.

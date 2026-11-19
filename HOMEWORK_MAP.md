@@ -10,8 +10,8 @@ review and student workload trials before publication.
 | --- | --- | --- |
 | HW01 | `joint_positions`, `publish_joint_state` in `homework/hw01/joint_publisher.py` | Node setup, timer, names, bounds, shutdown |
 | HW02 | `rot2`, `rotx`, `roty`, `rotz`, `rot_inv` in `transforms.py` | Input checks; standalone frame drawing |
-| HW03 | `se3`, `inv` in `transforms.py` | Input checks; frame/point visualization |
-| HW04 | `SerialArm.fk` in `kinematics.py` | `Joint`, constructor, frame-index parsing, physical model data, arm drawing/sliders |
+| HW03 | `se3`, `inv` in `transforms.py`; `frame_transforms` in `homework/hw03/frame_broadcaster.py` | Input checks; frame/point visualization; static TF broadcaster and matrix-to-TF conversion (`homework/ros_frames.py`) |
+| HW04 | `SerialArm.fk` in `kinematics.py`; four joints in `homework/hw04/arm.urdf` | `Joint`, constructor, frame-index parsing, physical model data, arm drawing/sliders; URDF links and visuals, launch file, RViz configuration, offline URDF reader, TF comparison node |
 | HW05 | `SerialArm.jacob_planar` in `kinematics.py` | Planarity checks, physical joint-frame locations, activity visualization |
 | HW06 draft | `extend_tree`, `rrt_connect` in `rrt.py` | `Tree`, planar collision/edge checks, scenes, plotting |
 | HW07 draft | `path_length`, `smoothness_cost` in `waypoint_metrics.py` | Input checks, base/arm scenes, local optimizers, plotting |

@@ -1,8 +1,54 @@
 # Foundation validation record
 
-Updated November 18, 2026. This record covers the uncommitted faculty change
+Updated November 19, 2026. This record covers the uncommitted faculty change
 set, not a published semester release. [TASKS.md](../../TASKS.md) distinguishes
 implemented work from faculty approval and further platform validation.
+
+## November 19: project contract, simulator, and lockstep runner
+
+Host (Windows faculty virtual environment): 100 instructor tests and 18
+public checks passed, including 12 new project tests:
+- Observation and Task fields carry no object truth.
+- The one-period command delay holds.
+- Speed, acceleration and joint limits are enforced.
+- The three self-collision modes behave as specified.
+- Scoring is +10 correct and −5 for a wrong bin or a drop.
+- The simulator's own kinematics match `SerialArm.fk` and `jacob_planar`, and an episode runs with `fk` and `jacob_planar` patched to fail.
+- Images scale with the scenario size, and noise is reproducible by seed.
+- The OpenCV fill differs from `planar_scene.py` only in edge pixels (235 of 76,800 on S1).
+- Moving objects are marked missed at the belt end.
+- The oracle is deterministic and sorts every object on S1 and on a moving, noisy belt.
+
+Oracle on S1, seeds 1--5: 6/6 sorted each time in 18--20 simulated seconds, with no failed picks, limit hits or collisions. An S1 episode with images runs in about 2 s of wall time; a 28 s moving-belt episode with 4-level noise runs in about 7 s. The release dry run is unchanged (68 files, 12 blocks), and the project package is excluded. No ROS node exists yet.
+
+## November 19: HW03 static TF and HW04 URDF problems
+
+Host (Windows faculty virtual environment): 85 instructor tests and 18 public
+checks passed, including the new quaternion round trip, the HW03 frame key,
+the HW04 URDF key against `fk` at four poses (flange and tool), and the
+starter-equals-key-minus-assigned-joints check. The release dry run copied
+68 files and removed 12 solution blocks; the student `arm.urdf` is the
+starter. HW03 builds to two pages and HW04 to three.
+
+In a disposable container from the local `intro-robotics-course:jazzy`
+image, started with the normal desktop and R2D2 launch, with the faculty tree
+mounted:
+
+- `python3 -m homework.hw03.frame_broadcaster` plus `tf2_echo base object`
+  printed translation `[-0.350, -0.400, 0.000]` and `tf2_echo base camera`
+  printed the key's `T_B_C` matrix.
+- `ros2 launch homework/hw04/view_arm.launch.py` ran beside R2D2 without
+  topic conflicts. `compare_tf` matched TF and `fk` to about 1e-16 at
+  `q = 0` (sliders) and at `[pi/2, 0, -pi/2]` (scripted joint states),
+  giving the hand answer `[0.7, 0.2, 0.5]`. A screenshot of the virtual
+  desktop showed the arm and TF axes in the expected pose.
+- With the unfinished starter, `robot_state_publisher` stops with "Two root
+  links found"; the student README explains this.
+
+The local course image lacks PySide6, so it predates the pyqtgraph viewer's
+Dockerfile change and must be rebuilt before the D6 viewer probe. Interactive
+slider use through the browser and Apple Silicon were not tested. The test
+container was removed.
 
 ## November 18: regular OpenCV selected
 

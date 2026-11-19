@@ -29,8 +29,8 @@ enough for students who are still learning classes.
 **Provided:** planar robot and scene, collision and joint-limit checks,
 interpolation, plotting, simple test scenarios, and RNG setup. Explain that
 sampled collision checks, projected link geometry, and ordinary Euclidean
-joint differences have limits. Provide fixed joint-space goal configurations;
-students are not expected to implement IK first.
+joint differences have limits. *Superseded Nov 19:* HW06 is to open with a
+short damped pseudo-inverse IK problem that produces the goal (TASKS.md D5(f)).
 
 **Draft boundary:** `planning.py` supplies geometry; `rrt.py` contains the
 two marked student methods, with input checks and a small `Tree` supplied.
@@ -68,6 +68,13 @@ not CHOMP. RRT*, CHOMP, TrajOpt, and STOMP can be compared in lecture.
 
 ## HW08: calibration, detection, and tracking
 
+*Revised scope, Nov 19 (TASKS.md D3):* keep the OpenCV plane map with one
+held-out check, color segmentation and centroid, a new color-and-shape rule
+classifier (contour vertex count), and filtered velocity from timestamps. Move
+hand projection (problem 1) to HW09; cut area/bounding-box/orientation
+measurements and the written truth comparison (an automatic check prints the
+error).
+
 **Outcomes:** CV1--CV5. Handwork and an image-based exercise share an oblique
 fixed-camera planar scene.
 
@@ -93,6 +100,13 @@ and independent data review before becoming a student exercise.
 
 ## HW09: planar visual feedback
 
+*Superseded Nov 19:* HW09 is being rewritten as tool-camera IBVS (TASKS.md
+D5, D3): projection, then the constant-depth image Jacobian by hand; the IBVS
+step on the `Controller` class with the HW05 damped solve; the lost-target
+hold; stationary target only. Moving-target interception moves to project
+scenario S2; the gain/delay study and fixed-camera comparison become lecture
+demonstrations. The fixed-camera draft below is kept as that comparison.
+
 **Outcomes:** VS1--VS3. Begin with a fixed camera and stationary target.
 
 1. Form target and tool positions in a common frame, sketch an error vector,
@@ -115,6 +129,12 @@ fixed-camera pickup; an OpenCV-backed, stripped student activity is pending.
 
 ## HW10: small PyTorch classifier
 
+*Revised scope, Nov 19 (TASKS.md D3):* a short guided lab (about 3--4 hours,
+two lectures). Students complete the forward/loss/backward/step lines, train
+on CPU in minutes, and compare a held-out confusion matrix with their HW08 rule
+classifier. The grouped-split explanation becomes a lecture question;
+save/reload and the conveyor-frame trial are cut.
+
 **Outcomes:** ML1--ML5. Use object crops from varied scenes, with geometry and
 appearance designed so color alone does not reveal the shape label.
 
@@ -134,7 +154,16 @@ Use the same preprocessing and class mapping at inference. The chosen PyTorch
 and dependency versions, independent data, and CPU runtime are not tested
 yet. A project team may use either a learned or rule-based classifier.
 
-## Week 11: guided RL lab
+## RL introduction and reward-shaping homework
+
+*Revised Nov 19 (TASKS.md D3):* two lectures after the project launch (rollouts
+in simulation, reward, the policy as a network, PPO intuition, SB3). The short
+homework changes only the reward for a supplied task and compares variants;
+teams may use RL late in the project to improve score and speed. The task
+(state-based interception, with planar reaching as the fallback) is in
+TASKS.md D3. The earlier lab design below is kept for reference.
+
+### Earlier design: week-11 guided RL lab
 
 **Outcomes:** RL1--RL5. Use a prepared planar reaching example if it works
 reliably; otherwise use a small provided control environment and explain the

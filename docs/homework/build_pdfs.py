@@ -10,9 +10,17 @@ ROOT = Path(__file__).resolve().parent
 
 
 def build(homework, render=False):
-    if not re.fullmatch(r"hw\d{2}", homework):
-        raise ValueError("Use homework directory names such as hw01")
-    source = ROOT / homework / "homework.tex"
+    """Build hwNN/homework.tex, or a reading named readings/<name>."""
+    if re.fullmatch(r"hw\d{2}", homework):
+        source = ROOT / homework / "homework.tex"
+        output = ROOT / "build" / homework
+        name = f"homework_{homework[2:]}"
+    elif re.fullmatch(r"readings/\w+", homework):
+        source = ROOT.parent / f"{homework}.tex"
+        output = ROOT / "build" / homework
+        name = homework.split("/")[1]
+    else:
+        raise ValueError("Use hw01 ... hw10, or readings/<name> for docs/readings")
     if not source.is_file():
         raise FileNotFoundError(source)
     compiler = shutil.which("pdflatex")
@@ -20,9 +28,7 @@ def build(homework, render=False):
         raise RuntimeError(
             "Install TeX Live or another distribution providing pdflatex"
         )
-    output = ROOT / "build" / homework
     output.mkdir(parents=True, exist_ok=True)
-    name = f"homework_{homework[2:]}"
     command = [
         compiler,
         "-interaction=nonstopmode",

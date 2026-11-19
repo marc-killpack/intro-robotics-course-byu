@@ -29,7 +29,7 @@ Faculty content/workload review remains pending for all four.
 | HW05 P2: spatial arm/pose-dependent interpretation | New HW05 P1/P3 use planar hand/numeric velocity interpretations and finite-displacement comparison. Spatial case omitted. | Retain graduate interpretation and singularity work. |
 | HW05 P3: planar manipulator | New HW05 P4: upstream point C, link-2 orientation, zero third column; original diagram. Optional fourth planar DOF in P3. | Compare problem length and frame notation after pilot. |
 | HW05 P4: Stanford arm | Exclude from introductory velocity homework. | Retain graduate spatial/prismatic example. |
-| HW06--HW07: IK and singularities | Only small provided motion-control support if needed; no separate singularities assignment. | Keep advanced derivations and analysis. |
+| HW06--HW07: IK and singularities | Nov 19: port basic IK by damped pseudo-inverse only (no Jacobian transpose or other methods); placement proposed in TASKS.md D5(f). No separate singularities assignment. | Keep advanced derivations and analysis. |
 | HW08--HW10: dynamics/control/RNE/Euler-Lagrange | Do not port. Use bounded kinematics and timed pickup in the introductory project. | Retain graduate dynamics and revisit only through a separate maintenance task. |
 
 Changed artifacts are `docs/homework/hw02` through `hw05`, their matching

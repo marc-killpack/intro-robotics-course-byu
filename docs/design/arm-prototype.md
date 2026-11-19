@@ -80,16 +80,19 @@ Mesh-geometry tests check pyqtgraph mesh placement against FK on the host;
 `tests/instructor/pyqtgraph_gui_probe.py` is the manual GUI probe. See the
 [validation record](validation.md) for dated results.
 
-**Still open** (tracked in [TASKS.md](../../TASKS.md), decision D6):
+**Decision D6 (Nov 19)** (work items in [TASKS.md](../../TASKS.md)): pyqtgraph
+for every interactive view; remove the Matplotlib slider player and
+`--backend` once the pyqtgraph probe passes in the Docker browser desktop
+(software OpenGL) and on Apple Silicon; keep the Matplotlib scene for
+`--save` images and static sketches. In `visualization_3d.py`, delete only the
+unused `TransformMPL`/`PlanarMPL` classes; keep ellipses, `wander`, the
+velocity panel, and STL support, because students use but never edit it.
 
-- Compare responsiveness and CPU cost of the two viewers on the Windows
-  browser desktop and Apple Silicon; software OpenGL through noVNC may be
-  slow. Neither has been benchmarked.
+**Still open:**
+
+- Responsiveness and CPU cost on the Windows browser desktop and Apple
+  Silicon have not been measured.
 - Check sliders, labels, multiple arms, orbit/zoom, and cleanup hands-on.
-- `visualization_3d.py` is about 2,000 lines, larger than the rest of the
-  package combined, and keeps graduate features (for example ellipses and
-  `wander`). Decide whether to trim it to what the course uses, and whether
-  maintaining both viewers is worthwhile.
 - RViz remains the ROS/URDF display; showing the Python arm there would need
   a bridge (see decision D1).
 

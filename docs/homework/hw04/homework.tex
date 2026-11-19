@@ -89,23 +89,50 @@ the tip? Predict the tip position at slider displacement 0.1 m, then check it.
 You do not need to change the FK method for this different joint type.
 \end{enumerate}
 
-\item \textbf{Compare calculated and displayed poses.}
+\end{enumerate}
+
+\newpage
+\begin{enumerate}[start=5]
+\item \textbf{Describe the arm in URDF and compare TF with your FK.}
+ROS describes robots in URDF files. A URDF \emph{joint} places its child
+link's frame in its parent link's frame: first its fixed \texttt{origin}
+(translation \texttt{xyz}, then rotation \texttt{rpy}), then its motion about
+\texttt{axis}. The starter \path{homework/hw04/arm.urdf} supplies every link
+and its visual, \texttt{world\_joint} (problem 4(a)'s base placement), and
+\texttt{joint1} as an example.
+\begin{enumerate}
+\item Add \texttt{joint2} and \texttt{joint3} (revolute) and
+\texttt{flange\_joint} and \texttt{tool\_joint} (fixed), so that
+\texttt{arm\_flange} is FK frame 3 and \texttt{arm\_tool} is problem 4(a)'s
+tool. URDF has no separate tip offset: explain where each \texttt{Joint}'s
+\texttt{tip} from problem 1 appears in your URDF.
+\item Show the arm and compare, using two container shells:
 \begin{lstlisting}
-python -m homework.hw04.hw04_fk --show
-python -m homework.hw04.play_arm
-python -m homework.hw04.play_arm --backend matplotlib
+ros2 launch homework/hw04/view_arm.launch.py
+python3 -m homework.hw04.compare_tf
 \end{lstlisting}
-The first command shows a Matplotlib frame view; the slider viewer defaults
-to pyqtgraph, with a Matplotlib alternative shown above. Use the browser
-desktop in Docker or a native Python window. Save a view with a
-nonzero first-joint rotation and bent shoulder/elbow. Name one displayed frame and
-explain which FK result locates it. Confirm that local Y and Z joint axes
-are drawn according to their geometry. The viewer implementation is provided.
+Set the sliders to problem 2's second pose. The script prints the tool
+position from TF (computed by ROS from your URDF) beside
+\texttt{fk(q, base=True, tip=True)}; both should match your problem 4(a)
+hand result. Save a screenshot of RViz and the printed comparison, then try
+one pose of your own.
+\item A URDF \texttt{rpy="r p y"} means
+$R=\operatorname{Rot}_z(y)\operatorname{Rot}_y(p)\operatorname{Rot}_x(r)$.
+Write \texttt{world\_joint}'s rotation as a matrix and compare it with
+problem 4(a). The link visuals use \texttt{rpy="0 1.5708 0"} to lay a
+cylinder (whose length runs along its local Z) along X; show why with
+$\operatorname{Rot}_y$.
+\item TF frame \texttt{arm\_link3} sits at joint 3. Which FK frame has the
+same origin, and why do their orientations differ when $q_3\neq 0$?
+\end{enumerate}
+The pyqtgraph slider viewer (\texttt{python -m homework.hw04.play\_arm})
+remains available for exploring your FK.
 \end{enumerate}
 
 \textbf{What to understand:} FK is composition of physical joint/link
-transforms. The same short loop handles spatial and prismatic mechanisms;
-it does not require a DH table or orientation-conversion functions.
+transforms. The same short loop handles spatial and prismatic mechanisms,
+and a URDF stores the same fixed offsets and joint axes for ROS. Neither
+requires a DH table or orientation-conversion functions.
 
 \submission
 \end{document}

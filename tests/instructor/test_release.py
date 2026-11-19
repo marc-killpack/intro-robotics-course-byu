@@ -29,7 +29,12 @@ class ReleaseTests(unittest.TestCase):
         source = ROOT / "homework/hw01/joint_publisher.py"
         before = source.read_bytes()
         files, report = prepare_release(ROOT)
-        self.assertEqual(report["removed_solution_blocks"], 11)
+        self.assertEqual(report["removed_solution_blocks"], 12)
+        self.assertEqual(
+            files["homework/hw04/arm.urdf"],
+            (ROOT / "homework/hw04/arm_starter.urdf").read_bytes(),
+        )
+        self.assertNotIn(b'name="joint2"', files["homework/hw04/arm.urdf"])
         text = files["homework/hw01/joint_publisher.py"].decode()
         self.assertNotIn("# BEGIN SOLUTION", text)
         self.assertNotIn("phase =", text)
@@ -71,6 +76,9 @@ class ReleaseTests(unittest.TestCase):
         ):
             self.assertNotIn(f"src/intro_robotics/{name}.py", files)
         self.assertIn("tests/public/test_hw05_planar_jacobian.py", files)
+        # The project package (and its faculty oracle) waits for its own release.
+        self.assertFalse(any(name.startswith(("src/intro_robotics/project/", "homework/project/"))
+                             for name in files))
 
     def test_generated_package_imports_and_all_nine_future_methods_stay_empty(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -112,6 +120,8 @@ empty(lambda: ArmMeshObject(arm, q0=[0]), [], 'HW04')
 # Isolate the HW05 placeholder from its still-unfinished HW04 prerequisite.
 arm.fk = lambda *args, **kwargs: np.eye(4)
 empty(arm.jacob_planar, [[0]], 'HW05')
+from homework.hw03.frame_broadcaster import frame_transforms
+empty(frame_transforms, [], 'HW03')
 scene = VizScene()
 scene.add_frame(np.eye(4), 'W')
 scene.update(As=[np.eye(4)])

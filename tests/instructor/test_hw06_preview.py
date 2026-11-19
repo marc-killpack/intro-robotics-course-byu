@@ -19,7 +19,7 @@ from release_tools.student_release import (
 class Homework06PreviewTests(unittest.TestCase):
     def test_temporary_student_tree_has_two_hw06_stubs_and_provided_geometry(self):
         files, report = prepare_release(ROOT)
-        self.assertEqual(report["removed_solution_blocks"], 11)
+        self.assertEqual(report["removed_solution_blocks"], 12)
         extra = [
             "src/intro_robotics/planning.py",
             "src/intro_robotics/rrt.py",

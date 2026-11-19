@@ -61,9 +61,26 @@ Applied to the given point they produce `[0,.5,0]` and `[.3,.2,0]`.
 Inverse translations are `[-.3,0,0]` and `[0,.3,0]` respectively; a rotated
 translation generally cannot be inverted by negating it alone.
 
-P4: the object frame's world rotation is identity and world origin is p_W.
-All plotted matrices must be world-referenced. Sending `T_B_C` directly
-would interpret base-relative coordinates as world coordinates.
+P4 (static TF, revised Nov 19): the object frame is oriented like the world,
+so `R_C_O = R_C_W = R_W_C.T`:
+
+```text
+T_C_O = [[1, 0, 0,0.1 ],
+         [0,-1, 0,0.05],
+         [0, 0,-1,0.8 ],
+         [0, 0, 0,1   ]]
+```
+
+`frame_transforms()` returns `(world, base, T_W_B)`, `(world, camera,
+T_W_C)`, `(camera, object, T_C_O)`, built with `se3` and `inv`; the marked
+answer is in `homework/hw03/frame_broadcaster.py`. `tf2_echo base object`
+prints translation `[-0.350, -0.400, 0.000]` (= p_B) and rotation matrix
+`[[0,1,0],[-1,0,0],[0,0,1]]` (`R_B_W`); `tf2_echo base camera` prints
+`T_B_C` above. TF's product is `inv(T_W_B) @ T_W_C @ T_C_O`. With `base`
+as the camera's parent, publish `T_B_C`. Publishing `T_B_C` with parent
+`world` would draw the camera at world point `[-0.3,-0.3,0.8]` with the
+wrong orientation: base-relative values read as world values. Both TF
+results were confirmed in the course container on Nov 19.
 
 ## HW04
 
@@ -100,9 +117,28 @@ P4(a): before base placement, the offset tool is at `[0,.3,.5]`. Its world
 position is `[.7,.2,.5]`. P4(b): positive local-X slider motion at yaw pi/2
 is world +Y. The tip at displacement .1 m is `[0,.6,0]`.
 
-P5: review frame directions and nonzero poses, not artistic detail. The
-viewer shows revolute circles, prismatic traveler squares, physical joint
-axes, link frames, and optional tool offset. Its implementation is provided.
+P5 (URDF, revised Nov 19; replaces the viewer screenshot problem). The
+complete URDF is `homework/hw04/arm.urdf`; students receive
+`arm_starter.urdf` under that name.
+
+(a) `joint2`: parent `arm_link1`, origin `0 0 0.2`, axis `0 1 0`.
+`joint3`: parent `arm_link2`, origin `0.4 0 0`, axis `0 1 0`.
+`flange_joint` (fixed): origin `0.3 0 0`. `tool_joint` (fixed): origin
+`0 0 0.1`. Each `Joint`'s tip becomes the next URDF joint's origin (h ->
+joint2, L1 -> joint3, L2 -> flange_joint); the arm's tool offset becomes
+`tool_joint`. Revolute joints need a `limit` line.
+
+(b) At `[pi/2, 0, -pi/2]` TF and `fk(q, base=True, tip=True)` both give
+`[0.7, 0.2, 0.5]` (P4(a)); differences are about 1e-16 (confirmed in the
+course container on Nov 19).
+
+(c) `rpy="0 0 1.5708"` gives `Rz(pi/2) = [[0,-1,0],[1,0,0],[0,0,1]]`, the
+P4(a) base rotation. `Ry(pi/2) @ [0,0,1] = [1,0,0]`, so the cylinder's
+length runs along the link's X.
+
+(d) FK frame 2 (`fk(q, index=2)`) has the same origin. URDF's `arm_link3`
+already includes joint 3's motion: `arm_link3 = frame 2 @ Ry(q3)`, while
+frame 2 ends before joint 3 moves. They coincide only when `q3 = 0`.
 
 ## HW05
 

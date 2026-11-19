@@ -29,12 +29,14 @@ right default for handouts, problems, and keys, which are cheap to revise.
 The exception is shared interfaces that many pieces plug into: those are
 decided first so later drafts are not rebuilt.
 
-1. **Lock interfaces before building on them.** Decide D1 (ROS threading,
-   node/message details) and D4 (minimum project) first: HW08--HW10
-   scaffolds and the project environment all depend on them.
-2. **Finish in the order students use it.** HW01--HW05 are finished before the
-   semester; each later unit is finished at least two to three weeks before
-   its first lecture.
+1. **Lock interfaces before building on them.** D1 (ROS threading and the
+   project interface) and D4 (minimum project) were settled Nov 19;
+   HW08--HW10 scaffolds and the project environment build on them.
+2. **Everything drafted by the first day of class** (instructor goal, Nov 19).
+   HW01--HW05 are fully done before the semester; every later assignment, the
+   RL lab, and the project environment exist as complete drafts (handout,
+   key, scaffold, passing faculty tests). In-semester time is for review,
+   timed pilots, and revision, each finished two to three weeks before use.
 3. **One definition of done per assignment:** reviewed handout PDF, written
    key, stripped student scaffold with public checks, a timed pilot by a TA or
    student, and an entry in the release manifest.
@@ -52,13 +54,13 @@ January 6, 2027; confirm against the BYU academic calendar.
 
 | Dates | Instructor focus | Faculty build focus (Codex) |
 | --- | --- | --- |
-| Nov 18--25 | Decide D1(a, c, d), D4, D5; skim D3 | Draft TF/URDF problem proposals for D1(a) |
-| Nov 30--Dec 11 | Review R1 (HW01) and R2 (HW02--HW05); request revisions | Revise HW01--HW05 from review; draft TF/URDF problems for the chosen homework; Apple Silicon validation |
-| Dec 14--18 | Timed pilot of HW01--HW05 (TA or student); decide D6 | Clean-source HW01--HW05 release dry run; begin project node-graph skeleton |
-| Dec 21--Jan 1 | Holiday buffer; optionally R3 (calendar) and D7/D8 (assessments, license) for the syllabus | Continue node-graph skeleton |
+| Nov 19--25 | Review the D2 outcomes; skim the new HW03 problem 4 and HW04 problem 5 | HW03 TF and HW04 URDF problems; `Controller` contract, lockstep runner, scenario file, S1, and oracle controller (all done Nov 19) |
+| Nov 30--Dec 11 | Review R1 (HW01) and R2 (HW02--HW05 with the new TF/URDF parts); decide D3 | Revise HW01--HW05 from review; node graph (simulator, camera, wrapper, message package); HW07 publish/subscribe node; HW08 student scaffold |
+| Dec 14--18 | Timed pilot of HW01--HW05 (TA or student); skim R4/R5 drafts | HW09 on the lockstep runner; S2/S3 with noise and belt-speed switches; camera-only reference controller; HW10 dataset and scaffold |
+| Dec 21--Jan 1 | Holiday buffer; optionally R3 (calendar) and D7/D8 (assessments, license) for the syllabus | Week-11 RL environment and checkpoint; full-draft check (every handout builds, every key exists, all faculty tests pass, release dry run) |
 | Jan 4--5 | Publish HW01--HW05 student copy; syllabus | Final platform check on a fresh clone |
 
-**During the semester ("ready" means the definition of done above).** Week
+**During the semester.** Every item below already exists as a draft on Jan 6; "ready" means the rest of the definition of done above (review, pilot, release entry). Week
 start dates are approximate; check Monday holidays.
 
 | Item | First used | Ready by |
@@ -66,35 +68,44 @@ start dates are approximate; check Monday holidays.
 | Lecture slides for each week | Each week | The Friday before |
 | HW06--HW07 planning (R4) | W6--W7 (~Feb 8) | End of W3 (~Jan 22) |
 | HW08 vision (R5) | W8 (~Feb 22) | End of W5 (~Feb 5) |
-| Project node graph and simulator skeleton | HW09 and project | End of W5 (~Feb 5) |
 | HW09 visual feedback (R5) | W9 (~Mar 1) | End of W6 (~Feb 12) |
-| HW10 classifier, dataset, CPU pilot (R6) | W10 (~Mar 8) | End of W7 (~Feb 19) |
-| Week-11 RL lab, environment, checkpoint (R6) | W11 (~Mar 15) | End of W8 (~Feb 26) |
-| Full project environment, reference controller, scoring (R7) | Introduced W10--W11; W12--W14 | End of W9 (~Mar 5) |
+| HW10 guided PyTorch lab, dataset, CPU pilot (R6) | W10 (~Mar 10) | End of W7 (~Feb 19) |
+| RL lectures and reward-shaping homework, environment, checkpoint (R6) | W11--W12 (~Mar 17) | End of W8 (~Feb 26) |
+| Full project environment, reference controller, scoring (R7) | Launched W11 (~Mar 15) | End of W8 (~Feb 26) |
 
 ## 1. Decisions needed from the instructor
 
-Each item gives the current working default (and who set it) so it can be
-confirmed quickly or changed.
+Open items give the current working default (and who set it) so they can be
+confirmed quickly or changed. D1 and D3--D6 were settled November 18--19.
+
+### Open
 
 | # | Decision | Current working default | Context |
 | --- | --- | --- | --- |
-| D1 | **How ROS threads through the course.** *Decided Nov 18:* the transform/FK mathematics stays plain Python; TF and basic URDF models are interleaved into HW01--HW05 where they fit; roll-pitch-yaw is introduced briefly in the week-4 lecture for URDF origins; the project is a camera / controller / robot node graph in which students write a plain `step(observation) -> command` class wrapped by a supplied node. *Still to decide:* (a) which problems get a TF/URDF component (proposal: HW03 broadcasts the camera/world/base chain as static TF and checks it with `tf2_echo`; HW04 writes a small URDF for the Z/Y/Y arm and compares TF with `fk(q)`; HW02 and HW05 stay pure Python); (c) which assignment first has students write a small node themselves (proposal: HW09's fixed-camera controller); (d) message types and simulated-clock rules: *proposal drafted Nov 18* in [the project interface](instructor/PROJECT_SPEC_DRAFT.md#interface-and-simulated-clock-proposal-for-d1d) (standard messages only, 20 Hz with one period of delay, graded runs in a plain-Python lockstep runner). | (a) and (c) as proposed; (d) awaiting approval; nothing implemented yet. | [Roadmap scope](COURSE_ROADMAP.md#agreed-mathematics-scope), [project architecture](instructor/PROJECT_SPEC_DRAFT.md#software-architecture) |
-| D2 | **Prioritized outcomes and implementation depth for planning, vision, ML, and RL.** For each topic record: priority (required / optional / future offering); evidence students must explain or demonstrate; coding responsibility (implement, modify supplied code, or use a library); lecture time and estimated student hours; and a focused assessment plus its project connection. This follows [backward course design](https://www.cmu.edu/teaching/assessment/basics/alignment.html). | Outcomes proposed in your three briefs; mapped to assignments by Codex. Not approved. | [Briefs](instructor/briefs/README.md), [assignment designs](instructor/NEW_ASSIGNMENT_DRAFTS.md) |
-| D3 | **Weeks 8--11 load.** Four new topics (vision, visual servoing, PyTorch, RL) and three new toolchains (OpenCV, PyTorch, Stable-Baselines3) arrive in four consecutive weeks, immediately before the project. Accept, merge HW08/HW09, lighten HW10, or make RL demonstration-only? | Four one-week units; RL is an in-class lab, not a full homework. | [Calendar](docs/design/semester-integration.md), [lecture outlines](docs/design/lecture-outlines.md) |
-| D4 | **Minimum project specification.** Observations, actions, required scenarios, and assessment evidence. Specific sub-questions: Is path planning (obstacles) assessed in the project? Sort by color, shape, or both, and how many classes? Is more than one simultaneous object required for the baseline? | *Proposal drafted Nov 18* from your direction: no obstacles in the baseline (second round or competition); 3 colors by 3 shapes with a supplied rule table mapping combinations to three bins; at most one object in the pick zone at a time; seeded scenarios S1--S3. Awaiting approval; thresholds still wait for a reference controller. | [Proposed scope](instructor/PROJECT_SPEC_DRAFT.md#minimum-project-scope-proposal-for-d4) |
-| D5 | **Confirm working interpretations Codex recorded on your behalf.** (a) Each project team may choose the fixed *or* tool camera; everyone does fixed-camera HW09 (alternative you also accepted: require fixed baseline plus wrist comparison). (b) The 42-session calendar: two ROS lectures plus guided HW01, 125 min of rotations, three 25/25 split meetings. (c) Optional locomotion/imitation/VLA lectures use project class time and add no homework. (d) HW06 supplies joint-space goals; IK is shown only by a worked example. | As listed (Codex, Nov 17). | [Calendar and prerequisites](docs/design/semester-integration.md) |
-| D6 | **Student arm viewers.** The adapted pyqtgraph viewer is now the default slider viewer; Matplotlib remains for activities and as a fallback. Keep both (two to maintain), or drop the Matplotlib slider player? Trim the ~2,000-line ported viewer to the features this course uses? | pyqtgraph default (Codex, Nov 18); decide after a measured comparison on Windows and Apple Silicon. | [Arm prototype: viewers](docs/design/arm-prototype.md#viewers) |
-| D7 | **Assessments.** Exam calendar, grading weights, and how homework, project milestones, and the final demonstration are weighted. Project score thresholds wait for a reference controller. | Open. | [Roadmap](COURSE_ROADMAP.md) |
-| D8 | **Course number, publication license, and student distribution channel.** | Open. No license has been assumed. | [Release workflow](release_tools/README.md) |
-| D9 | **Planning lecture P6 reading.** Use the Bodily, Allen, and Killpack paper, or only a worked Cartesian-task example? | Optional in both brief and outline. | [Planning brief](instructor/briefs/path_planning.md), [outlines](docs/design/lecture-outlines.md) |
+| D2 | **Course learning outcomes.** Eleven outcomes in three tiers, each with sub-points, where it is assessed, and whether students implement, modify, or use the code; outcomes 1--3 and 6 adapt the ME 537 outcomes. Mark each keep, edit, or cut. It feeds the syllabus and lecture outlines ([backward course design](https://www.cmu.edu/teaching/assessment/basics/alignment.html)). | Drafted Nov 19; awaiting review. | [Roadmap: course learning outcomes](COURSE_ROADMAP.md#course-learning-outcomes-draft-for-tasksmd-d2) |
+| D7 | **Assessments.** *Decided Nov 19:* a midterm and a final exam; the midterm sits at the semester midpoint and covers HW01--HW05 or HW06 (through Jacobians and IK, possibly RRT-Connect, depending on what has been taught); students grade their own homework, and automated checks are spot checks, not autograding. *Still open:* grading weights for homework, exams, project milestones, and the final demonstration (project thresholds wait for the reference controller). | Exams decided; weights open. | [Roadmap](COURSE_ROADMAP.md) |
+| D8 | **Course number, publication license, and student distribution channel.** *Decided Nov 19:* the temporary number is ME EN 495R. The full faculty repository stays private for now; students receive a stripped repository published the same way as the [ME 537 student repository](https://github.com/BYU-ME-537/byu-537-fall-2026). *Still open:* the student repository's name and license (none has been assumed). | Channel decided; license open. | [Release workflow](release_tools/README.md) |
+| D9 | **Planning lecture P6: position-only optimization.** *Decided Nov 19:* students learn a position-only task-space optimization (tool positions must hit Cartesian waypoints; orientation is free), because it can help in the project. Keep it simple and planar: a working in-class example plus a reading that is a simplified, planar version of the Bodily, Allen, and Killpack paper, drafted from the original. Drafted Nov 19: `docs/readings/position_only_branching.tex` and `examples/position_only_branching.py` (fixed base, position only; base optimization and the QP are described, not implemented). | Decided; draft reading (3 pages) and lecture example done Nov 19, awaiting instructor review. | [Planning brief](instructor/briefs/path_planning.md), [outlines](docs/design/lecture-outlines.md) |
 | D10 | **Retire superseded faculty code.** (a) *Done Nov 18:* deleted the standalone planning and two waypoint pilot scripts (duplicated by the HW06/HW07 activities); lectures P1--P5 now use those activities. (b) When HW08/HW09 and the project nodes are built, promote the reusable functions in `examples/oblique_camera_pilot.py`, `vision_measurement_pilot.py`, and `checkerboard_scene.py` into `src/` or the nodes, then delete the conveyor and visual-servo pilots with their tests. (c) Keep all tests; optionally move the four manual `*_probe.py` scripts into `tests/probes/`. | (b) and (c) await approval when the replacements exist. | [Pilot notes](docs/design/new-pilots.md) |
+
+### Decided (details kept for reference)
+
+These are settled. The details here are what build requests should cite; the
+roadmap, project specification, and calendar carry the same decisions.
+
+| # | Decision and details | Status | Where else it is recorded |
+| --- | --- | --- | --- |
+| D1 | **How ROS threads through the course.** *Decided Nov 18--19:* the transform/FK mathematics stays plain Python; roll-pitch-yaw is introduced in the week-4 lecture for URDF origins. (a) HW03 broadcasts the camera/world/base chain as static TF and checks it with `tf2_echo`; HW04 writes a small URDF for the Z/Y/Y arm and compares TF with `fk(q)`; HW02 and HW05 stay pure Python. (c) HW01 is a very basic publisher that replaces the sliders with the student's own smooth joint function (the current HW01 already does this). A second assignment, in the HW06 or HW07 week, has students publish and subscribe: send a set of joint angles from their RRT path to an arm node that generates a smooth trajectory shown in RViz with the URDF. (d) The project interface and clock rules in [the project interface](instructor/PROJECT_SPEC_DRAFT.md#interface-and-simulated-clock-proposal-for-d1d) are approved: 50 Hz camera and controller with one period of delay, configurable image size (default 320 by 240), graded runs in a plain-Python lockstep runner. *Decided Nov 19:* (e) HW07 week: students publish their optimized waypoints as `trajectory_msgs/JointTrajectory` and write the arm node that subscribes, interpolates a smooth trajectory, and publishes `JointState` for RViz. The arm model is their own HW04 URDF, edited to the HW07 planar arm (change the joint axes to Z and drop the base offset; link lengths 0.4/0.3 m already match). (f) A small supplied message package, built automatically at container start like `r2d2_demo`, defines the pickup request and pickup state, so students read real `.msg` files without running colcon. (g) Mild image noise and slight belt-speed variation are scenario switches: off while developing, on when ready, and on in graded scenarios. (h) The class is named `Controller`. HW09 uses the same class and lockstep runner on a stopped-belt scenario. | All decided; nothing implemented yet. | [Roadmap scope](COURSE_ROADMAP.md#agreed-mathematics-scope), [project architecture](instructor/PROJECT_SPEC_DRAFT.md#software-architecture) |
+| D3 | **Weeks 8--12 load.** Four new topics (vision, visual servoing, PyTorch, RL) and three new toolchains (OpenCV, PyTorch, Stable-Baselines3) arrive back to back before the project. *Instructor idea, Nov 19:* launch the project for two sessions (integration and ROS plumbing) before a short RL introduction (rollouts in simulation, reward/cost, the policy as a network, PPO intuition, SB3); the RL homework only changes the reward for a specific task, and teams may use RL late in the project to improve score and speed. *Decided Nov 19:* sessions after P6 are vision 3, servoing 3, supervised learning 2 (was 3), project launch 2, RL 2 (was 3), project/extensions/help 8. HW08 is refocused on what the project needs (plane map with OpenCV, segmentation, color-and-shape rule classifier, filtered velocity); hand projection moves to HW09, and area/orientation measurements and the written truth comparison are cut. HW09 keeps the planar image Jacobian, the IBVS step with the HW05 damped solve, and the lost-target hold, on a stationary target; moving-target interception moves to project S2, and the gain/delay study and fixed-camera comparison become lecture demonstrations. HW10 becomes a short guided lab (complete the training loop, train on CPU, compare a confusion matrix with the HW08 rule classifier). The RL homework only shapes the reward for a supplied task. *Decided Nov 19:* state-based interception: a small planar arm with acceleration limits must match the position and velocity of a moving object, observing joint angles and velocities and the object's relative position and velocity; students compare 2--3 reward variants with their own damped-solve-plus-feedforward controller on the same cases. Planar reaching is the fallback if a CPU pilot cannot train interception in about 10 minutes, and a reaching run is shown in lecture as the 'RL relearns IK' comparison. | Decided; CPU pilot pending. | [Calendar](docs/design/semester-integration.md), [assignment designs](instructor/NEW_ASSIGNMENT_DRAFTS.md) |
+| D4 | **Minimum project specification.** Observations, actions, required scenarios, and assessment evidence. Specific sub-questions: Is path planning (obstacles) assessed in the project? Sort by color, shape, or both, and how many classes? Is more than one simultaneous object required for the baseline? | *Proposal drafted Nov 18* from your direction: no obstacles in the baseline (second round or competition); 3 colors by 3 shapes with a supplied rule table mapping combinations to three bins; at most one object in the pick zone at a time; seeded scenarios S1--S3. *Decided Nov 19:* score is +10 per correctly sorted object and -5 per dropped object, with time mattering only through how many objects are sorted and a wrong-bin release also counts -5; the project arm is a redundant 4-link planar arm with links 0.4/0.3/0.2/0.2 m, extending the HW05 arm; the nominal pass level is 70--80% of what an oracle controller achieves under the same limits and delay; learning extensions run in project weeks with little or no homework. *Proposal to confirm (Nov 19):* self-collision is a scenario setting; the baseline uses "report" (counted, not blocked, so a student's arm cannot get stuck) and the second round uses "block" together with world obstacles. Bins sit between the arm base and the belt (base at (0, -0.2) m). Students learn damped least squares: solve the square case first, then the redundant arm. Where the square solve, damped least squares, and IK are taught is D5(f). *Decided Nov 19:* collision violations are reported but cost no points in the baseline (a blocked motion already costs time). | [Proposed scope](instructor/PROJECT_SPEC_DRAFT.md#minimum-project-scope-proposal-for-d4) |
+| D5 | **Camera, calendar, extensions, and IK.** *Decided Nov 19:* (a) image-based visual servoing (IBVS) with a tool camera is the servoing every student must learn, planar and simplified as needed; the fixed camera's measure-then-move approach (position-based) is just IK with a measured target. (b) 42 sessions; the project gets 2.5--3 weeks, during which there are 1--2 lectures a week on extensions or advanced topics plus one project help session. (c) Optional locomotion/imitation/VLA lectures are in those last weeks and add no homework. (d) Students implement basic IK, by damped pseudo-inverse only (no Jacobian transpose or other methods). *Also decided Nov 19:* (e) the project observation has both images: the fixed camera for detecting, classifying, and timing objects upstream, and the tool camera for the required IBVS final approach; (f) HW05 ends with the square inverse-velocity solve and damped least squares for a redundant arm; HW06 opens with a short IK problem (iterate that solve to turn a Cartesian goal into the RRT joint goal, and see two elbow solutions); HW09 becomes tool-camera IBVS with a constant-depth planar interaction matrix; (g) one inverse-velocity/IK lecture is inserted after the Jacobian unit, moving later sessions back one slot and leaving 8 project-period sessions (about 2.7 weeks); the [calendar](docs/design/semester-integration.md) is redrawn. | All decided. | [Calendar and prerequisites](docs/design/semester-integration.md), [project spec](instructor/PROJECT_SPEC_DRAFT.md) |
+| D6 | **Student arm viewers.** *Decided Nov 19:* (a) pyqtgraph for everything students view interactively (slider players, velocity view, animation); remove the Matplotlib slider player and the `--backend` option once the pyqtgraph probe passes in the Docker browser desktop and on Apple Silicon. The small Matplotlib scene stays only for the activities' `--save` images and static frame sketches, which need no OpenGL or display; HW06--HW10 plots are Matplotlib anyway. (b) Trim only what is unused: the Matplotlib `TransformMPL`/`PlanarMPL` classes inside the 3D viewer (about 175 lines). Keep ellipses, `wander`, the velocity panel, STL support, and the shader, since students never edit the file. (c) No shared-copy planning: the instructor will carry changes back to ME 537 later. STL link and end-effector meshes are a later improvement. | Decided; work items under Arm and visualization. | [Arm prototype: viewers](docs/design/arm-prototype.md#viewers) |
 
 Deferred until measurements or prototypes exist (no action now): an additional
 waypoint solver such as SciPy SLSQP; MuJoCo or a fuller simulator and its ROS 2
 integration (Gazebo Harmonic was an October candidate); a VS Code dev
-container; prebuilt multiarchitecture images; minimum computer specifications;
-and exact project arm geometry.
+container; prebuilt multiarchitecture images; and minimum computer
+specifications.
 
 ## 2. Review queue
 
@@ -122,11 +133,11 @@ Suggested reading order. Record approval, or requested changes, beside each item
   [HW08 key](instructor/HW08_REFERENCE.md), [HW09 key](instructor/HW09_REFERENCE.md),
   [checkerboard activity](docs/design/checkerboard-activity.md), and the
   assignment designs. Student scaffolds and data do not exist yet.
-- [ ] **R6. HW10 classifier and week-11 RL lab designs** — compare the
+- [ ] **R6. HW10 guided lab and RL homework designs** — compare the
   [assignment designs](instructor/NEW_ASSIGNMENT_DRAFTS.md) with the
   [PyTorch/RL brief](instructor/briefs/pytorch_rl.md).
 - [ ] **R7. Project** — [specification draft](instructor/PROJECT_SPEC_DRAFT.md)
-  and [one-object pilot](docs/design/conveyor-pilot.md); feeds decision D4.
+  and [one-object pilot](docs/design/conveyor-pilot.md), against decisions D1 and D4.
 - [ ] **R8. Lecture outlines** — the [18 timed outlines](docs/design/lecture-outlines.md)
   for planning, vision, servoing, ML, and RL (later lecture-preparation phase).
 - [ ] **R9. Optional backlog** — skim [improvements](instructor/IMPROVEMENTS.md);
@@ -140,6 +151,7 @@ Suggested reading order. Record approval, or requested changes, beside each item
 
 ### Platform validation
 
+- [ ] Rebuild the course image (`docker compose build`): the local image predates the Dockerfile's PySide6/pyqtgraph packages, so the pyqtgraph viewer cannot run in it yet (found Nov 19).
 - [ ] Repeat the revised HW01 workflow on Apple Silicon; test Linux and Intel Mac.
 - [ ] Repeat the rebuilt image checks (OpenCV, waypoint, ROS) on ARM64 and verify the interactive RViz GUI.
 - [ ] Check OpenCV window interaction through the browser desktop and repeat on ARM64.
@@ -148,34 +160,42 @@ Suggested reading order. Record approval, or requested changes, beside each item
 ### Arm and visualization
 
 - [ ] Pilot hands-on arm-viewer usability; repeat the new workflow on Apple Silicon.
-- [ ] Compare pyqtgraph and Matplotlib viewer responsiveness and CPU cost on the Windows browser desktop and Apple Silicon; record results in the validation record (feeds D6).
-- [ ] Run the manual pyqtgraph GUI probe in the course image and record the result.
+- [ ] Run the manual pyqtgraph GUI probe in the course image (Windows browser desktop) and on Apple Silicon; record responsiveness and CPU use in the validation record.
+- [ ] After the probe passes (D6): remove the Matplotlib slider player and the `--backend` option from `play_arm`; update the HW04 README, student guide, and arm-prototype notes.
+- [ ] D6: delete the unused `TransformMPL`/`PlanarMPL` classes from `visualization_3d.py`; rerun the visualization tests.
+- [ ] Later improvement: extend the STL loader from the gripper to any link, so arms can use STL link meshes (the same files a URDF can reference for RViz).
 
-### ROS integration (after D1 sub-decisions)
+### ROS integration (D1)
 
-- [ ] Draft TF/URDF components for the chosen HW02--HW05 problems (for example, check a hand-computed transform chain with `tf2_echo`, or write a small URDF for the HW04 arm and compare TF with `fk`).
+- [ ] Review the D9 reading and the lecture P6 branching example; decide whether the reading's questions are assigned or used in class.
 - [ ] Add a short roll-pitch-yaw segment to the week-4 lecture plan, built from `rotx`/`roty`/`rotz`, for reading URDF origins.
-- [ ] Build the project node graph around the existing conveyor simulator: robot simulator node (joint state, TF, simulated clock), camera node (images and camera information for either mount), controller wrapper around a student `step(observation) -> command` class, and a lockstep evaluation runner.
+- [ ] HW07: add the publish/subscribe problem (waypoints as `JointTrajectory`; student arm node interpolates and publishes `JointState`; student's HW04 URDF edited to the planar arm; obstacle shown as an RViz marker).
+- [ ] Build the project node graph around the existing simulator and runner: simulator node (joint state, TF, `/clock`), camera node (both cameras, configurable size), controller wrapper around `Controller`, supplied message package (pickup request and state), and a live viewer or video for runs.
+- [ ] Build a camera-only reference controller (HW08 measurements plus HW09 image-based servoing) and check it clears 70--80% of the oracle score.
 
 ### Homework scaffolds and pilots
 
 - [ ] Pilot student time budgets for HW01--HW07 with students; adjust problem counts.
 - [ ] HW08: pilot the checkerboard homography activity and make a separately stripped student exercise; build the student loader, same-camera object sequence, rectifier, plotter, and scaffold with calibration, independent checks, missed-detection cases, and student/faculty data splits.
-- [ ] HW09: turn the ideal fixed-camera tracking/feedback pilot into a student-ready, robust OpenCV exercise with a supplied detector and damped solve/limit helpers; add moving-target interception.
-- [ ] HW10: build the varied object dataset with scene-grouped splits, the PyTorch model/training scaffold, a checkpoint, and the handout; pilot CPU runtime.
-- [ ] Week 11: pilot small PyTorch and Gymnasium/Stable-Baselines3 exercises on CPUs; prepare an environment, checkpoint, and offline fallback.
+- [ ] HW05: add the square inverse-velocity solve and damped least squares for a redundant planar arm; check the workload against the 1.5-week limit.
+- [ ] HW06: add a short IK problem (iterate the HW05 damped solve to reach a Cartesian goal; compare elbow solutions) that produces the RRT goal; port suitable problems from ME 537 HW06, damped pseudo-inverse only.
+- [ ] HW09: rewrite the draft as tool-camera image-based visual servoing on the `Controller` contract and lockstep runner: constant-depth planar interaction matrix for a point feature, combined with the robot Jacobian and the damped solve; stationary target first, then a moving target; contrast with measure-then-move. The existing fixed-camera pilot becomes the comparison case.
+- [ ] Rework the visual-servoing lecture outlines for IBVS (measure-then-move versus image-based; planar image Jacobian; integration and limits), add an outline for the inverse-velocity/IK lecture, condense the supervised-learning and RL outlines to two sessions each, and add the two project-launch sessions (D3).
+- [ ] HW10: build the short guided lab: object-crop dataset with scene-grouped splits, a small model and training scaffold with the four training-loop lines marked, a checkpoint, and the handout; pilot CPU runtime.
+- [ ] RL homework: build the state-based interception environment (Gymnasium, same arm limits and delay as the project) with a reward scaffold; pilot PPO training time on a student-class CPU (target about 10 minutes); fall back to planar reaching if needed; prepare a checkpoint and a reaching demonstration for lecture.
 - [ ] Expand the release manifest one assignment at a time, only after its review item above is approved.
 
 ### Conveyor project environment
 
-- [ ] Add visible belt/bin geometry, multiple objects, selectable colors/shapes, sorting rules, and multi-object association.
-- [ ] Connect the tool-mounted camera to closed-loop moving-object control (camera-on-arm visual servoing milestone).
-- [ ] Validate moving interception and pickup/release across varied, seeded scenarios.
-- [ ] Add collision checking and scenarios; enforce the student/faculty observation boundary so simulator truth never reaches student policies.
-- [ ] Support both camera choices and either learned or rule-based classification.
-- [ ] Establish a conventional reference controller; then define fixed simulation time, seeded scenarios, scoring, provisional grading thresholds, and competition rules.
-- [ ] Supply a Gymnasium wrapper; compare optional RL with conventional methods using the same observations and limits. Add imitation only after the visual controller and logging interfaces work.
-- [ ] Review student interfaces, privacy of faculty truth, CPU runtime, and cross-platform packaging.
+The contract, simulator, S1 scenario, lockstep runner, and oracle exist
+(Nov 19; [project spec](instructor/PROJECT_SPEC_DRAFT.md#interface-and-simulated-clock-proposal-for-d1d)).
+
+- [ ] Write S2 (moving belt, full rule table, noise and belt-speed variation available) and S3 (held-out seeds and a new rule table); set durations and spacing so throughput matters; record oracle scores per scenario.
+- [ ] Second round: world obstacles with the "block" collision mode, four colors and shapes, tighter spacing.
+- [ ] Draw held objects and arm occlusion in the camera images, or document their absence for students.
+- [ ] Set provisional pass thresholds (70--80% of the oracle) and the per-step compute budget after timing the reference controller; define competition rules.
+- [ ] Supply a Gymnasium wrapper over the same simulator; compare optional RL with conventional methods using the same observations and limits. Add imitation only after the visual controller and logging interfaces work.
+- [ ] Add the project files to a release manifest (the oracle stays faculty-only); review student interfaces, CPU runtime, and cross-platform packaging.
 
 ### Release and publication
 
@@ -219,6 +239,10 @@ Evidence for completed checks, with test counts and commands, is in the
 
 ### Course planning and migration
 
+- [x] Nov 19: built the project `Controller` contract, TOML scenario files with S1, `SortingSimulator` (own planar kinematics, no student code; scoring, rule table, both cameras, noise, belt-speed variation, self-collision modes), the plain-Python lockstep runner with one-period delay, `homework/project/run.py`, a starter controller, and a faculty oracle (6/6 on S1 seeds 1--5); 12 instructor tests.
+- [x] Nov 19: drafted the D9 simplified planar reading of Bodily, Allen, and Killpack (ICRA 2017) and a NumPy branching example with a stepwise-IK contrast; instructor test added.
+- [x] Nov 19: HW03 problem 4 now publishes the world/base/camera/object frames as static TF (`frame_broadcaster.py`, supplied `ros_frames.py`) and checks them with `tf2_echo` and RViz; HW04 problem 5 has students complete the arm's URDF joints, launch it beside R2D2, and compare TF with `fk` (`compare_tf.py`), including reading RPY origins. Keys, READMEs, boundary map, manifest, a public check for each, and instructor tests updated; ROS behavior confirmed in a course container ([validation](docs/design/validation.md)).
+- [x] Nov 19: drafted the D2 course learning outcomes in the roadmap; settled D1 and D3--D6 and recorded D7--D9.
 - [x] Preserve the three new faculty unit briefs and evaluate them against the actual repository.
 - [x] Audit the original roadmap, preserve its exact October text, and restore goals and compressed details; see the [audit](docs/design/archive/roadmap-audit.md).
 - [x] Draft a 14-week integration map, HW06--HW10/lab designs, project specification, and 18 timed lecture outlines.

@@ -19,7 +19,7 @@ from release_tools.student_release import (
 class Homework07PreviewTests(unittest.TestCase):
     def test_cumulative_preview_strips_planner_and_metric_answers(self):
         files, report = prepare_release(ROOT)
-        self.assertEqual(report["removed_solution_blocks"], 11)
+        self.assertEqual(report["removed_solution_blocks"], 12)
         extra = [
             "src/intro_robotics/planning.py",
             "src/intro_robotics/rrt.py",

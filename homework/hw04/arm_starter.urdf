@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!-- HW04 problem 5 starter for the spatial_arm() model. The links, their
+     visuals, world_joint, and joint1 are supplied. Add joint2, joint3,
+     flange_joint, and tool_joint where marked below. -->
+<robot name="hw04_spatial_arm">
+  <material name="grey"><color rgba="0.6 0.6 0.6 1"/></material>
+  <material name="blue"><color rgba="0.2 0.4 0.8 1"/></material>
+  <material name="orange"><color rgba="0.9 0.5 0.1 1"/></material>
+
+  <!-- Links: each link frame is where its joint is. Visuals are supplied. -->
+  <link name="world"/>
+  <link name="arm_base">
+    <visual>
+      <origin xyz="0 0 0.02"/>
+      <geometry><cylinder radius="0.06" length="0.04"/></geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+  <link name="arm_link1">
+    <visual>
+      <origin xyz="0 0 0.1"/>
+      <geometry><cylinder radius="0.025" length="0.2"/></geometry>
+      <material name="blue"/>
+    </visual>
+  </link>
+  <link name="arm_link2">
+    <!-- A cylinder's length runs along its local Z axis; pitch it onto X. -->
+    <visual>
+      <origin xyz="0.2 0 0" rpy="0 1.5707963267948966 0"/>
+      <geometry><cylinder radius="0.025" length="0.4"/></geometry>
+      <material name="blue"/>
+    </visual>
+  </link>
+  <link name="arm_link3">
+    <visual>
+      <origin xyz="0.15 0 0" rpy="0 1.5707963267948966 0"/>
+      <geometry><cylinder radius="0.02" length="0.3"/></geometry>
+      <material name="blue"/>
+    </visual>
+  </link>
+  <link name="arm_flange"/>
+  <link name="arm_tool">
+    <visual>
+      <geometry><sphere radius="0.02"/></geometry>
+      <material name="orange"/>
+    </visual>
+  </link>
+
+  <!-- Supplied: frame 0 placed in the world (problem 4(a)). -->
+  <joint name="world_joint" type="fixed">
+    <parent link="world"/>
+    <child link="arm_base"/>
+    <origin xyz="1 0.2 0" rpy="0 0 1.5707963267948966"/>
+  </joint>
+
+  <!-- Supplied example: joint 1 rotates about its local Z axis. -->
+  <joint name="joint1" type="revolute">
+    <parent link="arm_base"/>
+    <child link="arm_link1"/>
+    <origin xyz="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.1416" upper="3.1416" effort="1" velocity="1"/>
+  </joint>
+
+  <!-- HW04 problem 5: add four joints here.
+       joint2 (revolute): arm_link1 -> arm_link2
+       joint3 (revolute): arm_link2 -> arm_link3
+       flange_joint (fixed): arm_link3 -> arm_flange, which is FK frame 3
+       tool_joint (fixed): arm_flange -> arm_tool, the problem 4(a) tool
+       Copy joint1's format; give revolute joints the same limit line. -->
+</robot>

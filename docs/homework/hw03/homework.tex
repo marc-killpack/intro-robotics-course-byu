@@ -59,26 +59,37 @@ same point $[0.2,0,0]^T$ and sketch the two resulting positions.
 the original translation sufficient to invert it? Use your block inverse to explain.
 \end{enumerate}
 
-\item \textbf{Display frames in one reference.}
-\begin{lstlisting}
-python -m homework.hw03.hw03_transforms --show
-\end{lstlisting}
-The provided scene draws $W$, $B$, and $C$ using their poses in the world.
+\item \textbf{Check the frame chain with ROS TF.}
+ROS keeps a tree of named frames called TF. Each entry is the pose of a
+\emph{child} frame expressed in its \emph{parent} frame: a matrix
+$\T{\text{parent}}{\text{child}}$, exactly as in this assignment.
 \begin{enumerate}
-\item Use your functions in a short script to reproduce problem 2's
-coordinate conversions. Label the frame of every intermediate vector.
-Keep NumPy points as one-dimensional arrays of length 3, or homogeneous
-arrays of length 4; use \texttt{@} for matrix multiplication.
-\item Add an object frame $O$ whose orientation equals the world and whose
-world origin is the computed $p_W$. Save a labeled image of all four frames.
-\item Explain why sending $\T{B}{C}$ directly to a scene that expects
-world-referenced poses would draw the camera in the wrong place.
+\item Write $\T{C}{O}$ by hand for an object frame $O$ located at $p_C$ and
+oriented like the world. Then complete \texttt{frame\_transforms()} in
+\path{homework/hw03/frame_broadcaster.py}: return the poses of
+\texttt{base} and \texttt{camera} in \texttt{world}, and of \texttt{object}
+in \texttt{camera}, built with your \texttt{se3} and \texttt{inv}.
+\item Publish the frames, then query TF from a second container shell:
+\begin{lstlisting}
+python3 -m homework.hw03.frame_broadcaster
+ros2 run tf2_ros tf2_echo base object
+ros2 run tf2_ros tf2_echo base camera
+\end{lstlisting}
+Compare the printed translations and matrices with your hand answers for
+$p_B$ and $\T{B}{C}$ in problem 2. TF found these by composing the tree for
+you. Write the product of your published matrices (and any inverse) that
+gives \texttt{base} to \texttt{object}.
+\item In RViz, set the Fixed Frame to \texttt{world} and add a TF display.
+Save a screenshot showing all four frames. Which matrix would you publish if
+\texttt{camera}'s parent were \texttt{base}? Where would RViz draw the camera
+if you published $\T{B}{C}$ with parent \texttt{world}, and why?
 \end{enumerate}
 \end{enumerate}
 
 \textbf{What to understand:} transform direction and composition order,
 translation expressed in the reference frame, rigid-transform inversion,
-and the difference between points and directions. No DH convention is used.
+and the difference between points and directions. A TF tree stores exactly
+these parent-to-child transforms. No DH convention is used.
 
 \submission
 \end{document}

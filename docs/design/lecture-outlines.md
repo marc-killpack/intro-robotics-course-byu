@@ -15,7 +15,7 @@ These are lecture outlines, not completed slides or measured class timings.
 | P3: Transfer to an arm and RRT* | 15 min joint-space scene; 15 min inspect a success and a failed trial; 10 min RRT* parent/rewiring idea; 10 min geometric path versus timed motion | Compare the arm and configuration-space panels. Mark one colliding arm pose on the plot. RRT* is a conceptual comparison. |
 | P4: Optimization formulation | 25 min variables, costs, constraints, initial guesses, and local minima; 15 min waypoint formulation; 10 min obstacle-avoidance difficulty | Label the intermediate joint configurations, fixed endpoints, smoothness cost, and collision requirements. |
 | P5: Refining a route | 10 min waypoint cost and validity; 15 min CHOMP idea; 10 min provided solver demonstration; 10 min compare initial paths and local methods; 5 min validate output | Ask whether a lower objective proves collision freedom. Show the separate edge check; the simple solver is not CHOMP. |
-| P6: Cartesian tasks and comparison | 15 min joint goal versus desired tool path; 10 min optional BYU paper or worked task; 10 min hard/soft task requirements; 10 min dynamics preview; 5 min choose a method | Classify a painting waypoint as a hard requirement or a soft cost. Supply an IK example; do not assume students implemented IK. |
+| P6: Cartesian tasks and position-only optimization | 10 min joint goal versus desired tool path; 20 min working planar example: optimize joint waypoints so the tool hits Cartesian positions, orientation free (D9); 10 min the assigned simplified planar reading of the Bodily, Allen, and Killpack paper; 5 min hard/soft task requirements; 5 min choose a method | Classify a painting waypoint as a hard requirement or a soft cost. Students have implemented damped pseudo-inverse IK (TASKS D5(f)); use it for the painting task. Demo: `python -m examples.position_only_branching --show` (then `--kappa 0` and `--no-obstacle`); reading: [docs/readings/position_only_branching.tex](../readings/position_only_branching.tex). |
 
 All six planning sessions are currently reserved. Keep the shorter combined
 outline as a contingency only if the actual holiday/exam calendar removes time.
@@ -23,7 +23,7 @@ The P5 base and arm demonstration is the HW07 activity run with the completed
 faculty master: `python -m homework.hw07.hw07_optimization --show`. P1--P3 can
 use the HW06 activity the same way.
 
-## Week 8: computer vision
+## Computer vision (weeks 8--9)
 
 | Session | 50-minute sequence | Active check / preparation |
 | --- | --- | --- |
@@ -35,7 +35,7 @@ Prepare the perspective-correct pilot, calibration pairs, held-out check,
 and a sequence with timestamps before the unit. The OpenCV version of this
 material still needs implementation and compatibility testing.
 
-## Week 9: visual servoing
+## Visual servoing (weeks 9--10)
 
 | Session | 50-minute sequence | Active check / preparation |
 | --- | --- | --- |
@@ -48,10 +48,11 @@ moving-object example demonstrates a timed pickup with image-derived velocity.
 They still need an OpenCV-backed, student-ready exercise. A tool-camera image
 is available, but a closed-loop eye-in-hand demonstration still has to be
 built. A full spatial Jacobian
-derivation is outside this course's velocity scope. Wrist-camera feedback is
-a supported project option; teams may choose either camera.
+derivation is outside this course's velocity scope. Instructor decision,
+November 19: tool-camera IBVS is required for every student, so these three
+sessions are being reworked around it (TASKS.md open work).
 
-## Week 10: supervised learning and PyTorch
+## Supervised learning and PyTorch (weeks 10--11)
 
 | Session | 50-minute sequence | Active check / preparation |
 | --- | --- | --- |
@@ -63,7 +64,7 @@ Prepare balanced shapes/colors, grouped scene identifiers, consistent RGB
 preprocessing, a small CPU-sized model, a trained fallback, and independent
 test scenes. The current six-frame pilot is not a classifier dataset.
 
-## Week 11: reinforcement learning
+## Reinforcement learning (weeks 11--12)
 
 | Session | 50-minute sequence | Active check / preparation |
 | --- | --- | --- |
