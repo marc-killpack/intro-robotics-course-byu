@@ -1,0 +1,100 @@
+% New introductory planning exercise; no graduate HW06 material copied.
+\input{../handout.tex}
+\begin{document}
+\courseheader{6}{Configuration space and RRT-Connect}
+\textbf{Schedule:} planning unit; the instructor will set the due date.
+Use meters for the base, radians for arm joints, and the provided scenes.
+This assignment plans geometric paths; it does not yet assign time to them.
+
+\begin{enumerate}
+\item \textbf{A path describes the whole robot.}
+The provided planar arm has two revolute joints, lengths $0.4$ and $0.3$ m,
+and a circular obstacle centered at $(0.55,0)$ with radius $0.07$ m. Each
+link has radius $0.015$ m. Its start and goal configurations are
+$q_s=[-1.2,1.3]$ and $q_g=[1.2,-1.3]$ radians.
+\begin{enumerate}
+\item Sketch the start and goal arm poses and calculate their tool positions
+using your FK code. Identify the two configuration-space coordinates.
+\item The midpoint of the straight joint-space interpolation is $[0,0]$.
+Show by hand why the second link collides there even though the tool point
+itself is outside the obstacle. Check the start and goal using the supplied
+\texttt{arm\_scene()} and \texttt{scene.is\_free(q)}.
+\item Explain why valid start and goal configurations do not by themselves
+prove that the motion between them is collision-free.
+\end{enumerate}
+
+\item \textbf{Trace two trees by hand.}
+In an empty 2D configuration space, the start tree contains a root at
+$(0,0)$, node 1 at $(0.2,0)$ with parent 0, and node 2 at $(0.2,0.2)$ with
+parent 1. The goal tree has only its root at $(0.8,0.2)$. The planner tries
+to connect the goal tree to node 2 with step size $0.2$.
+\begin{enumerate}
+\item List the new goal-tree nodes and their parent indices. Assume exact
+arithmetic and that all edges are valid.
+\item List the complete path in start-to-goal order. Include the meeting
+point once. Explain which part of the goal-tree path had to be reversed.
+\end{enumerate}
+
+\item \textbf{Implement one tree extension.}\par
+In \path{src/intro_robotics/rrt.py}, complete \texttt{extend\_tree}.
+The supplied \texttt{Tree} stores configurations in \texttt{points} and
+matching parent indices in \texttt{parents}; \texttt{path\_to} follows
+parents back to the root. Input checks and \texttt{edge\_is\_free} are supplied.
+\begin{enumerate}
+\item Find the nearest existing node and move toward the target by at most
+\texttt{step}. Check the entire connecting edge at the specified resolution.
+\item For a valid extension, append the new point and its parent; return
+its index and whether it reached the target. For a blocked edge return
+\texttt{(None, False)} without changing the tree. If the target is already a
+node, return that node and \texttt{True}.
+\end{enumerate}
+\end{enumerate}
+
+\newpage
+\begin{enumerate}[start=4]
+\item \textbf{Connect the trees.}
+Complete \texttt{rrt\_connect} in the same file. Endpoint checks, a seeded
+random generator, and the tree class are provided.
+\begin{enumerate}
+\item Start one tree at each endpoint. Sample inside the supplied bounds,
+extend the active tree once, and repeatedly extend the other tree toward the
+new point until it connects or is blocked. Alternate active trees each attempt.
+For example, the provided generator can sample with:
+\begin{lstlisting}
+sample = rng.uniform(bounds[:, 0], bounds[:, 1])
+\end{lstlisting}
+\item When connected, use \texttt{path\_to} for each tree and assemble a path
+from start to goal without duplicating the meeting point. Return \texttt{None}
+if the iteration budget is exhausted. Explain why a failure does not prove
+that no path exists.
+\end{enumerate}
+
+\item \textbf{Check and visualize your planner.}
+From \path{/workspace} in the course container, run:
+\begin{lstlisting}
+python -m homework.hw06.hw06_planning
+python -m homework.hw06.hw06_planning --show
+python -m homework.hw06.hw06_planning --save tmp/hw06.png
+\end{lstlisting}
+The first command runs limited public checks. The viewer shows a circular
+base, the arm's configuration-space path, and several physical arm poses.
+\begin{enumerate}
+\item In a short script, call \texttt{base\_scene()} and run the planner for
+at least three seeds using the same step, edge resolution, and iteration
+budget. For each run report success/failure, planning time, and the sum of
+Euclidean distances between adjacent path points when a path is found.
+\item Check every path edge with the supplied function at a finer resolution.
+Compare the routes and report any failure. Why is this still not a proof of
+continuous collision freedom?
+\item Save the supplied arm view. Explain how a point in its configuration
+plot corresponds to an entire physical arm pose. State one limitation of
+the obstacle, joint metric, or collision model.
+\end{enumerate}
+\end{enumerate}
+
+\textbf{What to understand:} sampling and connecting two trees search for a
+feasible geometric route. The arm's full geometry and connecting motions
+must be checked. Time, velocity limits, and path optimization are later work.
+
+\submission
+\end{document}

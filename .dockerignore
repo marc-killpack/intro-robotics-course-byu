@@ -4,3 +4,7 @@
 student_ws/ros2_ws/build
 student_ws/ros2_ws/install
 student_ws/ros2_ws/log
+release_output
+docs/homework/build
+tmp
+src/*.egg-info

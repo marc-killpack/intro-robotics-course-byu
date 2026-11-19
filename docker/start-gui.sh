@@ -32,9 +32,15 @@ x11vnc -display "$DISPLAY" -forever -shared -nopw -localhost \
 websockify --web=/usr/share/novnc 0.0.0.0:6080 localhost:5900 &
 
 echo "RViz desktop: http://localhost:6080/vnc.html?autoconnect=1&resize=scale"
+echo "Open that address in your computer's web browser; Docker Desktop is not the RViz window."
+echo "The robot appears after the ROS package finishes building."
 
 source /opt/ros/jazzy/setup.bash
+if [ -f /workspace/pyproject.toml ]; then
+    # Install the mounted student/faculty tree, never a baked-in answer copy.
+    python -m pip install --no-deps --no-build-isolation -e /workspace
+fi
 cd /workspace/student_ws/ros2_ws
 colcon build --packages-select r2d2_demo
 source install/setup.bash
-ros2 launch r2d2_demo view_r2d2.launch.py
+ros2 launch r2d2_demo view_r2d2.launch.py use_joint_gui:="${COURSE_JOINT_GUI:-true}"

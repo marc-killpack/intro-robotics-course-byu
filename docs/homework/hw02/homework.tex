@@ -1,0 +1,96 @@
+% Conceptual adaptations of ME 537 HW02 P1, P3--P6, P9; no textbook assets copied.
+\input{../handout.tex}
+\begin{document}
+\courseheader{2}{Rotation matrices and coordinate frames}
+\textbf{Schedule:} week 2, approximately one week. \conventions
+
+\begin{enumerate}
+\item \textbf{Implement the basic rotation functions.}
+In \path{src/intro_robotics/transforms.py}, complete the HW02 methods
+\texttt{rot2}, \texttt{rotx}, \texttt{roty}, \texttt{rotz}, and
+\texttt{rot\_inv}. The supplied input checks explain invalid arguments.
+\begin{enumerate}
+\item First write the $2\times2$ XY rotation and the three $3\times3$
+named-axis rotations by hand. Define a positive rotation using the right-hand rule.
+\item Implement those matrices directly with NumPy. Use the rotation-matrix
+property for inversion; do not call \path{numpy.linalg.inv}.
+The supplied \texttt{axis\_rotation} helper is for physical joints; do not
+call it in these assigned functions.
+\item In a course-container shell at \path{/workspace}, run:
+\begin{lstlisting}
+python -m homework.hw02.hw02_rotations
+\end{lstlisting}
+Add two checks of your own at nonzero angles. Explain what each checks.
+\end{enumerate}
+
+\item \textbf{Distinguish fixed-axis and current-axis composition.}
+Start with a frame aligned with $W$.
+\begin{enumerate}
+\item Write the matrix product for a rotation by $a$ about X, then $b$
+about Z, then $c$ about Y, with all axes belonging to the fixed world frame.
+Write the product again when each rotation uses the current moving frame.
+Do not expand these symbolic products.
+\item Now use just two rotations: $+\pi/2$ about X followed by $+\pi/2$
+about Z. Calculate both final matrices by hand: first fixed axes, then
+current axes. For each, find the final local X axis expressed in $W$.
+Sketch the result and check the products using your functions.
+\end{enumerate}
+
+\item \textbf{Describe a camera using its axes.}
+The camera's local Z axis points along $[0,1,0]^T$ in the world. Its local Y
+axis points along $[0,0,-1]^T$ in the world.
+\begin{enumerate}
+\item Find its local X axis using right-handed geometry, then construct
+$\R{W}{C}$ by arranging the three axes as columns.
+\item Map the camera-frame vector $[1,2,3]^T$ into $W$. Check that its
+length is preserved. Explain what each column of $\R{W}{C}$ means.
+\end{enumerate}
+\end{enumerate}
+
+\newpage
+\begin{enumerate}[start=4]
+\item \textbf{Find a relative rotation.}
+Two frames have orientations relative to a common reference $A$:
+\[
+\R{A}{B}=\begin{bmatrix}1&0&0\\0&0&-1\\0&1&0\end{bmatrix},\qquad
+\R{A}{C}=\begin{bmatrix}0&-1&0\\1&0&0\\0&0&1\end{bmatrix}.
+\]
+\begin{enumerate}
+\item Derive the product for $\R{B}{C}$ and evaluate it by hand.
+Use frame labels to explain why the multiplication order is correct.
+\item Map $[1,0,0]^T$ from $C$ into $B$, then from $B$ into $A$.
+Compare with mapping directly from $C$ into $A$.
+\end{enumerate}
+
+\item \textbf{Visualize and update an orientation.}
+Run the supplied viewer inside the same ROS/Docker environment:
+\begin{lstlisting}
+python -m homework.hw02.hw02_rotations --show
+\end{lstlisting}
+The figure appears on the browser desktop from HW01; move or minimize RViz
+if it hides the Matplotlib window. Red, green, and blue lines are local
+X, Y, and Z. A save-only alternative is:
+\begin{lstlisting}
+python -m homework.hw02.hw02_rotations --save tmp/hw02.png
+\end{lstlisting}
+\begin{enumerate}
+\item In your own short script, create a \texttt{VizScene}, add the world
+frame and a second frame, and display either result from problem 2(b).
+The provided \texttt{add\_frame} accepts a $4\times4$ matrix: start with
+\texttt{np.eye(4)} and put your rotation into its top-left $3\times3$ block.
+Keep the example's fixed drawing offset $[0.5,0,0]^T$ in the final column
+so the two frames are easy to distinguish; change only the rotation block.
+\item Use \texttt{scene.update(As=[T\_world, T\_moving])} to change the
+second frame to the other result. Supply one transform for every frame you
+added. Save both views and explain the direction of the local X axis.
+\item Optional: vary one angle smoothly and animate the frame. Implementing
+the drawing library is not part of the assignment.
+\end{enumerate}
+\end{enumerate}
+
+\textbf{What to understand:} matrix columns are frame axes; composition
+order depends on the axes used; a rotation inverse has a special structure.
+No other orientation parameterizations are required.
+
+\submission
+\end{document}

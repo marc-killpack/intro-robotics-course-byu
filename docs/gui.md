@@ -10,12 +10,21 @@ docker compose build
 docker compose up -d
 ```
 
-Open <http://localhost:6080/vnc.html?autoconnect=1&resize=scale>. Compose
+Open your usual browser yourself and visit
+<http://localhost:6080/vnc.html?autoconnect=1&resize=scale>. Docker Desktop's
+dashboard is not the RViz display. The [setup guide](setup.md) explains host
+terminals, container shells, and shutdown. Compose
 binds port 6080 to the host's loopback address, so this desktop is intended
 for use on the same computer. Drag a slider in the **Joint State Publisher**
 window and watch the model update in RViz. To stop it, run
 `docker compose down`. The [demo README](../student_ws/ros2_ws/src/r2d2_demo/README.md)
 explains the ROS 2 topics involved.
+
+If the sliders seem absent, move or minimize RViz: the slider window can
+start behind it. In HW01 publisher mode the slider node is deliberately
+disabled; see the [assignment instructions](../homework/hw01/README.md).
+Closing the browser tab alone does not stop the container. After
+`docker compose down`, you may also quit Docker Desktop.
 
 To rotate the view, select **Move Camera** on the RViz toolbar and left-drag
 inside the dark 3D view. Use the mouse wheel to zoom. If you still see an old

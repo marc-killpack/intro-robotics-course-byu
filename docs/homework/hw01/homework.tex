@@ -1,0 +1,188 @@
+% Layout adapted from the instructor's ME 537 homework sources.
+\documentclass[12pt,letterpaper]{article}
+\usepackage{mathptmx}
+\usepackage[T1]{fontenc}
+\usepackage{xcolor,amsmath,amssymb,xurl,listings,enumitem}
+\textwidth=6.5in
+\textheight=9in
+\oddsidemargin=0in
+\evensidemargin=0in
+\topmargin=0in
+\headheight=0in
+\headsep=0in
+\parskip=0.10in
+\parindent=0in
+\setlist[enumerate]{itemsep=0.05in,topsep=0.04in}
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,columns=fullflexible,
+  keepspaces=true,showstringspaces=false,aboveskip=0.05in,belowskip=0.05in}
+
+\begin{document}
+\setlength{\fboxrule}{2pt}\setlength{\fboxsep}{2mm}
+\fcolorbox{black}{white}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{\centering\textbf{Introduction to Robotics Homework \#1 -- Draft}}}
+
+\textbf{ROS 2 setup, messages, and motion over time}
+
+This assignment checks your environment and introduces a small application:
+publishing robot joint positions. You do not need prior robotics experience
+or forward kinematics. The supplied robot is a visualization, not a physics
+simulation. Use the student repository supplied by the instructor.
+
+\begin{enumerate}
+\item \textbf{Install, start, and see the robot.}
+Read \path{docs/setup.md} and the guide for your operating system.
+\begin{enumerate}
+\item Install and start Docker Desktop on Windows or macOS. Windows uses
+Linux containers with WSL 2. Linux users follow the Docker Engine directions
+in the setup guide. Open the course repository folder in your editor.
+\item In a terminal \emph{on your computer}, change to that repository
+folder (the one containing \path{compose.yaml}) and run:
+\begin{lstlisting}
+docker compose build
+docker compose up -d
+\end{lstlisting}
+\item Open your usual web browser and visit this exact address:
+
+\url{http://localhost:6080/vnc.html?autoconnect=1&resize=scale}
+
+The page shows the container's Linux desktop and RViz. Docker Desktop's
+dashboard is a different application. Wait for the first robot-package build
+to finish. If needed, inspect \texttt{docker compose logs -f course}; Ctrl+C
+stops following the logs without stopping the container.
+\item Find the Joint State Publisher window. It may be \emph{behind RViz};
+move or minimize RViz to reveal it. Move the head and both leg sliders.
+Select \textbf{Move Camera} in RViz and drag in the 3D view; scroll to zoom.
+Save a screenshot with the robot and sliders visible and the head turned.
+\item Record your host operating system, Docker version, and image
+architecture. Run these in the host terminal:
+\begin{lstlisting}
+docker version
+docker image inspect intro-robotics-course:jazzy --format '{{.Os}}/{{.Architecture}}'
+\end{lstlisting}
+An Apple Silicon image should be \texttt{linux/arm64}; an x64 Windows image
+should be \texttt{linux/amd64}. Report setup difficulties and resolutions.
+\end{enumerate}
+\end{enumerate}
+
+\newpage
+\begin{enumerate}[start=2]
+\item \textbf{Publish a fixed joint pose from Python.}
+Disable the automatic slider publisher before running your node. In a
+\emph{host} terminal in the repository folder, run:
+\begin{lstlisting}
+docker compose -f compose.yaml -f compose.publisher.yaml up -d --force-recreate
+docker compose exec course bash
+\end{lstlisting}
+Refresh the browser page after the container is recreated. The second
+command opens a Linux shell \emph{inside the container}; ROS 2 is available
+there. Robot links may not appear until your first valid joint-state message;
+missing-transform messages before that are expected. In that shell, run:
+\begin{lstlisting}
+cd /workspace
+python3 homework/hw01/joint_publisher.py
+\end{lstlisting}
+The starter intentionally raises a homework-labeled
+\texttt{NotImplementedError}. Edit it using your host editor. Stop the node
+with Ctrl+C and rerun after edits; this Python file needs no image rebuild.
+
+The supplied \texttt{JointPublisher} class owns a publisher, a start time,
+and a timer. Complete these two methods:
+\begin{enumerate}
+\item \texttt{joint\_positions(elapsed)}: initially return a fixed list
+of three joint angles in radians, in the supplied joint-name order. Choose
+a visibly changed head pose and keep both legs within their limits.
+\item \texttt{publish\_joint\_state()}: create a \texttt{JointState}
+message, fill its timestamp, joint names, and positions, and publish it with
+\texttt{self.publisher}. The provided variables are \texttt{now},
+\texttt{positions}, and \texttt{JOINT\_NAMES}. For the timestamp use the
+ROS message form of \texttt{now}; consult the linked ROS tutorial.
+\end{enumerate}
+\texttt{support.py} supplies names and the explained
+\texttt{check\_joint\_positions} utility. You do not need to implement it.
+
+\begin{center}
+\begin{tabular}{lll}
+\hline
+Position in list & Joint name & Allowed angle (radians) \\
+\hline
+1 & \texttt{head\_yaw} & $[-1.57,\ 1.57]$ \\
+2 & \texttt{left\_leg\_tilt} & $[-0.5,\ 0.5]$ \\
+3 & \texttt{right\_leg\_tilt} & $[-0.5,\ 0.5]$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\item \textbf{Make the motion depend on time.}
+The provided timer calls your publishing method every 0.1 seconds.
+\begin{enumerate}
+\item Confirm that repeatedly publishing a fixed pose holds the same pose.
+Then change \texttt{joint\_positions(elapsed)} so the head moves smoothly
+back and forth with a period between 4 and 10 seconds. Keep all angles
+within their limits. Moving the legs smoothly is an optional extension.
+\item Compute positions from elapsed time; keep the timer callback short.
+Do not add a blocking \texttt{while} loop or a sleep inside that callback.
+Save a short screen recording, or two time-labeled screenshots with message
+evidence, showing different poses while the same node continues running.
+\end{enumerate}
+\end{enumerate}
+
+\newpage
+\begin{enumerate}[start=4]
+\item \textbf{Inspect messages and explain what is happening.}
+While your node runs, open a second host terminal in the repository folder
+and enter a second container shell with \texttt{docker compose exec course bash}.
+Run the following \emph{inside} that second shell:
+\begin{lstlisting}
+ros2 topic echo /joint_states --once
+ros2 topic hz /joint_states
+ros2 topic info /joint_states --verbose
+\end{lstlisting}
+Stop the rate display with Ctrl+C. Save one message and the observed rate.
+Check that your node is the only publisher of \texttt{/joint\_states}.
+Approximate 10 Hz is expected; report the measured value rather than
+claiming an exact rate. Answer briefly:
+\begin{enumerate}
+\item How do the joint names correspond to the values in \texttt{position}?
+What are the position units? What does the message timestamp represent?
+\item Why does repeated publishing of an unchanged position not produce
+motion? How does your time-dependent function change that?
+\item What does the timer do, and what does \texttt{rclpy.spin(node)} do?
+Describe one use of \texttt{self} in the provided class.
+\item Explain this chain in your own words:
+\begin{center}\small
+\texttt{/joint\_states} $\longrightarrow$
+\texttt{robot\_state\_publisher} $\longrightarrow$
+\texttt{/tf} $\longrightarrow$ RViz.
+\end{center}
+\end{enumerate}
+
+\item \textbf{Stop and restart safely.}
+Stop your Python node with Ctrl+C. In a \emph{host} terminal, stop the course
+container with:
+\begin{lstlisting}
+docker compose down
+\end{lstlisting}
+You can then close the browser tab and quit Docker Desktop. Closing only
+the browser tab does not stop the container. Your source files remain in the
+repository folder. To return to the original sliders later, start Docker
+Desktop and run \texttt{docker compose up -d --force-recreate}, then reopen
+the same web address.
+\end{enumerate}
+
+\textbf{Submit:} your completed Python file; setup screenshot and environment
+record; fixed-pose and timed-motion evidence; one joint-state message and
+measured rate; the short explanations above; and a statement of AI use
+(including ``none'' if applicable). Keep explanations concise. We will
+review correct behavior, readable code, and your understanding of the
+provided tools. Follow the instructor's submission destination and deadline.
+
+\textbf{References and troubleshooting}
+
+The repository's \path{docs/setup.md} and \path{homework/hw01/README.md}
+contain the terminal commands and troubleshooting notes in copyable form.
+The supplied code handles setup and shutdown; the homework focuses on
+message contents and motion over time.
+
+\url{https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Publisher-And-Subscriber.html}
+
+\url{https://docs.ros.org/en/jazzy/p/sensor_msgs/msg/JointState.html}
+\end{document}

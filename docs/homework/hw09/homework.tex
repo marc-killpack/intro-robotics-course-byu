@@ -1,0 +1,81 @@
+% New introductory visual-servoing exercise; faculty draft.
+\input{../handout.tex}
+\begin{document}
+\courseheader{9}{Planar visual feedback}
+\textbf{Schedule:} week 9. Work in a fixed world-plane XY frame; use meters,
+seconds, and radians. The camera measures a stationary planar target first.
+
+\textbf{Faculty draft:} The student controller scaffold, detector interface,
+and simulator activity still need to be prepared and reviewed before release.
+
+\begin{enumerate}
+\item \textbf{Calculate a feedback command by hand.}
+A measured target is $p_t=[0.42,0.08]^T$ m, and the tool position from FK
+is $p_e=[0.37,0.05]^T$ m, both in the world plane. The gain is
+$k=1.5\ \mathrm{s}^{-1}$ and the current planar Jacobian is
+\[
+J_{\rm planar}=\begin{bmatrix}0.1&0\\0&0.2\\1&1\end{bmatrix}.
+\]
+The two joint rates are in rad/s; the first two rows map them to tool XY
+velocity in m/s, and the third maps them to upright angular velocity.
+\begin{enumerate}
+\item Calculate the position error $e=p_t-p_e$ and desired tool velocity
+$v_d=ke$. Sketch both vectors. What are their units?
+\item Use the first two rows $J_p$ to solve $J_p\dot q=v_d$ for this case.
+Then limit each joint rate to the interval $[-0.6,0.6]$ rad/s and calculate
+the resulting XY velocity $J_p\dot q$. Explain why the limited velocity can
+differ from $v_d$.
+\end{enumerate}
+
+\item \textbf{Implement a small visual-feedback command.}
+The provided interface will supply a planar arm, joint state, fixed-camera
+target detection, a damped velocity-solve helper, and a joint-rate limiter.
+Use the completed FK and \texttt{jacob\_planar} from earlier homeworks.
+\begin{enumerate}
+\item Write a short function that obtains the tool XY position from FK,
+forms $e=p_t-p_e$, and asks the supplied solver to map $ke$ to joint rates
+using the first two Jacobian rows. Limit the returned rates.
+\item If detection is missing, return a zero joint-velocity command rather
+than reusing an old target. Explain why the target and tool must be expressed
+in the same frame. The target input comes from an image measurement; do not
+use the simulator's true object position as the controller input.
+\end{enumerate}
+\end{enumerate}
+
+\newpage
+\begin{enumerate}[start=3]
+\item \textbf{Run and examine the closed loop.}
+Use the provided stationary-target simulation and image detector. The
+simulator advances at fixed time steps and limits joint speed and acceleration.
+\begin{enumerate}
+\item Run from the supplied initial configuration. Plot measured XY error
+magnitude and commanded joint rates against simulated time. Show an initial
+and a final image or visualization, and report the final measured error.
+Mark missing measurements on the error plot.
+\item Repeat with one changed gain, keeping the initial pose and scene the
+same. Compare the plots and explain one difference or failure. A failure
+should be diagnosed, not hidden; convergence is not guaranteed for every case.
+\item During the supplied detection-loss interval, verify that the requested
+command is zero. Explain why the simulated arm may take time to stop even
+though the request becomes zero immediately.
+\end{enumerate}
+
+\item \textbf{Reason about a camera near the tool.}
+\begin{enumerate}
+\item A camera rigidly attached near the tool moves when the arm moves.
+Explain why a homography fitted for a fixed camera generally cannot be
+reused unchanged as the camera moves.
+\item If the camera is offset from the tool, why does placing the target at
+the image center not necessarily put the tool over the target? Describe what
+additional frame relationship or reference observation would be needed.
+\end{enumerate}
+An eye-in-hand implementation and moving-target prediction are optional
+extensions; no general spatial Jacobian or singularity derivation is required.
+\end{enumerate}
+
+\textbf{Project connection:} Use the same image-derived target and bounded
+joint commands to approach a conveyor object before timed pickup. The project
+may use either supported camera after the fixed-camera practice here.
+
+\submission
+\end{document}

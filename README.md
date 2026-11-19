@@ -1,128 +1,166 @@
-# Introduction to Robotics
+# Introduction to Robotics: instructor source
 
-Starter repository for the Mechanical Engineering introduction to robotics
-course. The initial goal is a repeatable ROS 2 environment with RViz on
-Windows, macOS, and Linux. Course lessons and simulation choices will be added
-after the environment is established.
+A 14-week Mechanical Engineering course connecting robot geometry, planning,
+vision, feedback, and learning. Students have prior linear algebra and Python
+but may be new to classes and robotics. This faculty repository contains
+completed masters and prototypes; generate a reviewed student copy rather
+than distributing this working tree.
 
-The [course requirements and roadmap](COURSE_ROADMAP.md) records the intended
-finished course, open decisions, and a research brief for finding comparable
-teaching materials.
+## Faculty planning: start here
 
-## Course environment
+1. **[TASKS.md](TASKS.md)**: decisions needed from the instructor, the review
+   queue of draft material, and open work.
+2. **[Planning and design index](docs/design/README.md)**: what every other
+   planning document is for, plus decisions already made and their rationale.
+3. [Course roadmap](COURSE_ROADMAP.md): goals, scope, and the weekly sequence.
 
-- Ubuntu 24.04 and ROS 2 Jazzy in Docker
-- Docker Compose is the base workflow; VS Code dev containers can be layered
-  on top later without changing the image
-- `student_ws/ros2_ws/` for ROS 2 packages and `student_ws/python/` for
-  standalone Python work
-- A small R2D2-like robot, joint sliders, and RViz open in a local browser
-  page using software rendering; no host X11 server is required
+Student-facing entry points: [setup and browser access](docs/setup.md) and the
+[student homework guide](STUDENT_GUIDE.md).
 
-The reference repositories in the development workspace informed this layout:
-the rover project for ROS 2/Docker practices, the Baxter lab for GUI and
-platform troubleshooting, and the robotics homework repository for separating
-student materials from faculty solutions and preparing reviewed releases.
+## Start RViz
 
-## Start here
+Start Docker Desktop (Windows/macOS), or the Linux Docker engine. From this
+folder in a **host terminal**:
 
-Install Docker Desktop on Windows/macOS, or Docker Engine with the Compose
-plugin on Linux. Apple Silicon setup is detailed in [docs/macos.md](docs/macos.md),
-which also has a starter validation section for Intel Macs. From this
-repository's root directory, build and start the image:
-
-```bash
+```text
 docker compose build
 docker compose up -d
 ```
 
-Open <http://localhost:6080/vnc.html?autoconnect=1&resize=scale> to see the
-robot in RViz and move its three joint sliders. This is the first student
-[installation exercise](student_ws/ros2_ws/src/r2d2_demo/README.md). See
-[docs/gui.md](docs/gui.md) for display details. Open a ROS-enabled shell:
+**Open your browser yourself** and visit:
 
-```bash
-docker compose exec course bash
-```
+**<http://localhost:6080/vnc.html?autoconnect=1&resize=scale>**
 
-Stop the environment with:
+This local Linux desktop contains RViz and joint sliders. Docker Desktop's
+dashboard is a different window. Wait for the robot package to build. If
+sliders seem missing, move/minimize RViz to reveal their window behind it.
+Use Move Camera and drag to orbit; scroll to zoom.
 
-```bash
+Read [the setup guide](docs/setup.md), including its distinction between a
+host terminal and a ROS-enabled container shell. See platform details for
+[Windows](docs/windows.md) and [macOS](docs/macos.md).
+
+To stop, run this in a **host terminal**:
+
+```text
 docker compose down
 ```
 
-Inside the shell, build and source the student ROS workspace with:
+Then close the browser tab and optionally quit Docker Desktop. Closing only
+the browser tab leaves the container running. Source files remain on disk.
+After a Docker update/reboot, restart the engine and run `docker compose up -d`.
 
-```bash
-cd /workspace/student_ws/ros2_ws
-colcon build
-source install/setup.bash
+## HW01 publisher mode
+
+The student writes a short ROS 2 publisher that first holds a pose and then
+animates joints using a timer. Disable the automatic slider publisher with:
+
+```text
+docker compose -f compose.yaml -f compose.publisher.yaml up -d --force-recreate
+docker compose exec course bash
 ```
 
-The Python workspace is available under `/workspace/student_ws/python`.
-
-## Apple Silicon Mac setup
-
-These steps are for any M-series Mac. Install and start **Docker Desktop for
-Apple Silicon**, then open Terminal. `uname -m` should print `arm64`, and
-`docker info --format '{{.OSType}}/{{.Architecture}}'` should report a Linux
-ARM64 engine. From this folder, run:
+In that container shell:
 
 ```bash
-docker compose build
-docker compose up -d
+cd /workspace
+python3 homework/hw01/joint_publisher.py
 ```
 
-Open <http://localhost:6080/vnc.html?autoconnect=1&resize=scale> in your
-browser. RViz and the robot's slider window should appear there. Use `docker compose exec course bash` for
-student code and `docker compose down` when finished. The image uses a native
-ARM64 ROS 2 base and a software-rendered browser desktop; XQuartz is not
-required. See [the full Mac guide](docs/macos.md) for first-run checks and
-troubleshooting.
+**Here that file is the completed instructor master.** The release generator
+removes its two answer blocks. Follow the [HW01 guide](homework/hw01/README.md)
+when preparing student directions. Returning to `docker compose up -d
+--force-recreate` restores the sliders. Refresh the browser after recreation.
 
-### Intel Mac (to validate)
+## Rotation, transform, FK, and planar-Jacobian homeworks
 
-An Intel Mac should use the same Compose commands with a `linux/amd64` image.
-This has not yet been checked on Intel hardware. The [Intel Mac validation
-section](docs/macos.md#intel-mac-validation-to-do) lists what to record and
-where to add any platform-specific directions.
+`src/intro_robotics/` keeps `SerialArm` and `fk`, introduces explicit `Joint`
+geometry, and provides a checked `jacob_planar` returning three task rows.
+FK and visualization support spatial arms; the planar Jacobian deliberately
+rejects spatial mechanisms. A supplied DH adapter demonstrates future
+graduate-course reuse without making DH an undergraduate topic.
+
+The first renderer uses Matplotlib lines, joint markers, physical axes, and
+frames. It does not depend on the old DH-specific mesh renderer or a ROS
+runtime. The cumulative HW02--HW05 drafts assign nine short mathematical
+methods; input checks, physical joint modeling, and drawing are supplied.
+The release generator removes the mathematical answer bodies while retaining
+their guidance and homework-labeled errors. The DH adapter and project
+prototypes stay faculty-only. These boundaries await faculty review.
+
+The same Docker desktop now includes NumPy, Matplotlib, and Tk. Rebuild it
+after pulling these environment changes. In a container shell at `/workspace`:
+
+```text
+python -m homework.hw02.hw02_rotations --show
+python -m homework.hw03.hw03_transforms --show
+python -m homework.hw04.hw04_fk --show
+python -m homework.hw04.play_arm
+python -m homework.hw05.hw05_planar_jacobian --show
+```
+
+The completed faculty methods make those demonstrations run here. Students
+complete each stage before its scene can run. See the
+[student guide](STUDENT_GUIDE.md) for cumulative dependencies and save-only use.
+
+For faculty Python development, create a virtual environment and run:
+
+```text
+python -m pip install -e .
+python -m unittest discover -s tests/instructor -v
+python examples/arm_viewer.py --model planar
+```
+
+Choose `--model spatial` or `--model dh` for the other examples. See the
+[prototype guide](docs/design/arm-prototype.md) for frames, checks, and limits.
+
+## One-object conveyor pilot
+
+```text
+python examples/conveyor_pilot.py
+```
+
+This headless faculty pilot exercises bounded joint motion, a finite-time
+vertical pickup/lift, release over a bin, and both fixed/tool-mounted camera
+images. The supplied debug controller uses true positions; image-based
+tracking and visual servoing remain the next milestone. See
+[the pilot guide](docs/design/conveyor-pilot.md) for outputs and limitations.
+The simulation/camera prototypes are excluded from the student release.
+
+## Current validation
+
+The original demo was observed on Apple Silicon (`linux/arm64`) in October
+2026. On November 12, 2026 it built and launched on Windows/WSL 2
+(`linux/amd64`), including all sliders and camera controls. RViz reported
+OpenGL 4.5 with software rendering, and ROS joint states matched TF.
+The [Windows record](docs/windows.md) identifies observed versions and limits.
+On November 13 the rebuilt image also passed the foundation activities,
+frame updates, and a real Tk slider/event-loop check. This automated check
+does not establish hands-on usability on other platforms. See the
+[validation record](docs/design/validation.md) and remaining tasks.
+
+## Student release
+
+```text
+python -m release_tools --dry-run
+```
+
+The preview copies an explicit HW01--HW05 allowlist, strips answers only in that
+copy, validates Python syntax, reports input hashes/source revision, then
+discards it. Real review copies require clean, committed source. Publication
+is a separate faculty action. Never strip the instructor working tree.
 
 ## Repository layout
 
 ```text
-docker/                 Container image definition
-docs/                   Platform setup and maintenance notes
-instructor/             Faculty-only material (not for student releases)
-release_tools/           Student publication workflow notes
-student_ws/python/       Standalone Python exercises
-student_ws/ros2_ws/src/  Student ROS 2 packages, starting with r2d2_demo
+docker/                 Linux ROS 2/browser-desktop startup
+docs/                   Setup, design rationale, faculty LaTeX sources
+homework/hw01--hw05/    Activities, provided models, and marked publisher master
+src/intro_robotics/     Marked math masters and supplied geometry/drawing
+examples/              Faculty prototype demonstrations
+tests/instructor/      Numerical, release, and maintenance checks
+tests/public/          Limited student checks by assignment
+instructor/            Migration records and improvement lists
+release_tools/         Allowlisted, separate student-copy generation
+student_ws/            Persistent standalone Python and ROS workspaces
 ```
-
-## Course content roadmap
-
-The course repository is intended to grow in stages: homogeneous transforms;
-forward kinematics and DH parameters; 2.5D velocity kinematics and Jacobians;
-path planning for arms and mobile bases; computer vision and visual servoing;
-then learned vision models and reinforcement-learning policies. Simulator
-selection (Gazebo, MuJoCo, or another ROS 2-compatible option) remains open
-until the baseline workflow has been exercised across student platforms.
-
-## Instructor release workflow
-
-Keep canonical instructor material in the maintained repository. Before a
-student handout/repository is published, create a reviewed student copy or
-release from a clean revision and inspect its contents. Do not put private
-solutions in student-facing workspaces. A later release script should use an
-explicit allowlist and operate on a copy, following the safer pattern used by
-the reference robotics homework repository.
-
-## Current status
-
-The Apple Silicon container builds as `linux/arm64`. On the instructor Mac,
-RViz started with OpenGL 4.5 and the browser desktop served successfully.
-The R2D2-like demo now starts on the instructor Mac: its head slider changed
-`/joint_states` and the RViz picture. Classroom responsiveness and other host
-platforms still need a hands-on check.
-Intel Mac, Windows, and Linux results should be recorded after tests on
-representative machines.
-

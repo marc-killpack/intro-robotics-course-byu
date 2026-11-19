@@ -1,0 +1,31 @@
+% Shared layout adapted from the instructor's ME 537 homework sources.
+\documentclass[12pt,letterpaper]{article}
+\usepackage{mathptmx}
+\usepackage[T1]{fontenc}
+\usepackage{xcolor,amsmath,amssymb,xurl,listings,enumitem,tikz}
+\textwidth=6.5in
+\textheight=9in
+\oddsidemargin=0in
+\evensidemargin=0in
+\topmargin=0in
+\headheight=0in
+\headsep=0in
+\parskip=0.08in
+\parindent=0in
+\setlist[enumerate]{itemsep=0.04in,topsep=0.04in}
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,columns=fullflexible,
+keepspaces=true,showstringspaces=false,aboveskip=0.04in,belowskip=0.04in}
+\newcommand{\R}[2]{{}^{#1}\!R_{#2}}
+\newcommand{\T}[2]{{}^{#1}\!T_{#2}}
+\newcommand{\courseheader}[2]{%
+\setlength{\fboxrule}{2pt}\setlength{\fboxsep}{2mm}%
+\fcolorbox{black}{white}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{\centering\textbf{Introduction to Robotics Homework \##1 -- Draft}}}\par
+\textbf{#2}\par}
+\newcommand{\conventions}{Use right-handed rotations, column vectors, radians,
+and meters. $\R{A}{B}$ maps coordinates from frame $B$ into frame $A$;
+$\T{A}{B}$ also includes the origin of $B$ expressed in $A$.}
+\newcommand{\submission}{\textbf{Submit:} labeled hand derivations and sketches,
+your changed Python source files, the requested numerical/visual evidence,
+and an AI-use statement (including ``none'' if applicable). Show your reasoning
+before using code to check hand calculations. Public checks are intentionally
+limited. The instructor supplies the deadline and submission destination.}

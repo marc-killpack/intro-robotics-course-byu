@@ -4,6 +4,13 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 dist/
+*.egg-info/
+
+# Faculty build and review output
+docs/homework/build/
+output/pdf/
+release_output/
+tmp/
 
 # ROS 2 / colcon
 student_ws/ros2_ws/build/

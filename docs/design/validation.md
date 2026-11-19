@@ -1,0 +1,338 @@
+# Foundation validation record
+
+Updated November 18, 2026. This record covers the uncommitted faculty change
+set, not a published semester release. [TASKS.md](../../TASKS.md) distinguishes
+implemented work from faculty approval and further platform validation.
+
+## November 18: regular OpenCV selected
+
+The instructor chose GUI-enabled `opencv-python==4.10.0.84`. The updated
+Dockerfile was built as a separate AMD64 test image and with
+`docker compose build` under the normal course image tag. NumPy remains the
+image's system package. The previously stopped course container was not
+recreated; start it with the updated image when needed. The local faculty
+virtual environment was also switched to GUI-enabled OpenCV 4.14.0.94, its
+existing OpenCV version, with NumPy 2.5.3 unchanged.
+
+In isolated AMD64 containers, the new image passed 14 checkerboard/waypoint
+tests and 16 public checks. The publisher-mode ROS probe saw RViz and
+robot-state-publisher and received 25 bounded joint-state messages at 10.00 Hz.
+The noVNC page returned HTTP 200; the OpenCV and Matplotlib windows opened and
+processed events on the actual Xvfb desktop. A screenshot of that virtual
+display was inspected. This did not test keyboard interaction through noVNC.
+The GUI probe is `tests/instructor/opencv_gui_probe.py`; the temporary test
+containers were stopped and removed.
+
+The [regular OpenCV release](https://pypi.org/project/opencv-python/4.10.0.84/#files)
+provides a Linux ARM64 wheel, but the revised image and its interactive GUI
+have not yet been run on Apple Silicon. A hands-on browser check also remains.
+
+## November 18: OpenCV GUI comparison
+
+An isolated, network-disabled AMD64 container used the current course image
+and a separate temporary virtual environment with GUI-enabled
+`opencv-python==4.10.0.84`. Its OpenCV Qt window and a Matplotlib Tk window
+were both found on the Xvfb display while an RViz process remained running.
+This checked window creation and process coexistence; it did not visually
+test the noVNC browser interaction or execute on Apple Silicon. The disposable
+container was removed. At the time of this comparison the course image still
+used headless OpenCV; the instructor subsequently chose the regular package.
+
+## November 17: OpenCV and checkerboard
+
+The Windows host faculty environment passed **73 instructor tests** and
+**16 public checks** with OpenCV 4.14 and NumPy 2.5.3. The six new
+checkerboard tests check reproducible images, detected corner order against
+camera projection, supplied observations, four fit versus 31 held-out points,
+a missing board, and a point above the calibration plane.
+
+The revised Dockerfile built successfully under the separate tag
+`intro-robotics-course:opencv-test` using cached base/apt layers. It installed
+headless OpenCV 4.10.0.84 alongside NumPy 1.26.4 in the course virtual
+environment. In isolated AMD64 containers, 14 checkerboard/waypoint tests and
+16 public checks passed. A separate publisher-mode startup probe observed
+RViz and robot-state-publisher, no competing slider publisher, and 25 bounded
+joint-state messages at 10.00 Hz; stripped HW01 placeholders also raised the
+expected errors. These were process-level checks without a browser GUI review.
+All temporary containers used for the checks were stopped and removed.
+
+Docker Hub DNS failed immediately after Desktop started; a retry after DNS
+became available completed the build. A subsequent `docker compose build`
+updated the normal `intro-robotics-course:jazzy` image, whose OpenCV import
+was checked. The existing stopped course container was not recreated or
+started; it must be recreated to use the new image. The same pinned version
+had an available Linux ARM64 wheel, but that image was not run on Apple
+Silicon. At this stage the OpenCV package was headless.
+
+For the ideal synthetic board, the four fit corners are disjoint from 31
+held-out checks. The oblique-view plane RMSE was approximately 0.0004 m, and
+the view-to-view RMSE approximately 0.245 pixels. These are ideal-scene results,
+not guarantees for real cameras. The raw views and the rectified comparison
+were visually inspected. See [the activity design](checkerboard-activity.md).
+
+```text
+python -m examples.checkerboard_homography
+python -m unittest tests.instructor.test_checkerboard_homography -v
+docker build -t intro-robotics-course:opencv-test -f docker/Dockerfile .
+docker compose build
+```
+
+## November 17: moving-object image feedback
+
+The Windows host faculty suite passed **67 instructor tests** and **16 public
+checks**. New behavioral tests check image-timestamp velocity estimation,
+zero commands and cleared history after detection loss, removal of a lifted
+object from the flat belt image, one complete moving-object sort, and that
+importing the demo does not force a headless plotting backend.
+
+In that ideal fixed-camera run, image-derived position and velocity guided
+the arm to a red object on a belt moving at 0.04 m/s. The controller used a
+known bin location, joint state, calibration, and actuator phase; simulator
+truth was confined to image generation and evaluation/animation. The object
+was sorted in 4.88 simulated seconds with no failed pickups or joint-limit
+hits. Five deliberately blank images produced zero requested joint velocity;
+finite acceleration limits still govern how the arm slows. This single
+noiseless run is not a calibrated grade or evidence for wrist-camera control.
+The saved top-down GIF and four-panel plot were visually inspected.
+
+```text
+python -m examples.moving_visual_servo_pilot --animation tmp/vision-pilot/moving-sort.gif
+python -m unittest tests.instructor.test_moving_visual_servo_pilot -v
+```
+
+## November 17: waypoint optimization follow-up
+
+The Windows host faculty environment passed **62 instructor tests** and
+**16 public checks** after adding HW07. The six HW06--HW07 public checks are
+drafts; the HW01--HW05 manifest at that time selected 54 files, stripped 11
+solution regions, and includes its original 10 public checks. A separate
+temporary cumulative HW06--HW07 preview strips both methods in each new
+assignment and verifies that imports resolve to the temporary tree. No new
+student release was published.
+
+The supplied NumPy base optimizer reduced the seeded path objective from
+about 0.080 to 0.0015, with a separate finer sampled edge check passing.
+A direct seed's objective decreased but its resulting path was invalid. The
+two-joint arm refinement reduced its geometric smoothness cost from about
+1.44 to 0.108, and passed a finer nominal-scene check after planning with
+extra clearance. An earlier coarser arm check missed a collision, so neither
+the extra clearance nor these sampled results establish continuous safety.
+The two-page HW07 handout was compiled, rendered, and visually inspected;
+the reviewed build had no overfull/underfull or LaTeX warnings. The host
+formatter check also passed. The Docker daemon remained stopped; the new
+activities and dependencies were not checked in the course image.
+
+```text
+python -m unittest discover -s tests/instructor -q
+python -m unittest discover -s tests/public -q
+python -m homework.hw07.hw07_optimization --save tmp/hw07.png
+python docs/homework/build_pdfs.py hw07 --render
+```
+
+## November 17: planning and vision integration
+
+The Windows host faculty environment passed **53 instructor tests** and
+**13 public checks**. Three of the public checks are for draft HW06; the
+current student release manifest still includes only the 10 HW02--HW05
+public checks. The additional private tests cover whole-link and sampled-edge
+collisions, nonadjacent self-collision, reproducible base/arm RRT paths,
+perspective-correct plane drawing, held-out calibration geometry, image-based
+tracking, detection loss, and feedback direction.
+
+The HW06 student-preview test constructs a temporary tree from the existing
+release plus explicitly selected HW06 files. It verifies that both marked
+planner methods are replaced by their labeled `NotImplementedError`, the
+provided edge checker works, and imports resolve to the temporary student
+tree. The actual release manifest was not extended. HW06's two-page LaTeX
+handout was compiled, rendered, and visually inspected; the reviewed build has
+no overfull/underfull or LaTeX warning messages.
+
+The seeded planning activity found a circular-base path and a two-joint arm
+path; the arm path also passed finer sampled edge checks in the test. The
+oblique-camera scene uses four ideal fit points and an independent fifth
+point. Its six-frame image-based estimate had about 0.0010 m maximum position
+error and 0.0406 m/s mean estimated X velocity for a 0.0400 m/s target.
+The separate fixed-camera stationary-target feedback pilot reached about
+0.008 m true error in 3.00 simulated seconds and requested zero velocity
+during five deliberately lost frames. These results are for simplified,
+noiseless faculty prototypes; they are not project scoring thresholds.
+
+```text
+python -m unittest discover -s tests/instructor -v
+python -m unittest discover -s tests/public -v
+python -m homework.hw06.hw06_planning --save tmp/hw06.png
+python examples/oblique_camera_pilot.py
+python examples/vision_measurement_pilot.py
+python -m examples.visual_servo_pilot
+python docs/homework/build_pdfs.py hw06 --render
+```
+
+The host virtual environment did not have OpenCV, SciPy, PyTorch, Gymnasium,
+or Stable-Baselines3. The Docker daemon was stopped, so no new image build,
+ROS regression, or new dependency compatibility check ran on November 17.
+The November 13 Docker observations below remain historical evidence, not a
+claim that the newer HW06/vision pilots were exercised in that image.
+
+## November 13: completed foundation drafts
+
+The host faculty environment passed 37 instructor tests and all 10 limited
+public checks. New checks cover named-axis matrices, rigid inverses, the
+handout's camera/base/spatial-arm numerical cases, labeled frame updates,
+combined scene bounds, and actual generated-package imports. The existing
+conveyor, DH-adapter, release, and HW01 support checks still pass.
+
+```text
+python -m unittest discover -s tests/instructor -v
+python -m unittest discover -s tests/public -v
+python -m release_tools --dry-run
+python docs/homework/build_pdfs.py hw02 hw03 hw04 hw05 --render
+```
+
+HW02--HW05 each build to two letter-size pages. All eight pages were rendered
+and visually inspected, including revised diagram labels and page breaks.
+The reviewed build has no overfull/underfull or LaTeX warning messages.
+The four activity images were rendered inside Docker and inspected; HW05
+uses a top view so its instantaneous velocity arrow is readable. Build
+outputs remain under ignored `docs/homework/build/hwNN/` and graphics under
+`tmp/foundations-gui/`.
+
+### Rebuilt image and actual GUI backend
+
+Native AMD64 Docker image on the same Windows/WSL 2 host. Ubuntu packages
+provide NumPy 1.26.4 and Matplotlib 3.6.3; the course virtual environment
+inherits those packages. Startup installs the mounted source, so no faculty
+package or solution files are baked into the image.
+
+- The 9 kinematics, 8 transform/reference, and 4 visualization tests passed
+  inside this image, along with all 10 public checks.
+- All four `python -m homework.hwNN... --save ...` activities passed.
+- `python -m tests.instructor.foundations_gui_probe` opened real TkAgg
+  windows on display `:1`. A Tk timer updated a coordinate frame and the
+  spatial arm's shoulder slider, drew/saved both figures, then closed them.
+- The existing HW01 probe again observed RViz/robot-state-publisher with the
+  slider publisher disabled, 25 valid moving messages at 10 Hz, and the
+  expected generated-HW01 errors. ROS setup was sourced for the probe.
+
+These are automated Linux-GUI checks on a Windows host, separate from the
+instructor's earlier hands-on RViz confirmation. They do not establish
+interactive usability/performance on all student laptops.
+
+### Generated student installation
+
+The draft manifest at that time selected 54 files and removed 11 answer regions. Only
+`tests/public` is included; the DH adapter, camera/conveyor modules, private
+tests/keys, and all faculty handout sources/build output are absent.
+
+A retained, explicitly dirty faculty preview is in
+`release_output/foundations-preview-2026-11-13/`, with its JSON report beside
+it. This is a review artifact, not a publishable release. The preview was
+mounted read-only into a second temporary container, copied to that
+container's writable `/workspace`, and installed by the real startup script.
+It built the ROS package and launched RViz successfully.
+
+The probe confirmed imports came from `/workspace/src`, every selected
+package module imported, all nine mathematical methods raised their own
+homework-labeled placeholder errors, and excluded modules were unavailable.
+HW05's placeholder was isolated with an identity FK only in the probe.
+All 10 public checks produced expected homework-labeled errors on the empty
+scaffold, with no assertion/import failures. Provided standalone frame
+drawing and a real Tk update worked before any assigned methods were filled.
+The host preview remained unmodified. Nothing has been published.
+
+Both temporary validation containers were stopped and removed after the
+checks. The course image and ignored preview/graphics remain available for
+faculty review; no unrelated container was stopped.
+
+### Remaining review
+
+Faculty review of problems, keys, APIs, and release boundaries; a student
+workload pilot; updated Apple Silicon/other-host validation; and clean-source
+publication remain open. The graduate source repository remains unchanged.
+
+## November 12: initial HW01 and prototype evidence
+
+The observations below record the earlier HW01-only scope. The November 13
+checks above supersede its file/test counts and foundation-assignment status.
+
+### Python and release checks
+
+Run in the faculty virtual environment from the repository root:
+
+```text
+python -m unittest discover -s tests/instructor -v
+python -m release_tools --dry-run
+```
+
+Twenty-six instructor tests passed. They cover known spatial FK configurations
+and base/tool offsets; arbitrary physical joint axes; planar Jacobians versus
+central finite differences including redundancy, negative upright axes, and
+in-plane translation; rejected spatial mechanisms and vertical actuators;
+selected-reference planarity; DH adapter equivalence; input explanations;
+URDF/HW01 name and limit consistency; marker validation and stripping;
+source preservation, nonoverwrite, and clean-source release gates; and
+offscreen visualization/slider updates for general geometry; fixed/tool
+camera projection, depth, and image pixels; free-motion speed/acceleration
+bounds and hard joint stops; finite pickup/lift/release time; continued belt
+motion during pickup; relative-speed rejection; and camera motion with the
+vertical stroke.
+
+The actual HW01 preview selects 26 explicit files, removes two answer blocks,
+parses generated Python, and checks local Markdown links. It excludes the
+arm prototype, instructor/test files, LaTeX, and generated documents.
+The dirty-source preview is discarded. A real student release remains pending
+clean source and faculty inspection; nothing has been published.
+
+### Live ROS image checks
+
+Docker engine 29.9.3 on Windows/WSL 2, native AMD64 course image. The image
+was rebuilt after the startup/launch changes. Temporary containers used
+separate ROS domains and published no host ports.
+
+- Default startup: `joint_state_publisher`, `robot_state_publisher`, and
+  `rviz` all observed; RViz logged OpenGL 4.5.
+- Publisher startup (`COURSE_JOINT_GUI=false`): RViz and robot-state-publisher
+  observed, slider publisher absent.
+- The real `JointPublisher` timer produced 25 bounded, named messages at
+  10.00 Hz; timestamps increased and head positions changed. Only one
+  publisher was present on `/joint_states`.
+- Generated student code failed with the expected `joint_positions` HW01
+  error. After supplying a temporary fixed-pose implementation only in the
+  probe, its second method raised the expected publishing-method error.
+- Both temporary containers were stopped and removed.
+
+The repeatable integration probe is `tests/instructor/ros_hw01_probe.py`.
+It runs inside a ROS-enabled publisher-mode test container and is not a
+student artifact or part of host-only unittest discovery.
+
+### Handout and graphics review
+
+```text
+python docs/homework/build_pdfs.py hw01 --render
+```
+
+The handout builds to three letter-size pages using the previous course's
+general LaTeX style. Every page was rendered and visually inspected; there
+are no LaTeX overfull/underfull warnings in the reviewed build. Header,
+commands, table, links, footer spacing, and page breaks were checked.
+Build output remains ignored under `docs/homework/build/hw01/`.
+
+Planar, mixed-axis spatial/prismatic, and DH-adapted examples were rendered
+offscreen with sliders and inspected. Updated joint/traveler/tool positions
+and physical-axis drawing are also checked numerically. Preview PNGs are
+ignored under `tmp/arm-preview/`. This is the initial line-based renderer;
+hands-on Windows and Apple Silicon interaction still needs faculty review.
+
+### Limits and next gate at that stage
+
+The [one-object pilot](conveyor-pilot.md) completed one sort in 2.72 simulated
+seconds with no failed pickups or joint-limit hits. The trajectory, tool
+height, and both camera images were generated and inspected. Its reference
+controller uses true positions for debugging; it is not yet image-based
+control or a fair conventional-versus-RL grading benchmark.
+
+The original RViz interaction was confirmed by the instructor on Windows,
+including all sliders and camera controls. Revised launch modes were checked
+through ROS/process behavior, not a second visual browser session. Other
+host types, Matplotlib interaction/performance, later homework boundaries,
+image-based tracking/feedback, richer scene rendering, grading thresholds, and learning runtimes
+remain open tasks. The graduate repository was not modified.

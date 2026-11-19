@@ -23,11 +23,10 @@ lists ARM64 support for the official base image used here.
 
    Expected: `arm64`, then `linux/aarch64` (or `linux/arm64`), and a Compose
    version. Docker Desktop may ask for permission to initialize on first run.
-3. From the parent directory that contains this repository, enter it, then
+3. Open Terminal in the cloned course folder containing `compose.yaml`, then
    build and start the environment:
 
    ```bash
-   cd intro-robotics-course
    docker compose build
    docker compose up -d
    ```
@@ -36,6 +35,7 @@ lists ARM64 support for the official base image used here.
    browser. RViz should show an R2D2-like robot beside a joint-slider window.
    Move `head_yaw` and a leg slider to confirm the picture updates. The first
    launch builds the demo package and may take a moment while Mesa starts.
+   If sliders seem absent, move or minimize RViz to reveal their window.
 5. Open a shell for student work:
 
    ```bash
@@ -45,7 +45,12 @@ lists ARM64 support for the official base image used here.
    `ros2` commands should be available. The repository is mounted at
    `/workspace`; standalone Python work lives under `student_ws/python`, and
    ROS packages go under `student_ws/ros2_ws/src`.
-6. When finished, run `docker compose down` from the repository root.
+6. When finished, run `docker compose down` from a host terminal in the
+   repository root. You may then close the browser tab and quit Docker
+   Desktop. Closing only the tab does not stop the container.
+
+Follow the [common setup guide](setup.md) and [HW01](../homework/hw01/README.md)
+for host/container shell distinctions and the separate student-publisher mode.
 
 If the page is blank, run `docker compose logs course` and check whether RViz
 reported an OpenGL error. If port 6080 is already in use, edit the left side of

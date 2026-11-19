@@ -1,0 +1,92 @@
+% New introductory waypoint optimization exercise.
+\input{../handout.tex}
+\begin{document}
+\courseheader{7}{Waypoint optimization and path validation}
+\textbf{Schedule:} second part of the planning unit. Build on HW06.
+These are geometric paths: the waypoint index is not time.
+
+\begin{enumerate}
+\item \textbf{Formulate and calculate a path objective.}
+For waypoints $q_0,\ldots,q_N$, consider the cost
+\[
+C(q)=\sum_{i=1}^{N-1}\|q_{i+1}-2q_i+q_{i-1}\|^2.
+\]
+\begin{enumerate}
+\item Identify the decision variables if $q_0$ and $q_N$ are fixed. State
+the endpoint, joint-limit, and collision requirements for an arm path.
+Which requirements are constraints, and what is the initial guess?
+\item For $q_0=[0,0]$, $q_1=[1,1]$, $q_2=[2,0]$, and $q_3=[3,0]$,
+calculate $C(q)$ and the following path length by hand:
+\[
+L=\sum_{i=0}^{2}\|q_{i+1}-q_i\|.
+\]
+\item Explain why $C$ measures changes between waypoint steps. Why does it
+not establish physical joint acceleration without a timing model?
+\end{enumerate}
+
+\item \textbf{Implement two short path metrics.}\par
+The assigned file is:
+\begin{lstlisting}
+src/intro_robotics/waypoint_metrics.py
+\end{lstlisting}
+Complete \texttt{path\_length} and \texttt{smoothness\_cost}. The input checks are
+provided in an imported utility. Keep the supplied function signatures.
+\begin{enumerate}
+\item Use consecutive differences for length and second differences for the
+cost. Check your functions on problem 1(b) and add one example of your own.
+\item From \path{/workspace} in the course container, run the limited checks:
+\begin{lstlisting}
+python -m homework.hw07.hw07_optimization
+\end{lstlisting}
+For a two-revolute-joint path, what units does your length use? Why is it not
+the Cartesian distance traveled by the tool?
+\end{enumerate}
+\end{enumerate}
+
+\newpage
+\begin{enumerate}[start=3]
+\item \textbf{Compare two initial paths for a circular base.}
+The provided scene has a circular obstacle of radius $0.30$ m and a base of
+radius $0.06$ m. The supplied optimizer uses a smoothness cost plus a soft
+penalty for waypoint proximity to the expanded obstacle.
+\begin{enumerate}
+\item Use \texttt{base\_problem()} to obtain an RRT seed and a straight seed.
+Run the provided optimizer on each with the same settings. Report initial/final
+objective, path length, and whether each edge is valid at resolution $0.005$ m.
+Use \texttt{sampled\_path\_is\_free} for this check.
+See \path{homework/hw07/README.md} for a short starter script.
+\item Explain the difference between a soft penalty and a hard collision
+constraint. Does a lower objective alone prove that a path is collision-free?
+Explain the observed result from each seed.
+\item Change the obstacle weight for one run and compare smoothness and
+validity. Total objective values with different weights are different
+objectives; do not compare them as if they were the same quantity.
+\end{enumerate}
+
+\item \textbf{Refine an arm path.}
+Use \texttt{arm\_problem()} for the HW06 arm. The nominal link radius is
+$0.015$ m; the provided planning scene uses $0.030$ m to add clearance.
+The provided \texttt{refine\_feasible\_path} keeps endpoints fixed and
+accepts updates only when all sampled edges pass the selected checker.
+\begin{enumerate}
+\item Refine the provided RRT seed and report its initial/final smoothness,
+joint-space length, optimizer time, and returned validity flag. Independently
+check every returned edge against the nominal scene at resolution $0.005$ rad.
+\item Try the direct joint-space seed. What does the optimizer report about
+its initial validity? Explain why it cannot conclude that no valid route exists.
+\item Explain the role of the extra clearance and why even the finer sampled
+check is not a proof of continuous collision freedom.
+\end{enumerate}
+
+\item \textbf{Visualize and interpret.}
+\begin{lstlisting}
+python -m homework.hw07.hw07_optimization --show
+python -m homework.hw07.hw07_optimization --save tmp/hw07.png
+\end{lstlisting}
+Save a view and explain one reason to combine RRT-Connect with local
+optimization. State one limitation of the models or comparison. The supplied
+optimizers are simple teaching examples; they are not CHOMP implementations.
+\end{enumerate}
+
+\submission
+\end{document}

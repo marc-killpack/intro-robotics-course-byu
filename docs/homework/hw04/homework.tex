@@ -1,0 +1,111 @@
+% Adapt ME 537 HW04 P1(b) and HW03 frame-chain concepts without DH.
+\input{../handout.tex}
+\begin{document}
+\courseheader{4}{General forward kinematics with explicit joints}
+\textbf{Schedule:} week 4, approximately one week. Build on HW02--HW03.
+\conventions
+
+\begin{enumerate}
+\item \textbf{Read the small arm model.}
+The supplied \texttt{Joint} class stores a local axis, a motion type, and
+fixed \texttt{origin}/\texttt{tip} transforms. It provides
+\texttt{joint.transform(q)}. The supplied \texttt{SerialArm} constructor
+stores the joint list, base placement, and tool offset.
+\begin{enumerate}
+\item Explain \texttt{self.joints}, \texttt{self.n}, and one call to
+\texttt{joint.transform(q[i])}. Which values describe geometry, and which
+change when the arm moves? Joint displacements use radians or meters.
+\item For the supplied \texttt{spatial\_arm()} in \path{homework/models.py},
+write its three link transforms from these physical descriptions:
+\begin{center}
+\begin{tabular}{cll}
+Joint & Motion axis in its local joint frame & Following fixed offset \\
+\hline
+1 & Z rotation $q_1$ & $h=0.2$ m along local Z \\
+2 & Y rotation $q_2$ & $L_1=0.4$ m along local X \\
+3 & Y rotation $q_3$ & $L_2=0.3$ m along local X
+\end{tabular}
+\end{center}
+The joint origins have no additional offset. Apply each joint motion before
+its following offset. Frames are numbered 0 through 3. At zero displacement:
+\begin{center}
+\begin{tikzpicture}[scale=1.05]
+\draw[->] (0,0)--(1,0) node[right]{$x_0$};
+\draw[->] (0,0)--(0,2.0) node[above]{$z_0$};
+\draw[line width=2pt] (0,0)--(0,1.1)--(2.1,1.1)--(3.7,1.1);
+\fill (0,0) circle (3pt) node[below left]{joint 1};
+\draw[fill=white] (0,1.1) circle (5pt) node[left=7pt]{2};
+\draw[fill=white] (2.1,1.1) circle (5pt) node[below=6pt]{3};
+\node at (0,1.1){\scriptsize$\times$};\node at (2.1,1.1){\scriptsize$\times$};
+\fill (3.7,1.1) circle (3pt) node[right]{tip};
+\node at (-0.3,0.55){$h$};\node at (1.0,1.4){$L_1$};\node at (2.9,1.4){$L_2$};
+\node at (2.7,-0.65){local Y axes point into the page};
+\end{tikzpicture}
+\end{center}
+The diagram is a side view at $q=0$, not a restriction to planar motion.
+\end{enumerate}
+
+\item \textbf{Derive the spatial FK by hand.}
+\begin{enumerate}
+\item Compose the three transforms to find $\T{0}{3}(q)$.
+Give its rotation and position blocks. You may abbreviate
+$c_1=\cos q_1$ and $c_{23}=\cos(q_2+q_3)$, with analogous sine notation.
+\item Evaluate the full matrix at $q=[0,0,0]$ and
+$q=[\pi/2,0,-\pi/2]$. Sketch the arm and final frame in both poses.
+Then use code to check your derivation.
+\end{enumerate}
+\end{enumerate}
+
+\newpage
+\begin{enumerate}[start=3]
+\item \textbf{Implement the chain product.}
+In \path{src/intro_robotics/kinematics.py}, complete \texttt{SerialArm.fk}.
+The constructor and checks are provided; do not implement DH or alter
+\texttt{Joint.motion}. Your task is the matrix composition.
+\begin{enumerate}
+\item Use the supplied \texttt{start}/\texttt{end} indices. A scalar
+\texttt{index} selects an end frame; a pair selects \texttt{(start,end)}.
+The loop composes the joints from \texttt{start} up to, but excluding,
+\texttt{end}. An empty chain has an identity transform.
+\item Apply the optional base transform only when the chain starts at 0,
+and the optional tool transform only when it ends at \texttt{self.n}.
+The default result is relative to frame 0, excluding both optional transforms.
+\item Run \texttt{python -m homework.hw04.hw04\_fk}. Check one relative
+subchain, such as \texttt{index=(1,3)}, against your own matrix product.
+Explain its input and output frames.
+\end{enumerate}
+
+\item \textbf{Check base/tool offsets and a translating joint.}
+\begin{enumerate}
+\item At the second pose from problem 2, add a tool offset of 0.1 m along
+frame 3's Z axis. Place frame 0 in a world using rotation
+$\operatorname{Rot}_z(\pi/2)$ and translation $[1,0.2,0]^T$ meters.
+Calculate the tool position in the world by hand. Compare with
+\texttt{fk(q, base=True, tip=True)} on the corresponding arm.
+\item Inspect the supplied \texttt{slider\_arm()}. Its first joint rotates
+about Z; its second slides along its local X. With the first joint held at
+$\pi/2$, which world direction should a positive slider displacement move
+the tip? Predict the tip position at slider displacement 0.1 m, then check it.
+You do not need to change the FK method for this different joint type.
+\end{enumerate}
+
+\item \textbf{Compare calculated and displayed poses.}
+\begin{lstlisting}
+python -m homework.hw04.hw04_fk --show
+python -m homework.hw04.play_arm
+python -m homework.hw04.play_arm --backend matplotlib
+\end{lstlisting}
+The first command shows a Matplotlib frame view; the slider viewer defaults
+to pyqtgraph, with a Matplotlib alternative shown above. Use the browser
+desktop in Docker or a native Python window. Save a view with a
+nonzero first-joint rotation and bent shoulder/elbow. Name one displayed frame and
+explain which FK result locates it. Confirm that local Y and Z joint axes
+are drawn according to their geometry. The viewer implementation is provided.
+\end{enumerate}
+
+\textbf{What to understand:} FK is composition of physical joint/link
+transforms. The same short loop handles spatial and prismatic mechanisms;
+it does not require a DH table or orientation-conversion functions.
+
+\submission
+\end{document}

@@ -18,6 +18,10 @@ Open <http://localhost:6080/vnc.html?autoconnect=1&resize=scale>. You should
 see RViz with the robot and a separate **Joint State Publisher** slider window.
 Drag `head_yaw`, `left_leg_tilt`, and `right_leg_tilt`; watch the model move.
 The first startup builds this ROS 2 package automatically.
+If the sliders are hidden, move or minimize the main RViz window to reveal
+the Joint State Publisher window behind it. Docker Desktop's dashboard is
+not the browser desktop. The complete [setup guide](../../../../docs/setup.md)
+includes startup, browser access, and shutdown.
 In RViz, select **Move Camera** and left-drag in the 3D view to orbit the robot.
 
 In a second terminal, inspect the messages:
@@ -50,3 +54,11 @@ startup script rebuilds this package and reloads the description.
 This example was inspired by the
 [ROS 2 URDF robot-state-publisher tutorial](https://docs.ros.org/en/foxy/Tutorials/Intermediate/URDF/Using-URDF-with-Robot-State-Publisher.html).
 The URDF and launch file here were written for this course's Jazzy setup.
+
+## Student publisher mode
+
+[HW01](../../../../homework/hw01/README.md) switches the Compose environment
+using `compose.publisher.yaml`. This passes `use_joint_gui:=false` to the
+launch file, keeping RViz and robot-state-publisher while disabling the
+slider publisher. It prevents competing `/joint_states` publishers. The
+default Compose mode passes `use_joint_gui:=true`.

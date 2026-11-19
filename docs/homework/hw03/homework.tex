@@ -1,0 +1,84 @@
+% Conceptual adaptation of ME 537 HW03 transform/inverse and frame-chain work.
+\input{../handout.tex}
+\begin{document}
+\courseheader{3}{Homogeneous transforms and camera-to-arm coordinates}
+\textbf{Schedule:} week 3, approximately one week. Build on HW02. \conventions
+
+\begin{enumerate}
+\item \textbf{Implement rigid transforms and their inverse.}
+Complete HW03's \texttt{se3} and \texttt{inv} in
+\path{src/intro_robotics/transforms.py}.
+\begin{enumerate}
+\item Write the block form of $\T{A}{B}$ in terms of $\R{A}{B}$ and
+$p^A_B$. Derive its inverse by requiring both products to be identity.
+\item Implement the block operations directly. Use rotation structure rather
+than a general matrix inverse. The supplied signatures permit identity
+rotation and zero translation defaults; preserve those conveniences.
+\item Run \texttt{python -m homework.hw03.hw03\_transforms} from the
+container shell. Add a nontrivial round-trip check of your own, with both
+rotation and translation nonzero. Explain its frame directions.
+\end{enumerate}
+
+\item \textbf{Locate a conveyor object in the robot base frame.}
+Let $W$ be the world, $B$ the robot base, and $C$ a fixed camera.
+The camera looks down at a plane $z_W=0$. You are given:
+\[
+\T{W}{B}=\begin{bmatrix}
+0&-1&0&0.1\\1&0&0&0.1\\0&0&1&0\\0&0&0&1
+\end{bmatrix},\qquad
+\T{W}{C}=\begin{bmatrix}
+1&0&0&0.4\\0&-1&0&-0.2\\0&0&-1&0.8\\0&0&0&1
+\end{bmatrix}.
+\]
+A measured point is $p_C=[0.1,\ 0.05,\ 0.8]^T$ meters in camera coordinates.
+This is already a 3D point; pixel-to-3D estimation belongs in later vision work.
+\begin{enumerate}
+\item Sketch the origins and describe the camera's three axes in world coordinates.
+\item Derive and evaluate $\T{B}{C}$ by hand. State what its translation means.
+\item Calculate $p_W$ and $p_B$ by hand. Check that the point lies on the
+world conveyor plane. Verify by mapping $p_B$ back through $B$ into $W$.
+\item For a direction $v_C=[0,1,0]^T$, calculate $v_W$ and $v_B$.
+Explain why the transform's translation does not change a direction.
+Use homogeneous last entries 1 for a point and 0 for a direction.
+\end{enumerate}
+\end{enumerate}
+
+\newpage
+\begin{enumerate}[start=3]
+\item \textbf{Check that rotation and translation do not commute.}
+Define $R=\operatorname{Rot}_z(\pi/2)$ and $d=[0.3,0,0]^T$ meters. Let
+\[
+T_R=\begin{bmatrix}R&0\\0&1\end{bmatrix},\qquad
+T_d=\begin{bmatrix}I&d\\0&1\end{bmatrix}.
+\]
+Here the bottom row notation represents $[0,0,0,1]$.
+\begin{enumerate}
+\item Find $T_R T_d$ and $T_d T_R$ by hand. Apply each product to the
+same point $[0.2,0,0]^T$ and sketch the two resulting positions.
+\item Explain the geometric difference. For each product, is simply negating
+the original translation sufficient to invert it? Use your block inverse to explain.
+\end{enumerate}
+
+\item \textbf{Display frames in one reference.}
+\begin{lstlisting}
+python -m homework.hw03.hw03_transforms --show
+\end{lstlisting}
+The provided scene draws $W$, $B$, and $C$ using their poses in the world.
+\begin{enumerate}
+\item Use your functions in a short script to reproduce problem 2's
+coordinate conversions. Label the frame of every intermediate vector.
+Keep NumPy points as one-dimensional arrays of length 3, or homogeneous
+arrays of length 4; use \texttt{@} for matrix multiplication.
+\item Add an object frame $O$ whose orientation equals the world and whose
+world origin is the computed $p_W$. Save a labeled image of all four frames.
+\item Explain why sending $\T{B}{C}$ directly to a scene that expects
+world-referenced poses would draw the camera in the wrong place.
+\end{enumerate}
+\end{enumerate}
+
+\textbf{What to understand:} transform direction and composition order,
+translation expressed in the reference frame, rigid-transform inversion,
+and the difference between points and directions. No DH convention is used.
+
+\submission
+\end{document}
