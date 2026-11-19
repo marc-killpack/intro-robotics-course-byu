@@ -122,9 +122,10 @@ adding any dependency.
 
 ## Conveyor project
 
-Objects pass a camera on a simulated belt. Students detect/track selected
-colors or shapes, intercept and collect them, and carry/release them into
-appropriate bins. The baseline uses fixed bins; the environment must support
+Objects pass a camera on a simulated belt. Students detect and track them,
+classify color and shape, intercept and collect them, and carry/release them
+into the bin a supplied rule table assigns (proposed in TASKS D4: three colors
+by three shapes, no obstacles in the baseline). The baseline uses fixed bins; the environment must support
 both a fixed camera and one attached near the tool. Students first practice
 fixed-camera feedback in HW09. The working interpretation of the instructor's
 camera choice allows teams to use either camera in the project, including
