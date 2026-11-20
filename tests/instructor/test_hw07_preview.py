@@ -19,7 +19,7 @@ from release_tools.student_release import (
 class Homework07PreviewTests(unittest.TestCase):
     def test_cumulative_preview_strips_planner_and_metric_answers(self):
         files, report = prepare_release(ROOT)
-        self.assertEqual(report["removed_solution_blocks"], 12)
+        self.assertEqual(report["removed_solution_blocks"], 14)
         extra = [
             "src/intro_robotics/planning.py",
             "src/intro_robotics/rrt.py",
@@ -37,16 +37,23 @@ class Homework07PreviewTests(unittest.TestCase):
             "homework/hw07/scenes.py",
             "homework/hw07/visualization.py",
             "homework/hw07/hw07_optimization.py",
+            "homework/hw07/trajectory.py",
+            "homework/hw07/path_publisher.py",
+            "homework/hw07/arm_node.py",
+            "homework/hw07/view_planar_arm.launch.py",
+            "homework/hw07/planar_arm.rviz",
             "tests/public/test_hw07_optimization.py",
+            "tests/public/test_hw07_trajectory.py",
         ]
+        # planar_arm.urdf is the faculty answer; students build their own.
+        self.assertNotIn("homework/hw07/planar_arm.urdf", extra)
         self.assertTrue(all(name not in files for name in extra))
         for name in extra:
             data = (ROOT / name).read_bytes()
             if name.endswith(".py"):
                 text, count = strip_solutions(data.decode("utf-8"), name)
-                expected = (
-                    2 if name.endswith(("/rrt.py", "/waypoint_metrics.py")) else 0
-                )
+                expected = {"rrt.py": 2, "waypoint_metrics.py": 2, "trajectory.py": 1,
+                            "path_publisher.py": 1, "arm_node.py": 2}.get(Path(name).name, 0)
                 self.assertEqual(count, expected)
                 ast.parse(text, filename=name)
                 data = text.encode("utf-8")
@@ -84,6 +91,10 @@ def empty(call, label):
 empty(lambda: extend_tree(Tree([0, 0]), np.array([0.3, 0]), lambda q: True, 0.2, 0.02), 'HW06')
 empty(lambda: path_length([[0, 0], [1, 0]]), 'HW07: implement path_length')
 empty(lambda: smoothness_cost([[0, 0], [1, 0], [2, 0]]), 'HW07: implement smoothness_cost')
+from homework.hw07.trajectory import interpolate, waypoint_times
+empty(lambda: interpolate([0, 1], [[0, 0], [1, 1]], 0.5), 'HW07: implement interpolate')
+assert waypoint_times([[0, 0], [1, 0]])[-1] == 2.0
+import homework.hw07.path_publisher  # imports without ROS
 """
             result = subprocess.run(
                 [sys.executable, "-c", probe],

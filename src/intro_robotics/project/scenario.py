@@ -3,6 +3,13 @@
 Scenario files live in homework/project/scenarios/. A name such as "s1"
 finds the file whose name starts with it there. Image size, rates, noise,
 and belt-speed variation are all scenario settings.
+
+The [realism] table is a switch (decision D1(g)): develop with it off, turn
+it on when the pipeline works; graded scenarios have it on. When it is on,
+its image_noise and speed_variation are copied into [cameras] and [belt];
+when it is off, both are zero. A file may start from another with
+`base = "name.toml"` and change only some tables (the faculty held-out
+evaluation does this).
 """
 
 from pathlib import Path
@@ -29,18 +36,68 @@ def pose(rotation=None, translation=None):
 SCENARIO_DIR = Path(__file__).resolve().parents[3] / "homework" / "project" / "scenarios"
 
 
-def load_scenario(name_or_path):
-    """Return the scenario as a dict, from a path or a short name like 's1'."""
+def find_scenario(name_or_path, folder=SCENARIO_DIR):
+    """Path of a scenario file, from a path or a short name like 's1'."""
     path = Path(name_or_path)
-    if not path.exists():
-        matches = sorted(SCENARIO_DIR.glob(f"{name_or_path}*.toml"))
-        if len(matches) != 1:
-            raise FileNotFoundError(f"No single scenario matches {name_or_path!r} in {SCENARIO_DIR}")
-        path = matches[0]
-    with path.open("rb") as file:
+    if path.exists():
+        return path
+    if (Path(folder) / path).exists():
+        return Path(folder) / path
+    matches = sorted(Path(folder).glob(f"{name_or_path}*.toml"))
+    if len(matches) != 1:
+        raise FileNotFoundError(f"No single scenario matches {name_or_path!r} in {folder}")
+    return matches[0]
+
+
+def merge(base, changes):
+    """Copy of base with changes applied; tables merge, other values replace."""
+    merged = dict(base)
+    for key, value in changes.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def read_scenario(path):
+    with Path(path).open("rb") as file:
         scenario = tomllib.load(file)
-    scenario["path"] = str(path)
+    if "base" in scenario:
+        name = scenario.pop("base")
+        try:  # next to this file first, then the student scenario folder
+            base_path = find_scenario(name, Path(path).parent)
+        except FileNotFoundError:
+            base_path = find_scenario(name)
+        if base_path.resolve() == Path(path).resolve():
+            raise ValueError(f"{path} names itself as its base")
+        scenario = merge(read_scenario(base_path), scenario)
     return scenario
+
+
+def set_realism(scenario, enabled=None):
+    """Apply the [realism] switch; enabled=None keeps the file's setting."""
+    realism = scenario.get("realism")
+    if realism is None:
+        return scenario
+    if enabled is not None:
+        realism["enabled"] = bool(enabled)
+    on = realism.get("enabled", False)
+    scenario["cameras"]["image_noise"] = realism["image_noise"] if on else 0.0
+    scenario["belt"]["speed_variation"] = realism["speed_variation"] if on else 0.0
+    return scenario
+
+
+def load_scenario(name_or_path, realism=None):
+    """Return the scenario as a dict, from a path or a short name like 's1'.
+
+    realism: None uses the file's [realism] enabled setting; True or False
+    overrides it (image noise and belt-speed variation on or off).
+    """
+    path = find_scenario(name_or_path)
+    scenario = read_scenario(path)
+    scenario["path"] = str(path)
+    return set_realism(scenario, realism)
 
 
 def make_arm(scenario):

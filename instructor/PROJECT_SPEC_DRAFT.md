@@ -147,8 +147,14 @@ manifest): `src/intro_robotics/project/` holds the contract
 
 ```text
 python -m homework.project.run --scenario s1 --plot tmp/s1.png
-python -m intro_robotics.project.oracle --scenario s1 --seeds 1 2 3   # faculty
+python -m homework.project.run --scenario s2 --realism on --seeds 21 22 23
+python -m homework.project.run --scenario s2 --video tmp/s2.mp4
+python -m intro_robotics.project.oracle --scenario s2 --seeds 21 22 23   # faculty
+ros2 launch homework/project/project.launch.py scenario:=s2   # live, in the container
 ```
+
+`homework/project/README.md` is the student guide to the scenarios and both
+modes.
 
 `Task` gives the arm (`SerialArm` with its world base), limits, control
 period, pickup rules, belt geometry (not its speed), bins, the rule table,
@@ -162,18 +168,33 @@ The student's perception estimates object identity, position, and velocity
 from images. Object truth never enters `obs` or `task`. A method given
 different sensors or noise is a different experiment.
 
-**ROS topics (live mode).**
+**ROS topics (live mode, built November 19).** Everything is under the
+`/project` namespace except `/clock` and TF, so the graph does not collide
+with the R2D2 model the container starts.
 
 | Topic | Type | From → to |
 | --- | --- | --- |
-| `/clock` | `rosgraph_msgs/Clock` | simulator → all nodes |
-| `/joint_states` | `sensor_msgs/JointState` (position, velocity) | simulator → controller, RViz |
-| `/tf`, `/tf_static` | `tf2_msgs/TFMessage` (arm from its URDF; camera mounts, bins, calibration marks as static frames) | simulator → camera, RViz |
-| `/camera/image_raw` | `sensor_msgs/Image`, `rgb8` | camera → controller, RViz |
-| `/camera/camera_info` | `sensor_msgs/CameraInfo` | camera → controller |
-| `/actuator/state` | `PickupState` (supplied package) | simulator → controller |
-| `/joint_velocity_command` | `std_msgs/Float64MultiArray` | controller → simulator |
-| `/actuator/request` | `PickupRequest` (supplied package) | controller → simulator |
+| `/clock` | `rosgraph_msgs/Clock` | `conveyor_sim` → all nodes |
+| `/project/joint_states` | `sensor_msgs/JointState`: `joint1`--`joint4` and `pickup_joint` (the stroke), position and velocity | `conveyor_sim` → controller, `robot_state_publisher` |
+| `/tf`, `/tf_static` | from `robot_state_publisher` (50 Hz) with a URDF generated from the scenario: arm, pickup stroke, tool camera, fixed camera | → RViz |
+| `/project/fixed_camera/image_raw`, `/project/tool_camera/image_raw` | `sensor_msgs/Image`, `rgb8` | `conveyor_cameras` → controller, RViz |
+| `/project/*/camera_info` | `sensor_msgs/CameraInfo` (K with ROS's integer pixel centers) | `conveyor_cameras` → anyone |
+| `/project/actuator/state` | `conveyor_interfaces/PickupState` | `conveyor_sim` → controller |
+| `/project/joint_velocity_command` | `std_msgs/Float64MultiArray` | controller → `conveyor_sim` |
+| `/project/actuator/request` | `conveyor_interfaces/PickupRequest` (stamped with the observation it answers) | controller → `conveyor_sim` |
+| `/project/scene_markers` | `visualization_msgs/MarkerArray` (belt, bins, marks; latched) | `conveyor_sim` → RViz |
+| `/project/truth_markers` | object truth, only with `truth_markers:=true` (faculty demonstrations) | `conveyor_sim` → RViz |
+
+The camera node renders from the simulator's truth, so it runs in the
+simulator's process but is a separate node in the graph. The simulator ticks
+on a wall-clock timer (`rate` sets the real-time factor) and keeps the
+one-period delay explicitly: the newest command becomes pending and is
+applied over the following period, exactly as in the lockstep runner. The
+controller node matches both images, the joint state, and the actuator state
+by stamp before calling `step()`. Files: `sim_node.py`, `controller_node.py`,
+and `ros_bridge.py` (URDF, markers, and message fields, testable without
+ROS) in `src/intro_robotics/project/`; `homework/project/project.launch.py`
+and `project.rviz`; and `student_ws/ros2_ws/src/conveyor_interfaces`.
 
 `JointState` is already the HW01 message; `Float64MultiArray` matches the
 ros2_control velocity-controller convention used on real arms. The wrapper
@@ -226,8 +247,12 @@ control period and physics substeps, seed; arm lengths, limits, base, height,
 start pose, speed and acceleration limits, self-collision mode; pickup
 timing and tolerances; belt geometry, speed and speed variation; object
 count, spacing, size, jitter, colors, and shapes; bins and the rule table;
-calibration marks; image size, noise, and camera placement. S1 exists; S2 and
-S3 are the same file with a moving belt, noise, and new seeds and rules.
+calibration marks; image size and camera placement; and a `[realism]`
+switch (image noise and belt-speed variation, decision D1(g)) that the
+runner's `--realism on|off` overrides. S1--S3 exist (Nov 19; see
+[results](#evidence-and-assessment)). A file may start from another with
+`base = "file.toml"`; the faculty-only `instructor/project/s3_heldout.toml`
+uses this to change only S3's rule table and seeds.
 
 ## Simulation model
 
@@ -237,6 +262,9 @@ S3 are the same file with a moving belt, noise, and new seeds and rules.
   region and folded the arm into itself.)
   A separate timed vertical actuator supplies the lowering/lifting stroke.
 - The belt and objects continue to move while the pickup actuator is busy.
+  Objects upstream of the belt's start wait on a hidden feeder: they are not
+  drawn and cannot be picked until they reach it, so a long scenario can hold
+  many objects. `spacing_jitter` varies the gaps.
 - Position, speed, acceleration, and joint stops are enforced in simulated
   time. Any hard-stop idealization must be documented.
 - Begin with proximity, relative-speed, and dwell rules for pickup and a
@@ -244,8 +272,8 @@ S3 are the same file with a moving belt, noise, and new seeds and rules.
   not assumed present. Collision checks are between arm links and world
   obstacles (second round only), not only the end effector. Self-collision
   between nonadjacent links is checked once per control period with a
-  scenario setting: `"report"` counts it (the baseline default, proposed Nov
-  19 so a student's arm cannot get stuck), `"block"` also undoes that
+  scenario setting: `"report"` counts it (the baseline default, instructor
+  decision Nov 19, so a student's arm cannot get stuck), `"block"` also undoes that
   period's motion like a joint stop (second round), and `"off"`. Joint limits
   also restrict folding. Violations cost no points in the baseline. Teams
   that want to avoid folding can add a null-space posture term,
@@ -270,14 +298,45 @@ dropped object. Time counts only through how many objects are sorted in the
 fixed episode, so the score reflects real throughput rather than an added
 time bonus. A wrong-bin release also counts -5 (approved), so random guessing
 among three bins earns nothing on average (1/3 of +10, 2/3 of -5); missed
-objects and empty pick attempts score 0 and cost only time. Second-round
-collisions need their own rule.
+objects and empty pick attempts score 0 and cost only time. Self-collisions
+never cost points; the second round may penalize collisions with world
+obstacles (instructor, Nov 19).
 
-First oracle results (Nov 19): on S1 the oracle sorts 6 of 6 objects
-(score 60) on seeds 1--5 in 18--20 simulated seconds, with no failed picks,
-limit hits, or collisions; on a 0.05 m/s belt with noise it sorts 8 of 8.
-With the 45 s S1 duration, sorting speed matters little; set S2/S3 durations
-and spacing so that throughput matters.
+Camera-only reference controller (Nov 19, `reference.py`, faculty only): it
+uses only `Observation` and `Task` -- a homography from the marks, color
+masks and contour shape classification, nearest-neighbor tracking with a
+least-squares velocity, tool-camera IBVS with the constant-depth planar
+image Jacobian for the final approach, damped least squares with a
+null-space posture term, and position control to the bins. It sorts 6/6 on
+S1 seeds 1--5 and 92--95% of S2/S3 (table below), at about 2.5 ms of compute
+per step (2.1 ms in the live ROS node). Object positions from the fixed image
+are within about 1 mm of truth. Two settings were changed for the moving
+belt (Nov 19): it picks once the IBVS error is under 5 pixels (was 2.5; the
+pick radius is about 15 pixels), and it holds the tool heading only softly
+(weight 0.3) during IBVS. With a hard heading hold the damped solve lost
+tracking near full reach and sorted 0--1 of 15 objects at 0.08 m/s.
+
+Scenario results (Nov 19; five seeds each; "half speed" is the reference
+controller with its tool-speed cap lowered from 0.8 to 0.4 m/s, standing in
+for a correct but cautious team):
+
+| Scenario | Oracle | Reference | Half speed |
+| --- | --- | --- | --- |
+| S1, stopped belt, 6 objects | 60 (all seeds) | 60 | 60 (3--6 s slower) |
+| S2, 0.06 m/s, 15 objects, realism off | 150 | 140 (93%) | 112 (75%) |
+| S2, realism on | 150 | 142 (95%) | 114 (76%) |
+| S3 practice (seeds 31--35) | 150 | 140 (93%) | 112 (75%) |
+| S3 held-out (seeds 101--105) | 150 | 138 (92%) | 102 (68%) |
+
+S2 and S3 bring an object every 3.3 s at 0.06 m/s (spacing 0.2 m, 15
+objects, about 50 simulated seconds). The oracle sorts everything, so its
+score is the number of objects offered; slower controllers lose objects off
+the end of the belt (missed, 0 points), and no controller had wrong-bin
+releases, drops, failed picks, or collisions. Speed therefore matters in
+proportion: a half-speed controller lands at 68--76%, right at the 70--80%
+pass band. Tested and rejected: at 0.08 m/s with 0.2 m spacing even the
+oracle missed objects, which would make the denominator depend on the
+oracle's own tuning.
 
 Nominal baseline (instructor, November 19): students should reach 70--80% of
 what is physically achievable under the simulator's timing, delay, and
@@ -316,8 +375,10 @@ is an investigation, not a project completion requirement.
 
 ## Build and validation milestones
 
-Implemented Nov 19: the `Controller` contract, scenario files with S1, the
-simulator, the lockstep runner, the faculty oracle, and their tests. Earlier
+Implemented Nov 19: the `Controller` contract, scenario files S1--S3 and the
+held-out file, the simulator, the lockstep runner with video output, the
+faculty oracle and camera-only reference controllers, the live ROS graph
+with its message package, and their tests. Earlier
 completed pilots: the one-object bounded/timed debug pilot, perspective-correct
 planar images with timestamps, fixed-camera stationary-target feedback, one
 moving-object sort from fixed-camera images, and OpenCV plane calibration on a

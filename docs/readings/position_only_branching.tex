@@ -109,11 +109,40 @@ works for it, and the whole family moves together. With one copy and only
 terms (2) and the damping, the solution is exactly the damped pseudo-inverse
 step (1) (question 1).
 
-After solving, the example limits each joint's step, tries step lengths
-$\alpha\in\{1,\ 0.5,\ 0.25\}$ and keeps the one that lands closest to the
-targets (a simple line search), and clamps every joint to its limits.
+\heading{4. Joint limits: from least squares to a quadratic program}
+Without limits, the minimum of (6) is where the gradient
+$2A^T(A\Delta-b)$ is zero: $A^TA\,\Delta=A^Tb$, one linear solve. But every
+joint has stops, $q_{\min}\le q+\Delta\le q_{\max}$, and we also cap each
+step, $|\Delta|\le\Delta_{\max}$, so the linearization stays accurate.
+Expanding the cost,
+$\|A\Delta-b\|^2=\Delta^TA^TA\Delta-2b^TA\Delta+b^Tb$, so each iteration is
+\begin{equation}
+\min_{\Delta}\ \tfrac12\Delta^TP\Delta+c^T\Delta
+\quad\text{subject to}\quad G\Delta\le h,
+\qquad P=2A^TA,\quad c=-2A^Tb,
+\end{equation}
+with $G=\left[\begin{smallmatrix}I\\-I\end{smallmatrix}\right]$ and $h$
+holding the room left to each upper limit and (negated) to each lower
+limit. A quadratic cost with linear inequality constraints is a
+\emph{quadratic program} (QP), the paper's core problem. A QP solver finds
+the best step \emph{among those that respect the limits}.
 
-\heading{4. Turning down the secondary weights}
+The cheaper shortcut is to solve the unconstrained least squares and then
+clip the step to the limits. That is also feasible, but usually not optimal:
+when one joint is clipped, the other joints should have moved differently to
+make up for it, and clipping never tells them. On the same iteration the QP
+step's cost can never be higher than the clipped step's (question 5).
+
+The example does both. The default, \texttt{-{}-solver qp}, passes $P$, $c$,
+$G$, and $h$ to a small \texttt{solve\_qp} function built on SciPy's
+optimizer; \texttt{-{}-solver lstsq} solves least squares and clips. With the
+default loose stops ($\pm2.6$~rad) both succeed. With
+\texttt{-{}-joint-limit 1.6} both still reach the targets, but the QP needs
+about 180 iterations and the clipped version about 330. After the step is
+chosen, the example tries step lengths $\alpha\in\{1,\ 0.5,\ 0.25\}$ and keeps
+the one that lands closest to the targets (a simple line search).
+
+\heading{5. Turning down the secondary weights}
 Large $\kappa$ and $\beta$ early on make the copies spread out smoothly and
 stay in comfortable shapes, but they also hold the tools back from their
 targets. The paper therefore decays these weights: whenever the total
@@ -122,32 +151,38 @@ $\rho<1$ (the example halves them). By the end the problem is almost pure
 IK, but started from a well-organized, collision-free set of shapes. The
 obstacle weight $c$ stays constant so the copies keep their distance.
 
-\heading{5. Running the example}
+\heading{6. Running the example}
 \begin{lstlisting}
+python -m examples.position_only_branching --animate
 python -m examples.position_only_branching --show
 python -m examples.position_only_branching --kappa 0 --show
 python -m examples.position_only_branching --no-obstacle --show
+python -m examples.position_only_branching --joint-limit 1.6 --solver lstsq --show
 \end{lstlisting}
 The arm has four 0.2~m links and $k=10$ targets on a vertical line at
-$x=0.55$~m, with a circular obstacle below the path. The top row of the
-figure shows the copies branching out over the iterations. The bottom row
+$x=0.55$~m, with a circular obstacle below the path. Start with
+\texttt{-{}-animate}: it replays the solver one iteration per frame beside the
+worst remaining target error. The top row of the \texttt{-{}-show} figure
+shows the copies branching out over the iterations. The bottom row
 compares the stepwise IK baseline with the final branching result and plots
 each joint angle against the copy index. In the default run the branching
 copies reach their targets within about $10^{-4}$~m after roughly 100
 iterations and clear the obstacle by about 6~cm, while the stepwise baseline
 passes 9~cm into it.
 
-\heading{6. What the full paper adds}
+\heading{7. What the full paper adds}
 \begin{itemize}\setlength{\itemsep}{0pt}
 \item \textbf{Full poses in 3D.} Targets are positions and orientations; the
 error is a twist from the matrix logarithm, with weights choosing how much
 orientation matters. Our version sets the orientation weight to zero.
-\item \textbf{A quadratic program.} Joint stops and step limits are exact
-inequality constraints ($A\Delta\le b$) solved with a QP solver, rather than
-the clamping used here.
-\item \textbf{The base is optimized too.} All copies share a base whose pose
-is an extra unknown, so the planner also chooses where to park a mobile base
-or lift platform.
+\item \textbf{A dedicated, sparse QP solver.} The paper writes the same QP
+(its constraints are $A\Delta\theta\le b$) and solves it with CVXOPT, which
+exploits how sparse the matrices are; our small example uses SciPy's general
+optimizer, which is plenty for 40 unknowns.
+\item \textbf{Optional add-on: a movable base.} In the paper, the shared base
+pose is an extra unknown, so the planner also chooses where to park a mobile
+base or lift platform. This course keeps the base fixed; see the paper's
+Section III-B if you are curious.
 \item \textbf{Manipulability.} A term rewards motion that increases
 $\sqrt{\det(JJ^T)}$, keeping the arm away from singular shapes.
 \item \textbf{Refinement.} After solving with a moderate $k$, the planner
@@ -173,5 +208,10 @@ copies whose joint angles jump, and explain what the robot would have to do
 between those two configurations.
 \item Run it with \texttt{-{}-no-obstacle}. Which family of shapes does
 branching choose now, and why does the default run choose differently?
+\item Run it with \texttt{-{}-joint-limit 1.6}, once with \texttt{-{}-solver qp}
+and once with \texttt{-{}-solver lstsq}. Then explain why, for the same
+iteration, the clipped least-squares step can never have a lower cost (7)
+than the QP step. (Hint: is the clipped step one of the steps the QP was
+allowed to choose?)
 \end{enumerate}
 \end{document}

@@ -9,6 +9,8 @@ your damped least-squares solve (HW05), your image measurements (HW08), and
 your image-based servoing step (HW09). Run:
 
     python -m homework.project.run --scenario s1
+
+See README.md in this folder for the scenarios and the live ROS mode.
 """
 
 import numpy as np

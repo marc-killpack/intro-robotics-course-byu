@@ -4,8 +4,9 @@
 \courseheader{5}{Planar Jacobians and velocity interpretation}
 \textbf{Schedule:} late week 4 through week 5, at most 1.5 weeks.
 Build on HW02--HW04. The task is $[x,y,\psi]$, where $\psi$ is a single planar
-heading and $\dot\psi=\omega_z$. No spatial orientation parameterization,
-singularity analysis, or inverse-kinematics implementation is assigned.
+heading and $\dot\psi=\omega_z$. Problem 6 runs the Jacobian backward, from
+a desired tool velocity to joint rates; HW06 builds inverse kinematics on it.
+No spatial orientation parameterization or singularity theory is assigned.
 
 \begin{enumerate}
 \item \textbf{Derive a two-link planar Jacobian by hand.}
@@ -91,6 +92,31 @@ Try \texttt{spatial\_arm().fk([0,0,0])} and then its
 For the conveyor project, a separate actuator can lower/lift a pickup tool
 with finite duration. Explain why that vertical motion is not another row
 of this planar Jacobian. General spatial FK remains available.
+\end{enumerate}
+
+\newpage
+\begin{enumerate}[start=6]
+\item \textbf{From a desired tool velocity to joint rates.}
+Use only the two position rows, $J_{xy}$ (the first two rows of
+\texttt{jacob\_planar}), and a desired tool velocity $v=[0,\ 0.1]^T$ m/s.
+\begin{enumerate}
+\item For problem 1's two-link arm at $q=[\pi/2,-\pi/2]$, solve
+$J_{xy}\dot q=v$ by hand. Then evaluate $\det J_{xy}$ at $q=[\pi/2,0]$ and
+name the tool direction that cannot be produced there.
+\item In \path{src/intro_robotics/kinematics.py}, complete
+\texttt{damped\_least\_squares(J, v, damping)}, which returns
+$\dot q=J^T(JJ^T+\lambda^2I)^{-1}v$ using one linear solve. Show on paper that
+for $\lambda=0$ and a square, invertible $J$ this equals $J^{-1}v$, and check
+your answer to (a).
+\item For problem 3's three-link arm and pose, compute $\dot q$ with
+$\lambda=0$ and confirm $J_{xy}\dot q=v$. Find a nonzero $n$ with
+$J_{xy}n=0$ (for example, the last row of \texttt{np.linalg.svd(J)[2]}).
+Show that $\dot q+0.5n$ also gives $v$, and compare the norms. Which of the
+infinitely many answers does the formula return?
+\item At the nearly straight pose $q=[\pi/2,\ 0.01,\ 0.01]$, compare
+$\lambda=0$ and $\lambda=0.05$: report $\|\dot q\|$ and the achieved
+$J_{xy}\dot q$. What does damping trade away, and why might a robot prefer it?
+\end{enumerate}
 \end{enumerate}
 
 \submission

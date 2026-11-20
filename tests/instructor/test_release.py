@@ -29,7 +29,7 @@ class ReleaseTests(unittest.TestCase):
         source = ROOT / "homework/hw01/joint_publisher.py"
         before = source.read_bytes()
         files, report = prepare_release(ROOT)
-        self.assertEqual(report["removed_solution_blocks"], 12)
+        self.assertEqual(report["removed_solution_blocks"], 14)
         self.assertEqual(
             files["homework/hw04/arm.urdf"],
             (ROOT / "homework/hw04/arm_starter.urdf").read_bytes(),
@@ -120,6 +120,9 @@ empty(lambda: ArmMeshObject(arm, q0=[0]), [], 'HW04')
 # Isolate the HW05 placeholder from its still-unfinished HW04 prerequisite.
 arm.fk = lambda *args, **kwargs: np.eye(4)
 empty(arm.jacob_planar, [[0]], 'HW05')
+from intro_robotics.kinematics import damped_least_squares
+empty(damped_least_squares, [np.eye(2), [0.0, 0.0]], 'HW05')
+empty(arm.ik_position, [[0.0, 0.0], [0.0]], 'HW06')
 from homework.hw03.frame_broadcaster import frame_transforms
 empty(frame_transforms, [], 'HW03')
 scene = VizScene()

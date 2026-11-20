@@ -12,9 +12,9 @@ review and student workload trials before publication.
 | HW02 | `rot2`, `rotx`, `roty`, `rotz`, `rot_inv` in `transforms.py` | Input checks; standalone frame drawing |
 | HW03 | `se3`, `inv` in `transforms.py`; `frame_transforms` in `homework/hw03/frame_broadcaster.py` | Input checks; frame/point visualization; static TF broadcaster and matrix-to-TF conversion (`homework/ros_frames.py`) |
 | HW04 | `SerialArm.fk` in `kinematics.py`; four joints in `homework/hw04/arm.urdf` | `Joint`, constructor, frame-index parsing, physical model data, arm drawing/sliders; URDF links and visuals, launch file, RViz configuration, offline URDF reader, TF comparison node |
-| HW05 | `SerialArm.jacob_planar` in `kinematics.py` | Planarity checks, physical joint-frame locations, activity visualization |
-| HW06 draft | `extend_tree`, `rrt_connect` in `rrt.py` | `Tree`, planar collision/edge checks, scenes, plotting |
-| HW07 draft | `path_length`, `smoothness_cost` in `waypoint_metrics.py` | Input checks, base/arm scenes, local optimizers, plotting |
+| HW05 | `SerialArm.jacob_planar` and `damped_least_squares` in `kinematics.py` | Planarity checks, physical joint-frame locations, activity visualization |
+| HW06 draft | `SerialArm.ik_position` in `kinematics.py`; `extend_tree`, `rrt_connect` in `rrt.py` | `Tree`, planar collision/edge checks, scenes, plotting |
+| HW07 draft | `path_length`, `smoothness_cost` in `waypoint_metrics.py`; `interpolate` in `homework/hw07/trajectory.py`; `trajectory_message` in `path_publisher.py`; `receive_trajectory`, `publish_joint_state` in `arm_node.py`; their own `planar_arm.urdf` (edited HW04 URDF) | Input checks, base/arm scenes, local optimizers, plotting; `waypoint_times`, the publisher's path, markers, and QoS; the launch file and RViz configuration |
 | HW08 draft | Proposed: estimate a homography, segment/measure a target, and calculate velocity | Checkerboard images and measurements exist; student loader, same-camera object sequence, rectifier, plotter, and scaffold are planned |
 | HW09 draft | Proposed: short fixed-camera planar feedback command with zero request on detection loss | Faculty NumPy pilots exist; student detector, damped solve/limit helpers, and simulation activity are planned |
 | HW10 design | Proposed: small supervised object classifier and held-out evaluation | Dataset, PyTorch model/training scaffold, runtime pilot, and handout are not yet built |
@@ -25,7 +25,10 @@ HW01--HW05 contain 11 exact paired solution regions: two in HW01, seven in
 Python and an assignment-labeled `NotImplementedError`. Constructors and
 provided utilities remain complete. The physical-joint rotation helper is
 provided support; students implement HW02's named-axis matrices directly.
-HW06 and HW07 each add two separately marked answer regions. Temporary
+HW06 adds two marked answer regions in `rrt.py` (its `ik_position` is in
+`kinematics.py`). HW07 adds six: the two metrics, `interpolate`,
+`trajectory_message`, and the arm node's two methods; the faculty
+`homework/hw07/planar_arm.urdf` is an answer and is never released. Temporary
 student-preview tests strip these, but both assignments and their planning and
 waypoint modules are excluded from the current HW01--HW05 release manifest
 pending faculty review.

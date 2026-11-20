@@ -38,6 +38,34 @@ class BranchingExample(unittest.TestCase):
         self.assertLess(np.abs(np.diff(q_final, axis=0)).max(), 0.6)
         self.assertLess(len(history), 400)
 
+    def test_qp_step_respects_stops_and_never_costs_more_than_clipping(self):
+        # One iteration's subproblem with tight stops: the QP optimizes inside
+        # the limits; least squares then clipping is merely feasible.
+        from examples.position_only_branching import solve_step
+
+        rng = np.random.default_rng(5)
+        limits = np.array([[-1.0, 1.0]] * 4)
+        q = rng.uniform(-0.95, 0.95, (3, 4))
+        A, b = rng.normal(size=(30, 12)), rng.normal(size=30)
+        qp = solve_step(A, b, q, limits, 0.15, "qp")
+        clipped = np.clip(solve_step(A, b, q, limits, 0.15, "lstsq"), limits[0, 0] - q.ravel(),
+                          limits[0, 1] - q.ravel())
+        new_q = q.ravel() + qp
+        self.assertTrue(np.all(new_q >= -1 - 1e-9) and np.all(new_q <= 1 + 1e-9))
+        self.assertTrue(np.all(np.abs(qp) <= 0.15 + 1e-9))
+        cost = lambda step: np.sum((A @ step - b) ** 2)
+        self.assertLessEqual(cost(qp), cost(clipped) + 1e-9)
+
+    def test_both_solvers_solve_the_default_problem(self):
+        # The arm is redundant, so the two may settle on different (equally
+        # good) joint paths; both must reach, stay smooth, and clear.
+        targets, obstacle, q_start = wall_problem()
+        for solver in ("qp", "lstsq"):
+            q, _ = branch(targets, q_start, obstacle, solver=solver)
+            self.assertLess(np.linalg.norm(position_errors(q, targets), axis=1).max(), 1e-3)
+            self.assertGreater(min(clearance(c, obstacle) for c in q), 0.0)
+            self.assertLess(np.abs(np.diff(q, axis=0)).max(), 0.6)
+
     def test_stepwise_ik_baseline_still_hits_the_obstacle(self):
         # The lecture contrast depends on this; retune wall_problem if it changes.
         targets, obstacle, q_start = wall_problem()

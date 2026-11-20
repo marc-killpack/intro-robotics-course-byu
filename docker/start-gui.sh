@@ -41,6 +41,8 @@ if [ -f /workspace/pyproject.toml ]; then
     python -m pip install --no-deps --no-build-isolation -e /workspace
 fi
 cd /workspace/student_ws/ros2_ws
-colcon build --packages-select r2d2_demo
+# conveyor_interfaces holds the project's pickup messages; colcon skips it
+# with a warning when a student copy does not include it yet.
+colcon build --packages-select r2d2_demo conveyor_interfaces
 source install/setup.bash
 ros2 launch r2d2_demo view_r2d2.launch.py use_joint_gui:="${COURSE_JOINT_GUI:-true}"

@@ -76,16 +76,73 @@ check every returned edge against the nominal scene at resolution $0.005$ rad.
 its initial validity? Explain why it cannot conclude that no valid route exists.
 \item Explain the role of the extra clearance and why even the finer sampled
 check is not a proof of continuous collision freedom.
-\end{enumerate}
-
-\item \textbf{Visualize and interpret.}
+\item Save a view (\texttt{-{}-show} opens a window):
 \begin{lstlisting}
-python -m homework.hw07.hw07_optimization --show
 python -m homework.hw07.hw07_optimization --save tmp/hw07.png
 \end{lstlisting}
-Save a view and explain one reason to combine RRT-Connect with local
-optimization. State one limitation of the models or comparison. The supplied
-optimizers are simple teaching examples; they are not CHOMP implementations.
+Give one reason to combine RRT-Connect with local
+optimization and one limitation of these models or this comparison. The
+supplied optimizers are simple teaching examples, not CHOMP implementations.
+\end{enumerate}
+
+\item \textbf{Send the path to an arm node (ROS publish/subscribe).}
+A supplied publisher sends your problem~4 path as a
+\texttt{JointTrajectory} message on \texttt{/hw07/trajectory}. Your arm node
+subscribes, interpolates a smooth motion, and publishes a
+\texttt{JointState} 50 times per second on \texttt{/hw07/joint\_states};
+\texttt{robot\_state\_publisher} turns those into TF for RViz, using your own
+HW04 URDF edited to this planar arm.
+\begin{enumerate}
+\item \textbf{URDF.} Copy your HW04 \texttt{arm.urdf} to
+\path{homework/hw07/planar_arm.urdf}. Put \texttt{world\_joint} at the world
+origin with no rotation; make \texttt{joint1} a fixed joint named
+\texttt{post\_joint}; rename \texttt{joint2} and \texttt{joint3} to
+\texttt{joint1} and \texttt{joint2}, with axis \mbox{\texttt{0 0 1}} and
+limits $\pm2.8$ rad. Why must both axes be $Z$ for this arm, and at what height do
+the links move? Give the position of \texttt{arm\_tool} for $q=[0,0]$.
+\item \textbf{Message.} Complete \texttt{trajectory\_\allowbreak message} in
+\texttt{path\_publisher.py}: one trajectory point per waypoint, with its
+positions and \texttt{time\_\allowbreak from\_\allowbreak start}. The supplied
+\texttt{waypoint\_\allowbreak times} in \texttt{trajectory.py} gives each
+segment the time its largest joint change needs at $0.5$ rad/s. Relate this
+to problem~1(c): what does the waypoint index not tell you? How long is the
+trajectory, and how many points does it have?
+\item \textbf{Interpolation.} In \texttt{trajectory.py}, complete
+\texttt{interpolate(times, path, t)}, returning $q(t)$ and $\dot q(t)$. Use
+waypoint velocities $v_0=v_N=0$ and, at interior waypoints,
+$v_i=\tfrac12\big(\tfrac{q_{i+1}-q_i}{t_{i+1}-t_i}+\tfrac{q_i-q_{i-1}}{t_i-t_{i-1}}\big)$.
+On segment $i$, with $h=t_{i+1}-t_i$ and $s=(t-t_i)/h\in[0,1]$,
+\[
+q(t)=h_{00}(s)\,q_i+h\,h_{10}(s)\,v_i+h_{01}(s)\,q_{i+1}+h\,h_{11}(s)\,v_{i+1},
+\]
+\[
+h_{00}=2s^3-3s^2+1,\quad h_{10}=s^3-2s^2+s,\quad h_{01}=-2s^3+3s^2,\quad h_{11}=s^3-s^2,
+\]
+and $\dot q(t)$ is its time derivative ($ds/dt=1/h$). Outside
+$[t_0,t_N]$, return the nearest endpoint with zero velocity. Check that $q$
+passes through every waypoint and that $\dot q$ is the same on both sides of
+an interior waypoint. Why is this smoother than straight lines between
+waypoints?
+\item \textbf{Node and graph.} In \texttt{arm\_node.py}, complete
+\texttt{receive\_\allowbreak trajectory} (store names, times in seconds,
+positions, and the arrival time) and \texttt{publish\_\allowbreak joint\_state}
+(interpolate at the elapsed time; publish stamp, names, positions, and
+velocities). In three
+course-container shells at \path{/workspace}, run
+\begin{lstlisting}
+ros2 launch homework/hw07/view_planar_arm.launch.py
+python3 -m homework.hw07.arm_node
+python3 -m homework.hw07.path_publisher
+\end{lstlisting}
+Save an RViz screenshot during the motion. Does the tool follow the orange
+tool-path marker around the red obstacle? Report \texttt{ros2 node info
+/hw07\_arm} and the rate from \texttt{ros2 topic hz /hw07/joint\_states}.
+Restart the arm node while the publisher is still running: the motion
+replays. Explain why, using \texttt{ros2 topic info -v /hw07/trajectory}
+(look at durability). Finally, at the end of the motion compare
+\texttt{ros2 run tf2\_ros tf2\_echo world arm\_tool} with your
+\texttt{fk} of the final waypoint.
+\end{enumerate}
 \end{enumerate}
 
 \submission

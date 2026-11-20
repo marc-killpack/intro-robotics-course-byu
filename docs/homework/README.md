@@ -15,7 +15,7 @@ tracks the relationship between the two courses' material.
 | HW04: general spatial FK | Week 4 | [HW04](hw04/README.md) |
 | HW05: planar Jacobians | Late week 4 through week 5 | [HW05](hw05/README.md) |
 | HW06: configuration space and RRT-Connect | Weeks 6--7: planning unit | [HW06](hw06/README.md) |
-| HW07: waypoint optimization | Second part of planning unit | [HW07](hw07/README.md) |
+| HW07: waypoint optimization and a ROS arm node | Second part of planning unit | [HW07](hw07/README.md) |
 | HW08: camera geometry, calibration, and tracking | Week 8 | [HW08](hw08/README.md) |
 | HW09: planar visual feedback | Week 9 | [HW09](hw09/README.md) |
 

@@ -2,6 +2,8 @@
 
     python -m homework.project.run --scenario s1
     python -m homework.project.run --scenario s1 --seed 3 --plot tmp/s1.png
+    python -m homework.project.run --scenario s2 --realism on --seeds 21 22 23
+    python -m homework.project.run --scenario s2 --video tmp/s2.mp4
     python -m homework.project.run --controller my_package.module:MyClass
 
 This is the same plain-Python lockstep runner used for grading: the result
@@ -58,23 +60,69 @@ def plot_episode(result, simulator, first_obs, path):
     print(f"Saved {path}")
 
 
+class VideoWriter:
+    """Write the fixed and tool images side by side, with time and score."""
+
+    def __init__(self, path, every=2):
+        self.path, self.every, self.count, self.writer = Path(path), every, 0, None
+
+    def __call__(self, obs, simulator):
+        import cv2
+
+        self.count += 1
+        if (self.count - 1) % self.every:
+            return
+        frame = cv2.cvtColor(np.hstack((obs.fixed_image, obs.tool_image)), cv2.COLOR_RGB2BGR)
+        frame = cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
+        text = f"t = {obs.time:5.2f} s  actuator {obs.actuator}  score {simulator.score}"
+        cv2.putText(frame, text, (8, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
+        if self.writer is None:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            fps = 1 / (simulator.scenario["control_period"] * self.every)
+            height, width = frame.shape[:2]
+            self.writer = cv2.VideoWriter(str(self.path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
+        self.writer.write(frame)
+
+    def close(self):
+        if self.writer is not None:
+            self.writer.release()
+            print(f"Saved {self.path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--scenario", default="s1", help="name (s1, ...) or path of a .toml file")
+    parser.add_argument("--scenario", default="s1", help="name (s1, s2, s3) or path of a .toml file")
     parser.add_argument("--controller", default="homework.project.my_controller:MyController")
     parser.add_argument("--seed", type=int, help="override the scenario's seed")
+    parser.add_argument("--seeds", type=int, nargs="+", help="run several seeds and report the mean")
+    parser.add_argument("--realism", choices=("on", "off"),
+                        help="image noise and belt-speed variation (default: the file's setting)")
     parser.add_argument("--plot", type=Path, help="save a summary figure to this path")
+    parser.add_argument("--video", type=Path, help="save an .mp4 of both camera images")
     args = parser.parse_args()
 
-    scenario = load_scenario(args.scenario)
-    simulator = SortingSimulator(scenario, seed=args.seed)
-    controller = load_class(args.controller)(make_task(scenario))
-    first_obs = simulator.observe()
-    result = run_episode(controller, simulator, record=args.plot is not None)
-    print(f"{scenario['name']} (seed {args.seed if args.seed is not None else scenario['seed']}): "
-          f"{result.summary()}")
-    if args.plot:
-        plot_episode(result, simulator, first_obs, args.plot)
+    realism = None if args.realism is None else args.realism == "on"
+    scenario = load_scenario(args.scenario, realism=realism)
+    seeds = args.seeds or [args.seed if args.seed is not None else scenario["seed"]]
+    controller_class = load_class(args.controller)
+    scores = []
+    for seed in seeds:
+        simulator = SortingSimulator(scenario, seed=seed)
+        controller = controller_class(make_task(scenario))
+        first_obs = simulator.observe()
+        video = VideoWriter(args.video) if args.video and len(seeds) == 1 else None
+        try:
+            result = run_episode(controller, simulator, record=args.plot is not None, watch=video)
+        finally:
+            if video is not None:
+                video.close()
+        scores.append(result.score)
+        print(f"{scenario['name']} (seed {seed}, realism "
+              f"{'on' if scenario.get('realism', {}).get('enabled') else 'off'}): {result.summary()}")
+        if args.plot and len(seeds) == 1:
+            plot_episode(result, simulator, first_obs, args.plot)
+    if len(seeds) > 1:
+        print(f"mean score over {len(seeds)} seeds: {np.mean(scores):.1f}")
 
 
 if __name__ == "__main__":

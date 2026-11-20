@@ -131,3 +131,55 @@ class SerialArm:
         return jacobian
         # END SOLUTION
         raise NotImplementedError("HW05: implement SerialArm.jacob_planar")
+
+    def ik_position(self, target, q0, damping=0.05, tolerance=1e-4, iterations=200,
+                    base=False, tip=False):
+        """Return (q, converged): joint values that put the tool XY at target.
+
+        Iterates the damped least-squares step from damped_least_squares with
+        the two position rows of jacob_planar, clipping to any joint limits.
+        Orientation is free. Different q0 can reach different solutions.
+        """
+        target = check_vector(target, 2, "Target XY")
+        q = check_vector(q0, self.n, "q0").copy()
+        if not isinstance(iterations, (int, np.integer)) or iterations < 1:
+            raise ValueError("iterations must be a positive integer")
+        # HW06: repeat until the XY error is within tolerance: compute the
+        # error, take one damped least-squares step, and respect joint limits.
+        # BEGIN SOLUTION
+        for _ in range(iterations):
+            error = target - self.fk(q, base=base, tip=tip)[:2, 3]
+            if np.linalg.norm(error) < tolerance:
+                return q, True
+            jacobian = self.jacob_planar(q, base=base, tip=tip)[:2]
+            q = q + damped_least_squares(jacobian, error, damping)
+            for i, joint in enumerate(self.joints):
+                if joint.limits is not None:
+                    q[i] = np.clip(q[i], *joint.limits)
+        error = target - self.fk(q, base=base, tip=tip)[:2, 3]
+        return q, bool(np.linalg.norm(error) < tolerance)
+        # END SOLUTION
+        raise NotImplementedError("HW06: implement SerialArm.ik_position")
+
+
+def damped_least_squares(jacobian, velocity, damping=0.0):
+    """HW05: joint rates that best produce a task velocity, J^T (J J^T + d^2 I)^-1 v.
+
+    With damping 0 and a square, invertible J this equals J^-1 v. With more
+    joints than rows it is the smallest joint-rate vector that achieves v.
+    A positive damping keeps the result bounded near poses where J J^T is
+    nearly singular, at the cost of not quite achieving v.
+    """
+    jacobian = np.asarray(jacobian, dtype=float)
+    if jacobian.ndim != 2 or not np.all(np.isfinite(jacobian)):
+        raise ValueError("The Jacobian must be a finite 2-D array")
+    velocity = check_vector(velocity, jacobian.shape[0], "Task velocity")
+    damping = check_scalar(damping, "Damping")
+    if damping < 0:
+        raise ValueError("Damping must be zero or positive")
+    # HW05: one linear solve; do not form an explicit inverse.
+    # BEGIN SOLUTION
+    rows = jacobian.shape[0]
+    return jacobian.T @ np.linalg.solve(jacobian @ jacobian.T + damping**2 * np.eye(rows), velocity)
+    # END SOLUTION
+    raise NotImplementedError("HW05: implement damped_least_squares")

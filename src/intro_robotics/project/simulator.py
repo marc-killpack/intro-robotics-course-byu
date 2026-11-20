@@ -116,7 +116,7 @@ class SortingSimulator:
         self.pickup = scenario["pickup"]
         self.phase, self.phase_time = "idle", 0.0
         belt = scenario["belt"]
-        variation = belt["speed_variation"] * self.rng.uniform(-1, 1)
+        variation = belt.get("speed_variation", 0.0) * self.rng.uniform(-1, 1)
         self.belt_speed = belt["speed"] * (1 + variation)
         self.rules = {tuple(k.split()): v for k, v in scenario["rules"].items()}
         self.objects = self._make_objects()
@@ -127,19 +127,34 @@ class SortingSimulator:
 
     def _make_objects(self):
         o, belt = self.scenario["objects"], self.scenario["belt"]
+        # Every color and every shape appears at least once (when count
+        # allows); the rest are random. Colors and shapes are paired randomly.
+        colors, shapes = (self._cover(o[key], o["count"]) for key in ("color_names", "shape_names"))
+        # Gaps between consecutive objects; spacing_jitter varies each gap by
+        # up to that fraction (drawn only when nonzero, so S1 is unchanged).
+        gaps = np.full(o["count"] - 1, float(o["spacing"]))
+        jitter = o.get("spacing_jitter", 0.0)
+        if jitter > 0:
+            gaps *= 1 + jitter * self.rng.uniform(-1, 1, len(gaps))
+        xs = o["first_x"] - np.concatenate(([0.0], np.cumsum(gaps)))
         objects = []
         for i in range(o["count"]):
             y = belt["y"] + self.rng.uniform(-1, 1) * o["lateral_jitter"]
             objects.append(
                 SimObject(
-                    color=str(self.rng.choice(o["color_names"])),
-                    shape=str(self.rng.choice(o["shape_names"])),
-                    position=np.array([o["first_x"] - i * o["spacing"], y]),
+                    color=colors[i],
+                    shape=shapes[i],
+                    position=np.array([xs[i], y]),
                     size=o["size"],
                     yaw=self.rng.uniform(0, 2 * np.pi),
                 )
             )
         return objects
+
+    def _cover(self, names, count):
+        """A shuffled list of `count` names that includes each name once."""
+        chosen = list(names)[:count] + [str(self.rng.choice(names)) for _ in range(count - len(names))]
+        return [str(name) for name in self.rng.permutation(chosen)]
 
     # ----- kinematics ------------------------------------------------------
     def tool_xy_and_jacobian(self, q):
@@ -227,9 +242,17 @@ class SortingSimulator:
             self._release()
             self.phase, self.phase_time = "idle", 0.0
 
+    def on_belt(self, obj):
+        """True once an object has come onto the visible belt (and is still on it).
+
+        Objects upstream of x_start are still on the feeder: they move but are
+        not drawn and cannot be picked.
+        """
+        return obj.state == "belt" and obj.position[0] >= self.scenario["belt"]["x_start"]
+
     def _try_pick(self):
         tool = self.tool_pose()[:2, 3]
-        on_belt = [o for o in self.objects if o.state == "belt"]
+        on_belt = [o for o in self.objects if self.on_belt(o)]
         if on_belt:
             nearest = min(on_belt, key=lambda o: np.linalg.norm(o.position - tool))
             relative = np.linalg.norm(self.tool_velocity() - [self.belt_speed, 0])
@@ -275,12 +298,12 @@ class SortingSimulator:
             polygons.append(square(xy, s["marks"]["size"]))
             colors.append([15, 15, 15])
         for obj in self.objects:
-            if obj.state == "belt":  # the flat renderer does not draw held objects
+            if self.on_belt(obj):  # the flat renderer does not draw held objects
                 polygons.append(obj.outline())
                 colors.append(s["colors"][obj.color])
         tool_pose = self.tool_pose() if camera.mount == "tool" else None
         image = fill_polygons(camera, polygons, colors, tool_pose)
-        sigma = s["cameras"]["image_noise"]
+        sigma = s["cameras"].get("image_noise", 0.0)
         if sigma > 0:
             # Drawing fresh Gaussian noise each frame is slow; reuse a seeded
             # bank of independent noise frames, chosen at random per image.

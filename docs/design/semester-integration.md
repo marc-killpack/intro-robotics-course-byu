@@ -62,8 +62,9 @@ the project. The supervised PyTorch exercise remains a separate course activity.
 ## Aligning prerequisites
 
 - The planning brief assumes students have seen IK. Students now implement
-  basic IK by damped pseudo-inverse before planning (instructor, Nov 19;
-  placement proposed in TASKS.md D5(f)).
+  basic IK by damped pseudo-inverse before planning (instructor, Nov 19):
+  `damped_least_squares` in HW05 problem 6 and `ik_position` in HW06
+  problem 1.
 - The vision brief's controller can use the first two rows of the provided
   3-by-n `jacob_planar`. Supply a damped inverse/velocity limiter, and let
   students formulate and test the feedback law. Treat poor conditioning and

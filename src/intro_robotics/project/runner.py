@@ -34,13 +34,15 @@ class EpisodeResult:
                 f"{self.mean_step_ms:.2f} ms mean, {self.max_step_ms:.2f} ms max per step")
 
 
-def run_episode(controller, simulator, render=True, record=False):
+def run_episode(controller, simulator, render=True, record=False, watch=None):
     """Run one episode to completion and return an EpisodeResult.
 
     controller: a Controller built from the same scenario's Task.
     simulator: a fresh SortingSimulator (it holds the seed and the truth).
     render=False skips images (only for faculty controllers that use truth).
     record=True keeps a per-period trace of q, tool XY, phase, and objects.
+    watch: optional function called as watch(obs, simulator) every period,
+        for example to write video frames. It must not change anything.
     """
     if not isinstance(simulator, SortingSimulator):
         raise TypeError("run_episode needs a SortingSimulator")
@@ -51,6 +53,8 @@ def run_episode(controller, simulator, render=True, record=False):
     trace = {"time": [], "q": [], "tool": [], "phase": [], "objects": []}
     while not simulator.done:
         obs = simulator.observe(render=render)
+        if watch is not None:
+            watch(obs, simulator)
         start = wallclock.perf_counter()
         command = controller.step(obs)
         step_ms.append(1000 * (wallclock.perf_counter() - start))

@@ -160,6 +160,64 @@ class SimulatorTests(unittest.TestCase):
         self.assertEqual(sim.counts["missed"], len(sim.objects))
 
 
+class ScenarioFileTests(unittest.TestCase):
+    """S1--S3, the realism switch, the feeder, and the faculty held-out file."""
+
+    NAMES = ("s1", "s2", "s3", "instructor/project/s3_heldout.toml")
+
+    def test_every_scenario_is_valid_and_offers_every_class(self):
+        for name in self.NAMES:
+            with self.subTest(name=name):
+                scenario = load_scenario(name)
+                sim = SortingSimulator(scenario)  # q0 checked in the constructor
+                self.assertEqual({o.color for o in sim.objects}, set(scenario["objects"]["color_names"]))
+                self.assertEqual({o.shape for o in sim.objects}, set(scenario["objects"]["shape_names"]))
+                self.assertEqual(len(scenario["rules"]), 9)
+
+    def test_rule_tables_differ_where_they_should(self):
+        s1, s2, s3 = (load_scenario(n)["rules"] for n in ("s1", "s2", "s3"))
+        held = load_scenario(self.NAMES[3])
+        self.assertEqual(s1, s2)
+        for other in (s3, held["rules"]):
+            self.assertTrue(all(s1[k] != other[k] for k in s1))
+        self.assertTrue(all(s3[k] != held["rules"][k] for k in s3))
+        # The held-out file changes only its name, seeds, and rules.
+        practice = load_scenario("s3")
+        for key in ("belt", "objects", "arm", "cameras", "realism", "duration"):
+            self.assertEqual(held[key], practice[key])
+
+    def test_realism_switch(self):
+        self.assertFalse(load_scenario("s2")["realism"]["enabled"])
+        self.assertEqual(load_scenario("s2")["cameras"]["image_noise"], 0.0)
+        on = load_scenario("s2", realism=True)
+        self.assertGreater(on["cameras"]["image_noise"], 0)
+        self.assertGreater(on["belt"]["speed_variation"], 0)
+        self.assertGreater(load_scenario("s3")["cameras"]["image_noise"], 0)  # on by default
+        self.assertEqual(load_scenario("s3", realism=False)["belt"]["speed_variation"], 0.0)
+
+    def test_spacing_jitter_and_feeder(self):
+        s1 = SortingSimulator(S1)  # no jitter: exact spacing, as before
+        assert_allclose(np.diff([o.position[0] for o in s1.objects]), -S1["objects"]["spacing"])
+        s3 = load_scenario("s3")
+        sim = SortingSimulator(s3)
+        gaps = -np.diff([o.position[0] for o in sim.objects])
+        o = s3["objects"]
+        self.assertTrue(np.all(np.abs(gaps / o["spacing"] - 1) <= o["spacing_jitter"] + 1e-12))
+        self.assertGreater(np.ptp(gaps), 0)
+        # Objects upstream of x_start wait unseen on the feeder and cannot be picked.
+        waiting = [obj for obj in sim.objects if obj.position[0] < s3["belt"]["x_start"]]
+        self.assertTrue(waiting)
+        self.assertFalse(any(sim.on_belt(obj) for obj in waiting))
+        # A waiting object is not drawn; the same object on the belt is.
+        sim.objects = waiting[:1]
+        sim.scenario["cameras"]["image_noise"] = 0.0  # compare clean images
+        hidden = sim.render(sim.fixed_camera)
+        self.assertTrue(np.all(hidden == sim.render(sim.fixed_camera)))
+        sim.objects[0].position[:] = [0.0, s3["belt"]["y"]]
+        shown = sim.render(sim.fixed_camera)
+        self.assertGreater(np.sum(np.any(shown != hidden, axis=2)), 100)
+
+
 class OracleTests(unittest.TestCase):
     def test_oracle_sorts_s1_deterministically(self):
         first = achievable(S1, [1, 2])
@@ -168,6 +226,10 @@ class OracleTests(unittest.TestCase):
             self.assertEqual(result.score, 10 * result.objects)
             self.assertEqual(result.counts["collisions"], 0)
             self.assertEqual((result.score, result.sim_time), (repeat.score, repeat.sim_time))
+
+    def test_oracle_sorts_every_s2_object_so_s2_measures_throughput(self):
+        for result in achievable(load_scenario("s2", realism=True), [21, 22]):
+            self.assertEqual(result.counts["sorted"], result.objects)
 
     def test_oracle_handles_a_moving_belt_with_noise(self):
         scenario = copy.deepcopy(S1)
@@ -178,6 +240,32 @@ class OracleTests(unittest.TestCase):
         sim = SortingSimulator(scenario, seed=3)
         result = run_episode(OracleController(make_task(scenario), sim), sim, render=False)
         self.assertEqual(result.counts["sorted"], 5)
+
+
+class ReferenceControllerTests(unittest.TestCase):
+    """The camera-only key: it uses only Observation and Task."""
+
+    def test_perception_finds_every_object_with_the_right_class(self):
+        from intro_robotics.project.reference import find_objects, fit_plane_map, to_plane
+
+        task = make_task(S1)
+        for seed in (1, 2, 3):
+            sim = SortingSimulator(S1, seed=seed)
+            image = sim.observe().fixed_image
+            plane = fit_plane_map(image, task.marks)
+            self.assertIsNotNone(plane)
+            found = sorted((c, s, *to_plane(plane, uv)) for c, s, uv in find_objects(image, task.colors))
+            truth = sorted((o.color, o.shape, *o.position) for o in sim.objects)
+            self.assertEqual([f[:2] for f in found], [t[:2] for t in truth])
+            assert_allclose(np.array([f[2:] for f in found]), np.array([t[2:] for t in truth]), atol=0.004)
+
+    def test_reference_sorts_s1_from_images_only(self):
+        from intro_robotics.project.reference import ReferenceController
+
+        sim = SortingSimulator(S1, seed=2)
+        result = run_episode(ReferenceController(make_task(S1)), sim)
+        self.assertEqual(result.counts["sorted"], result.objects)
+        self.assertEqual(result.counts["failed_picks"], 0)
 
 
 if __name__ == "__main__":

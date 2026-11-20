@@ -179,6 +179,22 @@ P5: spatial FK succeeds and `jacob_planar` raises the explained scope error.
 The separate timed vertical actuator produces Z travel outside the three-row
 task. It consumes project time without turning this into spatial velocity work.
 
+P6 (inverse velocity, added Nov 19): (a) `J_xy = [[-.4,0],[.3,.3]]`,
+`det = -0.12`, `qdot = [0, 1/3]` rad/s for `v = [0, 0.1]`. At `[pi/2, 0]`,
+`J_xy = [[-.7,-.3],[0,0]]` has determinant 0: the tool cannot move along
+the stretched arm (world Y there). (b) With `lambda = 0` and invertible
+square J, `J^T (J J^T)^-1 = J^T J^-T J^-1 = J^-1`. The marked answer is
+`damped_least_squares` in `kinematics.py` (one `np.linalg.solve`).
+(c) `J_xy = [[-.6,-.2,-.2],[.3,.3,0]]`, `qdot = [-0.0556, 0.3889, -0.2222]`,
+norm 0.451. A null vector is `+-[-0.408, 0.408, 0.816]`; `qdot + 0.5 n`
+also gives v with norm about 0.674 (sign of n may differ). The formula
+returns the minimum-norm solution: it lies in the row space of J, which is
+orthogonal to every null-space motion. (d) At `[pi/2, .01, .01]`:
+`lambda = 0` needs `|qdot|` about 29 rad/s to achieve v exactly;
+`lambda = 0.05` gives about 0.14 rad/s but achieves only about
+`[0.001, 0.0005]` m/s. Damping trades task accuracy for bounded, safe joint
+rates near a nearly singular pose.
+
 ## Faculty review before publication
 
 - Verify workload with a student pilot: roughly one week each for HW02--HW04,

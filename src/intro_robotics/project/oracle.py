@@ -33,7 +33,7 @@ class OracleController(Controller):
     def _choose_object(self, tool):
         reach = 0.92 * self.sim.lengths.sum()
         base = self.sim.base_xy
-        candidates = [o for o in self.sim.objects if o.state == "belt"
+        candidates = [o for o in self.sim.objects if self.sim.on_belt(o)
                       and np.linalg.norm(o.position - base) < reach
                       and o.position[0] < self.task.belt["x_end"] - 0.05]
         # Most downstream first; it leaves the belt soonest.
@@ -103,6 +103,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Faculty: oracle score per seed")
     parser.add_argument("--scenario", default="s1")
     parser.add_argument("--seeds", type=int, nargs="+", default=[1, 2, 3])
+    parser.add_argument("--realism", choices=("on", "off"))
     args = parser.parse_args()
-    for seed, result in zip(args.seeds, achievable(load_scenario(args.scenario), args.seeds)):
+    scenario = load_scenario(args.scenario, realism=None if args.realism is None else args.realism == "on")
+    for seed, result in zip(args.seeds, achievable(scenario, args.seeds)):
         print(f"seed {seed}: {result.summary()}")

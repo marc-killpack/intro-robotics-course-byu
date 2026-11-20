@@ -117,8 +117,9 @@ checks for Jacobians, RNE, Euler-Lagrange work, and current visualization APIs.
 ROS threads through the course rather than ending after HW01 (instructor
 decision, Nov 18--19): mathematics stays plain Python; HW01 is a basic
 publisher, HW03 adds static TF and HW04 a small URDF to check students' own
-results, a publish/subscribe trajectory node follows the RRT work, and the
-project is a camera / controller / robot node graph (see below). Keep the
+results, a publish/subscribe trajectory node follows the RRT work (HW07
+problem 5), and the project is a camera / controller / robot node graph (see
+below). Keep the
 working ROS 2 Jazzy/Docker/browser RViz route for setup and ROS exercises. Explicitly tell students to open the localhost URL. Record the
 known window-stacking issue and explain how to reveal the sliders. Closing
 a browser tab and stopping a container are different operations.
@@ -199,7 +200,9 @@ The project runs as a ROS 2 graph: supplied camera and robot-simulator nodes,
 and a controller node that wraps the student's plain Python
 `step(observation) -> command` class (instructor decision, Nov 18). The
 wrapper keeps graded evaluation deterministic in simulated time, allows
-offline unit tests, and reuses the same class in a Gymnasium wrapper. See the
+offline unit tests, and reuses the same class in a Gymnasium wrapper. The
+graph was built Nov 19 (`ros2 launch homework/project/project.launch.py`);
+see the
 [project specification](../../instructor/PROJECT_SPEC_DRAFT.md#software-architecture).
 
 Begin with finite-speed kinematics, acceleration limits, and explicit pickup,

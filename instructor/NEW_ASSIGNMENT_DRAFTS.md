@@ -29,8 +29,9 @@ enough for students who are still learning classes.
 **Provided:** planar robot and scene, collision and joint-limit checks,
 interpolation, plotting, simple test scenarios, and RNG setup. Explain that
 sampled collision checks, projected link geometry, and ordinary Euclidean
-joint differences have limits. *Superseded Nov 19:* HW06 is to open with a
-short damped pseudo-inverse IK problem that produces the goal (TASKS.md D5(f)).
+joint differences have limits. *Updated Nov 19:* HW06 now opens with a short
+damped pseudo-inverse IK problem (`ik_position`) that finds two elbow
+solutions for the goal; the planner still receives the supplied goal.
 
 **Draft boundary:** `planning.py` supplies geometry; `rrt.py` contains the
 two marked student methods, with input checks and a small `Tree` supplied.

@@ -1,0 +1,22 @@
+# Faculty only: the graded week-14 evaluation. Never copy into a student
+# release. It is the student S3 file with a different rule table and seeds
+# students have not run. Change both every semester.
+#
+#   python -m homework.project.run --scenario instructor/project/s3_heldout.toml \
+#       --seeds 101 102 103 104 105 --controller team.module:Controller
+
+base = "s3_evaluation.toml"
+name = "S3 held-out evaluation"
+seed = 101
+seeds = [101, 102, 103, 104, 105]   # the graded seeds
+
+[rules]
+"red circle" = "B"
+"red square" = "C"
+"red triangle" = "A"
+"blue circle" = "C"
+"blue square" = "A"
+"blue triangle" = "B"
+"yellow circle" = "A"
+"yellow square" = "B"
+"yellow triangle" = "C"

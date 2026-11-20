@@ -4,6 +4,104 @@ Updated November 19, 2026. This record covers the uncommitted faculty change
 set, not a published semester release. [TASKS.md](../../TASKS.md) distinguishes
 implemented work from faculty approval and further platform validation.
 
+## November 19: S2/S3 scenarios and the live project graph
+
+Host: 122 instructor tests (1 skipped, see HW07 below) and 26 public checks
+passed; the release dry run copied 68 files and removed 14 solution blocks,
+with no project, `conveyor_interfaces`, or HW07 file. New project tests:
+5 in `test_project_runner.py` (every scenario valid with every class, rule
+tables, realism switch, spacing jitter and feeder, oracle 15/15 on S2) and 7
+in `test_project_ros.py` (URDF tool, tool camera, and fixed camera against
+the simulator to 1e-9 m, RPY round trip, image and CameraInfo fields, joint
+order, stamp matching).
+
+Scores, five seeds each (oracle / reference / reference capped at half
+tool speed): S1 60/60/60; S2 realism off 150/140/112, on 150/142/114; S3
+seeds 31--35 150/140/112; held-out seeds 101--105 150/138/102. No
+wrong-bin, dropped, failed-pick, or collision events in any run. Before two
+reference settings changed (pick at 5 px instead of 2.5; heading weight 0.3
+instead of 1), the reference sorted 1, 0, and 11 of 15 at 0.08 m/s with
+0.24 m spacing; afterwards 13, 14, and 13. S1 stayed 6/6 on every seed.
+`run.py --video` wrote a 1245-frame, 25 fps S2 video (8 MB), checked by
+eye.
+
+Course container (`intro-robotics-course:jazzy`, throwaway container): a
+clean `colcon build` of `r2d2_demo` and `conveyor_interfaces` took 56 s
+(repeat build 18 s; clock-skew warnings from the Windows bind mount only);
+with `conveyor_interfaces` absent, colcon only warns, so the current student
+copy still starts. `ros2 launch homework/project/project.launch.py
+scenario:=s1 rviz:=false` with the reference controller ended with score 60,
+6/6 sorted, at 19.66 s, identical to the lockstep runner for seed 1; the
+controller node reported about 2.1 ms per step. On S2 the graph had the four
+expected nodes and all `/project` topics; `/project/actuator/request` had one
+publisher and one subscriber. A probe saw all five actuator phases and all
+three requests; TF `world -> tool_flange` matched planar FK of the joint
+state at the same stamp to 7e-16 m after setting robot_state_publisher's
+`publish_frequency` to 50 Hz (1.1 mm at its 20 Hz default). The simulator
+ran at 0.89x real time without RViz and 0.73x with RViz (software
+rendering) plus the probe. RViz showed the arm, TF, belt, bins, marks,
+truth markers, and both camera images.
+
+## November 19: HW07 publish/subscribe
+
+Host: 6 new instructor tests (`test_hw07_ros.py`: URDF vs `fk` at four
+poses, key values, direct seed invalid, answer-block counts; the
+JointTrajectory message test is skipped without ROS) and 5 new public checks
+(`test_hw07_trajectory.py`) pass within the totals above. The HW06 and HW07
+preview tests passed; the HW07 preview strips six blocks and keeps
+`planar_arm.urdf` out. The handout builds to three pages (one overfull line
+under 1 pt).
+
+Course container (`intro-robotics-course:jazzy`, throwaway container):
+`trajectory_msgs`, `visualization_msgs`, and `builtin_interfaces` import, and
+the 11 HW07 tests pass with ROS, including the message test. With
+`view_planar_arm.launch.py`, the arm node, and the path publisher, the arm
+node received 15 waypoints lasting 8.38 s whether it started before or after
+the publisher, and a restarted arm node replayed the motion (TRANSIENT_LOCAL
+on both endpoints in `ros2 topic info -v`). `/hw07/joint_states` arrived at
+50.0 Hz (652 messages in 13 s). TF `world -> arm_tool` matched `fk(q)` plus
+the 0.3 m tool height within 0.39 mm at 23 sampled stamps during motion
+(robot_state_publisher's 20 Hz updates), and `tf2_echo world arm_tool` gave
+[0.443, 0.343, 0.300] at the end, equal to `fk([1.2, -1.3])`. RViz under
+Xvfb showed the arm, TF, the obstacle, and the tool-path marker. A SIGINT
+to a background node raised `ExternalShutdownException`; both HW07 nodes now
+exit cleanly. The publisher's optimizer takes about 6--10 s to start in the
+container.
+
+## November 19: HW05 inverse velocity and HW06 IK
+
+Host: 104 instructor tests and 21 public checks passed; the release dry run
+copied 68 files and removed 14 solution blocks, and the stripped copy's
+`damped_least_squares` (HW05) and `ik_position` (HW06) raise their labeled
+errors. Key values were computed with the faculty code: the HW05 P6 square
+solve `[0, 1/3]`, the minimum-norm redundant solution (norm 0.451 against
+0.674 with a null-space move), and the damping comparison (29 rad/s against
+0.14 rad/s). HW06 IK reached both elbow solutions; RRT path lengths on seeds
+1--3 were 2.0--2.7 to the near goal and 4.9--5.6 to the far one. HW05 and
+HW06 now build to three pages each.
+
+## November 19: camera-only reference controller and QP branching
+
+Host: 104 instructor tests and the public checks passed. The camera-only
+reference controller sorted 6/6 on S1 seeds 1--5 (about 20 simulated
+seconds, 2.4--2.9 ms mean compute per step, about 3.5 s wall per episode)
+and 8/8 on a 0.05 m/s belt with 4-level noise and 20% speed variation on
+seeds 1--3 (31--35 s against the oracle's 28--30 s). Fixed-camera detections
+matched truth in class and within 4 mm (about 1 mm typical) on seeds 1--3.
+Every generated S1 episode on seeds 1--5 contained all three colors and
+shapes. `homework.project.run --controller
+intro_robotics.project.reference:ReferenceController` reproduced the seed-1
+result.
+
+The branching example's QP (SciPy 1.18.1 SLSQP in the faculty environment)
+and least-squares-plus-clipping solvers both solve the default problem
+(QP about 1.6 s, least squares 0.2 s). With joint stops at +/-1.6 rad the
+QP converged in 184 iterations against 334; at +/-1.2 rad neither fully
+reached every target (worst errors 0.9 cm QP, 1.6 cm clipped). A test checks
+that a QP step never costs more than the clipped step on the same
+subproblem. The reading builds to four pages. The Docker image has not been
+rebuilt with `python3-scipy` yet.
+
 ## November 19: project contract, simulator, and lockstep runner
 
 Host (Windows faculty virtual environment): 100 instructor tests and 18
