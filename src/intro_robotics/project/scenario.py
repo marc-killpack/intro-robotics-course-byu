@@ -137,8 +137,19 @@ def make_cameras(scenario):
     return fixed, tool
 
 
+def board(scenario):
+    """The [board] table as task.board, or None."""
+    if "board" not in scenario:
+        return None
+    b = scenario["board"]
+    return {"squares": tuple(int(n) for n in b["squares"]), "square": float(b["square"]),
+            "center": tuple(float(c) for c in b["center"])}
+
+
 def make_task(scenario):
     """The information a student controller is allowed to know."""
+    from .simulator import calibration_image  # the simulator imports this module
+
     arm = make_arm(scenario)
     fixed, tool = make_cameras(scenario)
     rules = {tuple(key.split()): value for key, value in scenario["rules"].items()}
@@ -153,7 +164,9 @@ def make_task(scenario):
         bins={name: tuple(v) for name, v in scenario["bins"].items()},
         rules=rules,
         fixed_camera=(fixed.width, fixed.height, fixed.focal),
-        marks=np.array(scenario["marks"]["xy"], float),
         tool_camera=tool,
         colors={k: tuple(v) for k, v in scenario["colors"].items()},
+        calibration_image=calibration_image(scenario) if "board" in scenario else None,
+        board=board(scenario),
+        marks=np.array(scenario["marks"]["xy"], float) if "marks" in scenario else None,
     )

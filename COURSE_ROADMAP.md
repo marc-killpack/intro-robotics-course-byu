@@ -194,11 +194,11 @@ Provided control utilities may handle difficult cases with bounded commands.
 | 2 | Finish rotations and begin transforms | HW02 draft: matrices, composition, camera/relative frames |
 | 3 | Finish transforms and begin FK | HW03 and HW04 drafts: frame chains, explicit joint geometry |
 | 4 | Finish FK and begin planar Jacobians | General spatial FK, then x/y/upright-angle velocity |
-| 5 | Planar Jacobians and velocity interpretation | Finish the 1.5-week lecture allocation; HW05 draft, ending with the square and damped least-squares velocity solves |
+| 5 | Planar Jacobians and velocity interpretation | Finish the 1.5-week lecture allocation; HW05 draft (the square and damped least-squares velocity solves open HW06, after the IK lecture) |
 | 6 to 8 | Inverse kinematics, then path planning and collision checking | One IK lecture and six planning lectures; drafts of [HW06](docs/homework/hw06/README.md) (opens with damped pseudo-inverse IK) and [HW07](docs/homework/hw07/README.md) |
 | 8 to 9 | OpenCV and camera geometry | [HW08 draft](docs/homework/hw08/README.md): homography, detection, tracking, and velocity |
-| 9 to 10 | Visual servoing | [HW09 draft](docs/homework/hw09/README.md), being rewritten as tool-camera image-based servoing |
-| 10 | Supervised learning and PyTorch (2 sessions) | Short guided HW10 lab: training loop, CPU training, confusion matrix versus the HW08 rule classifier |
+| 9 to 10 | Visual servoing | [HW09 draft](docs/homework/hw09/README.md): tool-camera image-based servoing on the project runner |
+| 10 | Supervised learning and PyTorch (2 sessions) | [HW10 draft](docs/homework/hw10/README.md): training loop, CPU training, confusion matrices versus the HW08 rules on clean and hard images |
 | 11 | Project launch (2 sessions), then RL | Project architecture and ROS plumbing; RL rollouts and reward |
 | 12 | RL (policy, PPO intuition, SB3), then project | Short reward-shaping homework; teams may use RL late in the project |
 | 12 to 14 | Project (8 sessions) | Integrated conveyor sorting; 1--2 extension lectures and one help session a week; demonstration |
@@ -207,7 +207,7 @@ The instructor chose to reallocate time elsewhere while preserving the
 Jacobian and six-lecture planning units. A draft 42-session calendar uses two
 50-minute ROS lectures plus the existing guided HW01 setup, and 125 minutes
 for rotations; it retains 150 minutes each for transforms and FK, 225 minutes
-for Jacobians, six planning lectures, weeks 8--11, and nine project sessions.
+for Jacobians, six planning lectures, weeks 8--11, and eight project sessions.
 Several 50-minute meetings bridge adjacent units. See the detailed
 [session calendar](docs/design/semester-integration.md); faculty workload
 review and the actual semester calendar remain necessary.
@@ -288,8 +288,7 @@ methods; it may help scheduling or interception without replacing every
 feedback loop. Teams may use a learned or rule-based classifier. Exact
 scoring, thresholds, delays, and scenario difficulty are not yet specified.
 
-Current prototypes are described in the [one-object pilot](docs/design/conveyor-pilot.md)
-and the [planning and camera pilots](docs/design/new-pilots.md); the full
+Remaining prototypes are described in the [planning and camera pilots](docs/design/new-pilots.md); the full
 draft is the [project specification](instructor/PROJECT_SPEC_DRAFT.md).
 
 ## Homework migration and releases

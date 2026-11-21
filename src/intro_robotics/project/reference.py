@@ -3,10 +3,11 @@
 It sees exactly what a student controller sees (Observation and Task) and
 uses the course's own pieces, so it shows the baseline is attainable:
 
-- HW08: calibrate a plane homography from the marks in the fixed image;
-  segment objects by color, classify shape by contour, map centroids to the
+- Project calibration: a belt-plane homography from the checkerboard in
+  task.calibration_image (HW08 fit_plane_map).
+- HW08: segment objects by color, classify shape by contour, map centroids to the
   belt plane, and track them with a least-squares velocity estimate.
-- HW05: damped least squares for the redundant arm (plus a null-space
+- HW06 (problem 1): damped least squares for the redundant arm (plus a null-space
   posture term to keep the four links from folding).
 - HW09: image-based visual servoing (IBVS) with the tool camera for the final
   approach, using the constant-depth planar image Jacobian.
@@ -14,77 +15,13 @@ uses the course's own pieces, so it shows the baseline is attainable:
 Faculty only; it is not in the student release.
 """
 
-from itertools import permutations
-
-import cv2
 import numpy as np
 
+from ..kinematics import damped_least_squares
+from ..vision import calibrate, find_objects, fit_velocity, to_plane
 from .contract import Command, Controller
 
-# ----- HW08-style measurement ---------------------------------------------
-
-
-def dark_blobs(image, threshold=60, min_area=3, max_area=400):
-    """Centroids (u, v) of small near-black regions, in Camera pixel coordinates."""
-    mask = np.all(image < threshold, axis=2).astype(np.uint8)
-    count, _, stats, centroids = cv2.connectedComponentsWithStats(mask, connectivity=8)
-    keep = [i for i in range(1, count) if min_area <= stats[i, cv2.CC_STAT_AREA] <= max_area]
-    return centroids[keep] + 0.5  # OpenCV pixel centers are integers; Camera's are +0.5
-
-
-def fit_plane_map(fixed_image, marks):
-    """Homography from image pixels to world XY on the belt plane, or None.
-
-    The marks' image order is unknown, so try every assignment and keep the
-    one that reprojects best. (The marks are deliberately asymmetric.)
-    """
-    pixels = dark_blobs(fixed_image)
-    if len(pixels) != len(marks):
-        return None
-    best = None
-    for order in permutations(range(len(marks))):
-        h, _ = cv2.findHomography(marks.astype(np.float64), pixels[list(order)].astype(np.float64))
-        if h is None:
-            continue
-        projected = cv2.perspectiveTransform(marks.reshape(-1, 1, 2), h).reshape(-1, 2)
-        error = np.sqrt(np.mean(np.sum((projected - pixels[list(order)]) ** 2, axis=1)))
-        if best is None or error < best[0]:
-            best = (error, h)
-    return np.linalg.inv(best[1]) if best and best[0] < 1.0 else None
-
-
-def to_plane(image_to_world, uv):
-    point = image_to_world @ [uv[0], uv[1], 1.0]
-    return point[:2] / point[2]
-
-
-def classify_shape(contour):
-    """'triangle', 'square', or 'circle' from corner count and compactness."""
-    perimeter = cv2.arcLength(contour, True)
-    corners = len(cv2.approxPolyDP(contour, 0.04 * perimeter, True))
-    compactness = 4 * np.pi * cv2.contourArea(contour) / perimeter**2  # 1 for a circle
-    if corners == 3 or compactness < 0.66:
-        return "triangle"
-    if corners == 4 and compactness < 0.83:
-        return "square"
-    return "circle"
-
-
-def find_objects(image, colors, tolerance=50, min_area=12):
-    """List of (color, shape, (u, v)) for whole colored objects in an image."""
-    found = []
-    height, width = image.shape[:2]
-    for name, rgb in colors.items():
-        rgb = np.array(rgb)
-        mask = cv2.inRange(image, np.clip(rgb - tolerance, 0, 255), np.clip(rgb + tolerance, 0, 255))
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        for contour in contours:
-            x, y, w, h = cv2.boundingRect(contour)
-            if cv2.contourArea(contour) < min_area or x == 0 or y == 0 or x + w >= width or y + h >= height:
-                continue  # too small, or cut off by the image edge
-            m = cv2.moments(contour)
-            found.append((name, classify_shape(contour), (m["m10"] / m["m00"] + 0.5, m["m01"] / m["m00"] + 0.5)))
-    return found
+# ----- HW08-style measurement (intro_robotics.vision; the HW08 answer key) ---
 
 
 class Track:
@@ -98,9 +35,7 @@ class Track:
     def add(self, time, xy, keep=25):
         self.times = (self.times + [time])[-keep:]
         self.points = (self.points + [np.asarray(xy, float)])[-keep:]
-        if len(self.times) >= 6:  # fit once per new point; slope of position vs time
-            t = np.array(self.times) - self.times[-1]
-            self.velocity_estimate = np.polyfit(t, np.array(self.points), 1)[0]
+        self.velocity_estimate = fit_velocity(self.times, self.points)  # None below 6 points
 
     def velocity(self):
         return self.velocity_estimate
@@ -111,13 +46,7 @@ class Track:
         return self.points[-1] + velocity * (time - self.times[-1])
 
 
-# ----- HW05/HW09-style motion -----------------------------------------------
-
-
-def damped_solve(jacobian, velocity, damping=0.05):
-    """dq = J^T (J J^T + damping^2 I)^-1 v."""
-    jjt = jacobian @ jacobian.T
-    return jacobian.T @ np.linalg.solve(jjt + damping**2 * np.eye(len(jjt)), velocity)
+# ----- HW06/HW09-style motion: damped_least_squares (HW06) below -------------
 
 
 class ReferenceController(Controller):
@@ -127,7 +56,7 @@ class ReferenceController(Controller):
     YAW_WEIGHT = 0.3  # soft heading hold during IBVS; 1.0 lost tracking near full reach
 
     def reset(self):
-        self.image_to_world = None
+        self.image_to_world = calibrate(self.task.calibration_image, self.task.board)  # None: board not found
         self.tracks = []
         self.target = None
         self.carrying = None
@@ -143,9 +72,7 @@ class ReferenceController(Controller):
     # -- perception ---------------------------------------------------------
     def update_tracks(self, obs):
         if self.image_to_world is None:
-            self.image_to_world = fit_plane_map(obs.fixed_image, self.task.marks)
-            if self.image_to_world is None:
-                return
+            return
         for color, shape, uv in find_objects(obs.fixed_image, self.task.colors):
             xy = to_plane(self.image_to_world, uv)
             belt = self.belt_velocity()
@@ -233,7 +160,7 @@ class ReferenceController(Controller):
         weights = np.array([1.0, 1.0, self.YAW_WEIGHT])
         rows = weights[:, None] * jacobian if hold_yaw else jacobian[:2]
         command = np.append(velocity, 0.0) if hold_yaw else velocity
-        dq = damped_solve(rows, command)
+        dq = damped_least_squares(rows, command, 0.05)
         null = np.eye(arm.n) - np.linalg.pinv(rows) @ rows
         dq += null @ (self.POSTURE - obs.q)
         return Command(dq, request)

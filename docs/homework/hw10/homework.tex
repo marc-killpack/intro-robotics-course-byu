@@ -1,0 +1,88 @@
+% Introductory supervised-learning lab (TASKS.md D3: short guided PyTorch lab); faculty draft.
+\input{../handout.tex}
+\begin{document}
+\courseheader{10}{Learning to classify when rules fail}
+\textbf{Schedule:} week 10, after the two supervised-learning lectures.
+About three to four hours, including a training run of a minute or two on
+your CPU.
+
+\textbf{Task.} Your HW08 rule classifier (color threshold, contours, corner
+count) is perfect on the project's images. Real cameras are less kind: light
+gets brighter or dimmer and changes color, objects blur, noise grows, and an
+arm link or cable can cover part of an object. You will train a small
+convolutional network on $48\times48$ crops of single objects from the
+project's fixed camera, under both \emph{clean} (project) and \emph{hard}
+conditions, and compare it with your rules on scenes neither has seen. Each
+crop is one of 9 classes: a color (red, blue, yellow) and a shape (circle,
+square, triangle). The data are generated from fixed seeds, so everyone has
+the same crops. Your code goes in \path{homework/hw10/learning.py}.
+
+\begin{enumerate}
+\item \textbf{Look at the data first.}
+\begin{lstlisting}
+python -m homework.hw10.hw10_data --save tmp/hw10_data.png
+\end{lstlisting}
+\begin{enumerate}
+\item Report the number of crops and scenes in each split, the image
+array's shape and type, and the shape, type, and value range of a batch
+after \texttt{to\_tensor}. What does each of the four tensor dimensions mean?
+\item A \emph{scene} is one object in 6 consecutive frames under one set of
+conditions, so its crops are nearly identical. The splits are made by scene,
+never by crop. If crops of one scene were in both the training and test
+sets, would the test accuracy be too high or too low? Why?
+\item Name three hard conditions in your figure and the step of your HW08
+classifier (threshold, contour, or corner count) that each one would break.
+\end{enumerate}
+
+\item \textbf{The training step.}
+\begin{enumerate}
+\item The network gives 9 scores (logits) per crop; the cross-entropy loss is
+$-\ln p_y$, where $p_k=e^{s_k}/\sum_j e^{s_j}$ and $y$ is the true class. By
+hand, for three classes with scores $s=(2,\ 1,\ -1)$, find $p$ and the loss
+when the true class is 0 and when it is 2. Why does a confident wrong answer
+cost so much more than an unsure one?
+\item Complete \texttt{train\_epoch}: the four lines that compute the loss,
+clear old gradients, backpropagate, and step the optimizer, then record the
+loss. What does \texttt{loss.backward()} compute, and what would go wrong
+without \texttt{optimizer.zero\_grad()}?
+\item Run \texttt{python -m homework.hw10.hw10\_train} (5 epochs). Report each
+epoch's loss and validation accuracy (clean and hard), the total time, and
+your plot (\path{tmp/hw10/cnn.png}). With 64 crops per batch, how many
+optimizer steps is one epoch? Why judge the network on validation scenes
+rather than on the training loss?
+\end{enumerate}
+
+\item \textbf{Evaluate against your rules.}
+\begin{enumerate}
+\item Complete \texttt{predict}. Why must it call \texttt{model.eval()} and
+use \texttt{torch.no\_grad()}?
+\item Complete \texttt{confusion\_matrix}, then run
+\begin{lstlisting}
+python -m homework.hw10.hw10_evaluate --save tmp/hw10_eval.png
+\end{lstlisting}
+It runs your network and your HW08 \texttt{find\_objects} on the same 600
+test scenes. Report both classifiers' accuracy on clean and on hard crops,
+and include the two confusion matrices.
+\item Your rules almost never get the \emph{color} wrong on hard crops, yet
+often get the shape wrong or find nothing. Explain both using your answers
+to 1(c). What do the network's mistakes (bottom of the figure) have in
+common?
+\item For the project as it is (S1--S3, clean images), which classifier
+would you use, and why? Name one change to the project that would make the
+network worth its cost. What is missing from these synthetic crops before
+you would trust the network on a real camera?
+\end{enumerate}
+\end{enumerate}
+
+\textbf{If training is too slow} on your computer, evaluate the supplied
+network, trained the same way, and say so in your answers:
+\begin{lstlisting}
+python -m homework.hw10.hw10_evaluate --checkpoint homework/hw10/checkpoints/cnn.pt
+\end{lstlisting}
+
+\textbf{Project connection:} a project team may use either classifier; the
+evaluation's images are clean. HW11 trains a policy network with the same
+PyTorch pieces.
+
+\submission
+\end{document}

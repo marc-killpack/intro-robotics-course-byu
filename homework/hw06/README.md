@@ -1,7 +1,7 @@
 # HW06 draft: RRT-Connect
 
-Complete `SerialArm.ik_position` in `src/intro_robotics/kinematics.py`
-(problem 1, built on your HW05 `damped_least_squares`), then `extend_tree` and
+Complete `damped_least_squares` (problem 1) and `SerialArm.ik_position`
+(problem 2, built on it) in `src/intro_robotics/kinematics.py`, then `extend_tree` and
 `rrt_connect` in `src/intro_robotics/rrt.py`.
 The small `Tree`, `PlanarArmScene`, collision/edge checks, models, and plotting
 are supplied. Read the assignment handout for the handwork and evidence.

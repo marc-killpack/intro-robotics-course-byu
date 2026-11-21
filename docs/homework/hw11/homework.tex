@@ -1,0 +1,95 @@
+% New introductory reinforcement-learning exercise (TASKS.md D3); faculty draft.
+\input{../handout.tex}
+\begin{document}
+\courseheader{11}{Reward shaping for interception}
+\textbf{Schedule:} week 12, after the two RL lectures. You do not implement
+PPO; you choose what it optimizes and compare the result with a controller
+you write yourself.
+
+\textbf{Task.} A two-link planar arm ($0.4$ and $0.3$ m, base at the origin)
+must bring its tool to an object sliding toward $+x$ at $0.05$--$0.12$ m/s and
+move with it. Success: the tool is within $2.5$ cm of the object and within
+$5$ cm/s of its velocity for three consecutive control periods. The arm runs
+as in the project: $50$ Hz control, joint speed $1.5$ rad/s, joint
+acceleration $4$ rad/s$^2$, and one period of delay. An episode ends on
+success (\emph{terminated}) or after $4$ s (\emph{truncated}). The
+environment is \path{src/intro_robotics/rl_interception.py}.
+
+\begin{enumerate}
+\item \textbf{Specify the problem.}
+\begin{enumerate}
+\item The observation holds $\cos q$, $\sin q$, $\dot q$, the previous action,
+and the object's position and velocity relative to the tool; the action is
+two numbers in $[-1,1]$ that scale the joint speed limit. Why does the
+observation include the previous action? (Hint: when is it applied?) Why
+relative position rather than the object's world position?
+\item Explain the difference between terminated and truncated, and why PPO
+should not treat running out of time as reaching a goal.
+\item For one step with distance $0.20$ m, relative speed $0.10$ m/s,
+action $[0.6,-0.8]$, and no success, compute the three rewards defined in
+problem 2. Repeat for distance $0.02$ m, relative speed $0.01$ m/s, and
+success.
+\end{enumerate}
+
+\item \textbf{Write three rewards and a conventional baseline.}
+In \path{homework/hw11/rewards.py}, complete
+\begin{itemize}
+\item \texttt{sparse\_reward}: $1$ on success, else $0$;
+\item \texttt{distance\_reward}: $-d$ every step, plus $10$ on success;
+\item \texttt{shaped\_reward}: \texttt{distance\_reward}
+$-\,0.5\,\|v_{\rm rel}\|-0.01\,\|a\|^2$.
+\end{itemize}
+In \path{homework/hw11/baseline.py}, complete \texttt{InterceptController}:
+with $J$ the first two rows of your \texttt{jacob\_planar}, estimate the
+object's velocity $v_o=v_{\rm rel}+J\dot q$, command the tool velocity
+$v_o+k\,(p_{\rm rel}+2T\,v_o)$ with $k=4$ s$^{-1}$ and $T=0.02$ s, convert
+it to joint rates with your HW06 \texttt{damped\_least\_squares}, and scale
+by the speed limit. Why the $2T$ lead? Run
+\begin{lstlisting}
+python -m unittest discover -s tests/public -p "test_hw11_*.py" -v
+python -m homework.hw11.evaluate --policy baseline
+\end{lstlisting}
+\end{enumerate}
+
+\newpage
+\begin{enumerate}[start=3]
+\item \textbf{Train and compare.} For each reward, train one policy:
+\begin{lstlisting}
+python -m homework.hw11.train --reward sparse --out tmp/hw11/sparse.zip
+python -m homework.hw11.evaluate --policy tmp/hw11/sparse.zip
+\end{lstlisting}
+and the same for \texttt{distance} and \texttt{shaped}. Each run (600k steps)
+takes about 5--10 minutes of unattended CPU time and prints it; on a much
+slower computer use \texttt{-{}-steps 300000} and say so. Then train your
+best reward again with \texttt{-{}-seed 2}.
+\begin{enumerate}
+\item Make one table: policy, training minutes, success out of 100,
+mean time to intercept, and one observed failure (final distance and
+relative speed). Include your baseline.
+\item Which rewards learned the task? Explain the sparse result in terms of
+what the policy experiences early in training.
+\item Compare \texttt{distance} with \texttt{shaped}. Which failures did the
+relative-speed term change? Did the action penalty change anything you can
+measure?
+\item Compare your two seeds of the same reward. What does the difference
+say about reporting a single training run?
+\end{enumerate}
+
+\item \textbf{When is RL a plausible choice?}
+\begin{enumerate}
+\item List what your baseline needed from a model (kinematics, the delay,
+the object's motion) and what the learned policy needed instead (a
+simulator, a reward, and training time). Compare the time each controller
+takes to intercept.
+\item The success condition and the reward are different things. Give one
+way a policy could earn a high return under \texttt{distance\_reward}
+without intercepting, and how you would detect it.
+\item Name one change (a sensor, the arm, the object's motion, or the
+real robot) that would make you prefer the learned policy, and one that
+would make you prefer the baseline. In the project, where could a policy
+like this replace part of your controller, and what would it observe?
+\end{enumerate}
+\end{enumerate}
+
+\submission
+\end{document}

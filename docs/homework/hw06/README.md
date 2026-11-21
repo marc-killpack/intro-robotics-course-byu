@@ -2,14 +2,19 @@
 
 This draft introduces configuration spaces and a two-tree planner using a
 circular base and a two-joint arm. It is newly written for the introductory
-course. P1 (added Nov 19, TASKS D5(f)) is a short position-only IK problem
-adapted in spirit from the graduate HW06, damped pseudo-inverse only: students
-complete `SerialArm.ik_position` and find two elbow solutions for the arm's
-goal, one of which gives much shorter plans.
+course. P1 (moved from HW05 on Nov 20, TASKS D11) runs the Jacobian
+backward: a square 2-by-2 solve, then `damped_least_squares` for a redundant
+arm, with the null space and the damping tradeoff. P2 (added Nov 19, TASKS
+D5(f)) is a short position-only IK problem adapted in spirit from the
+graduate HW06, damped pseudo-inverse only: students complete
+`SerialArm.ik_position` and find two elbow solutions for the arm's goal, one
+of which gives much shorter plans. Both follow the IK lecture (IK1); P3--P7
+follow the planning lectures. Workload: P1 adds roughly 1.5--2 hours; pilot
+it.
 
-Students complete `ik_position` in `src/intro_robotics/kinematics.py`, and
+Students complete `damped_least_squares` and `ik_position` in `src/intro_robotics/kinematics.py`, and
 `extend_tree` and `rrt_connect` in `src/intro_robotics/rrt.py`. The `Tree`, arm model, collision/edge checking,
-and plotting are supplied. The faculty master has two marked answer regions.
+and plotting are supplied. The faculty master has four marked answer regions (two in `kinematics.py`, two in `rrt.py`).
 The current HW01--HW05 release manifest excludes the entire HW06 scaffold and
 both planning modules. Review the assignment's workload and boundaries before
 expanding that manifest and preparing a separate student copy.

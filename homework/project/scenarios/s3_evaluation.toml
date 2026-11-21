@@ -71,15 +71,16 @@ C = [0.40, 0.28, 0.08]
 "yellow square" = "C"
 "yellow triangle" = "A"
 
-[marks]                  # calibration marks on the belt, world XY
-xy = [[-0.38, 0.47], [0.38, 0.47], [0.38, 0.73], [-0.38, 0.73], [0.15, 0.73]]  # asymmetric: no mirror ambiguity
-size = 0.02
+[board]                  # calibration checkerboard; only in task.calibration_image
+squares = [16, 6]        # along the belt (x), across it (y): 15 x 5 interior corners
+square = 0.04            # side of one square
+center = [0.0, 0.6]      # world XY of the board's center (on the belt centerline)
 
 [cameras]
 width = 320              # both cameras; raise for sharper images, slower runs
 height = 240
-fixed_location = [0.0, 0.22, 1.05]
-fixed_target = [0.0, 0.6, 0.0]
+fixed_location = [0.03, 0.20, 1.07]  # moved from S1/S2: calibrate every run
+fixed_target = [0.02, 0.61, 0.0]
 fixed_focal = 400
 tool_offset = [-0.06, 0.0, 0.05]   # camera origin in the tool frame
 tool_focal = 180

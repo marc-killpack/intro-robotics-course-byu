@@ -26,13 +26,12 @@ request in TASKS.md.
 | [Homework map](../../HOMEWORK_MAP.md) | Exactly which methods students write versus which are supplied, HW01--HW10 | Reviewing any assignment boundary |
 | [Handout sources](../homework/README.md) | LaTeX handouts, per-assignment faculty notes, PDF build commands | Reading or building handouts |
 | [Assignment designs](../../instructor/NEW_ASSIGNMENT_DRAFTS.md) | HW06--HW10 and week-11 RL lab: outcomes, problems, supplied code | Reviewing later units |
-| [Checkerboard activity](checkerboard-activity.md) | First OpenCV homography exercise (feeds HW08) | Reviewing HW08 |
+| [Checkerboard activity](checkerboard-activity.md) | Week-8 lecture demonstration; HW08 problem 1 uses its corner file | Reviewing HW08 |
 | [Position-only branching reading](../readings/position_only_branching.tex) and [example](../../examples/position_only_branching.py) | Simplified planar version of Bodily, Allen, and Killpack (ICRA 2017) for lecture P6 (D9); build with `python docs/homework/build_pdfs.py readings/position_only_branching --render` | Preparing lecture P6 |
 | [Migration inventory](../../instructor/HOMEWORK_MIGRATION.md) | Problem-by-problem ME 537 to intro mapping, with graduate follow-up flags | Reviewing HW02--HW05 provenance |
 | Written keys: [HW02--HW05](../../instructor/FOUNDATION_REFERENCE.md), [HW06](../../instructor/HW06_REFERENCE.md), [HW07](../../instructor/HW07_REFERENCE.md), [HW08](../../instructor/HW08_REFERENCE.md), [HW09](../../instructor/HW09_REFERENCE.md) | Private hand-calculation answers | Checking a handout |
 | **Project** | | |
 | [Project specification](../../instructor/PROJECT_SPEC_DRAFT.md) | Conveyor task, observation/action contract, simulation rules, assessment approach | Deciding the minimum project |
-| [One-object conveyor pilot](conveyor-pilot.md) | `ConveyorDemo` mechanics, timed pickup, camera mounts | Understanding the simulator |
 | [Planning and camera pilots](new-pilots.md) | RRT, waypoint, oblique-camera, visual-servo, and moving-sort faculty prototypes | Understanding what the pilots do and do not show |
 | **Technical reference** | | |
 | [Arm prototype](arm-prototype.md) | `Joint`/`SerialArm` frames, units, API; the pyqtgraph and Matplotlib viewers and their open checks | Reviewing the arm API or deciding the student viewer (D6) |

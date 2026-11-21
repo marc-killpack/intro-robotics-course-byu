@@ -108,8 +108,8 @@ publishes the returned command. This choice:
 
 Faculty truth (object poses, labels, future trajectories) stays inside the
 simulator node and evaluation tools and is never published on student topics.
-The existing `ConveyorDemo` and camera pilots are the starting point for the
-simulator and camera nodes.
+The simulator and camera nodes grew from the one-object `ConveyorDemo` and
+camera pilots, removed Nov 20.
 
 ## Interface and simulated clock (proposal for D1(d))
 
@@ -125,8 +125,8 @@ runner, offline unit tests, and the optional Gymnasium wrapper.
 ```python
 class Controller:
     def __init__(self, task): ...  # from the scenario file: SerialArm, camera
-                                   # model and calibration marks, bins, rule
-                                   # table, joint limits, control period
+                                   # intrinsics, calibration image and board,
+                                   # bins, rule table, joint limits, period
     def reset(self): ...
     def step(self, obs) -> Command: ...
 
@@ -158,9 +158,9 @@ modes.
 
 `Task` gives the arm (`SerialArm` with its world base), limits, control
 period, pickup rules, belt geometry (not its speed), bins, the rule table,
-the fixed camera's intrinsics (not its pose: students calibrate from the
-marks), the mark positions, and the tool camera's intrinsics and
-`T_tool_camera`. The simulator does not call `SerialArm.fk`,
+the fixed camera's intrinsics (not its pose), a calibration image of the
+stopped, empty belt with a checkerboard on it and the board's size and
+placement, and the tool camera's intrinsics and `T_tool_camera`. The simulator does not call `SerialArm.fk`,
 `jacob_planar`, or `se3`, which are student code in the release; it uses its
 own closed-form planar kinematics, checked against `fk` in the faculty tests.
 
@@ -182,7 +182,7 @@ with the R2D2 model the container starts.
 | `/project/actuator/state` | `conveyor_interfaces/PickupState` | `conveyor_sim` → controller |
 | `/project/joint_velocity_command` | `std_msgs/Float64MultiArray` | controller → `conveyor_sim` |
 | `/project/actuator/request` | `conveyor_interfaces/PickupRequest` (stamped with the observation it answers) | controller → `conveyor_sim` |
-| `/project/scene_markers` | `visualization_msgs/MarkerArray` (belt, bins, marks; latched) | `conveyor_sim` → RViz |
+| `/project/scene_markers` | `visualization_msgs/MarkerArray` (belt and bins; latched) | `conveyor_sim` → RViz |
 | `/project/truth_markers` | object truth, only with `truth_markers:=true` (faculty demonstrations) | `conveyor_sim` → RViz |
 
 The camera node renders from the simulator's truth, so it runs in the
@@ -247,12 +247,33 @@ control period and physics substeps, seed; arm lengths, limits, base, height,
 start pose, speed and acceleration limits, self-collision mode; pickup
 timing and tolerances; belt geometry, speed and speed variation; object
 count, spacing, size, jitter, colors, and shapes; bins and the rule table;
-calibration marks; image size and camera placement; and a `[realism]`
+the calibration board; image size and camera placement; and a `[realism]`
 switch (image noise and belt-speed variation, decision D1(g)) that the
 runner's `--realism on|off` overrides. S1--S3 exist (Nov 19; see
 [results](#evidence-and-assessment)). A file may start from another with
 `base = "file.toml"`; the faculty-only `instructor/project/s3_heldout.toml`
-uses this to change only S3's rule table and seeds.
+uses this to change only S3's rule table, seeds, and fixed-camera pose.
+
+**Calibration** (instructor, November 20). Students calibrate the fixed
+camera from a checkerboard every run, stacking the HW08 plane map with
+OpenCV corner detection. `task.calibration_image` shows the board (16 by 6
+squares of 4 cm, centered on the belt) on the stopped, empty belt; the board
+never appears in episode images. Its orientation is fixed and documented
+(long side along the belt, +x right and +y up in the image), so the only
+ordering step is reversing OpenCV's corners when it starts from the other
+end (about half the time). Students write `find_board_corners` (marked
+"Project" in `src/intro_robotics/vision.py`); `board_corners` and
+`calibrate` are supplied. S3 practice moves the fixed camera a few
+centimeters from S1/S2, and the held-out evaluation moves it again; the
+student guide says so. `homework/project/check_calibration.py` reports the
+corner order, a fit-on-half/check-on-half error, and the error against the
+true camera over the visible belt, with `--warp N` to test randomly warped
+copies of the image. A map saved from S3 practice is off by more than 2 cm
+on the held-out camera. Lens distortion is not modeled. The five dark marks
+remain only in the HW08 and HW09 scenarios. The calibration check is the
+first draft checkoff (start of the second launch session, one lecture day
+after calibration is taught); later checkoffs are S1 (week 12), S2
+with realism (week 13), and the evaluation (week 14).
 
 ## Simulation model
 
@@ -283,7 +304,7 @@ uses this to change only S3's rule table and seeds.
   the simulated clock.
 
 `SortingSimulator` (Nov 19) generalizes the one-object `ConveyorDemo`
-pilot to seeded multi-object episodes with scoring, the rule table, both
+pilot (removed Nov 20) to seeded multi-object episodes with scoring, the rule table, both
 cameras, image noise, belt-speed variation, and self-collision modes. Images
 come from an OpenCV polygon fill of the same pinhole projection as
 `planar_scene.py` (they differ only in edge pixels). Held objects are not
@@ -303,7 +324,8 @@ never cost points; the second round may penalize collisions with world
 obstacles (instructor, Nov 19).
 
 Camera-only reference controller (Nov 19, `reference.py`, faculty only): it
-uses only `Observation` and `Task` -- a homography from the marks, color
+uses only `Observation` and `Task` -- a checkerboard homography from
+`task.calibration_image` (Nov 20; marks before), color
 masks and contour shape classification, nearest-neighbor tracking with a
 least-squares velocity, tool-camera IBVS with the constant-depth planar
 image Jacobian for the final approach, damped least squares with a
@@ -316,17 +338,20 @@ pick radius is about 15 pixels), and it holds the tool heading only softly
 (weight 0.3) during IBVS. With a hard heading hold the damped solve lost
 tracking near full reach and sorted 0--1 of 15 objects at 0.08 m/s.
 
-Scenario results (Nov 19; five seeds each; "half speed" is the reference
+Scenario results (Nov 20, with checkerboard calibration and the moved S3
+and held-out cameras; Nov 19 values with marks shown where they differ;
+five seeds each: S1 1--5, S2 21--25, S3 31--35, held-out 101--105;
+"half speed" is the reference
 controller with its tool-speed cap lowered from 0.8 to 0.4 m/s, standing in
 for a correct but cautious team):
 
 | Scenario | Oracle | Reference | Half speed |
 | --- | --- | --- | --- |
 | S1, stopped belt, 6 objects | 60 (all seeds) | 60 | 60 (3--6 s slower) |
-| S2, 0.06 m/s, 15 objects, realism off | 150 | 140 (93%) | 112 (75%) |
-| S2, realism on | 150 | 142 (95%) | 114 (76%) |
-| S3 practice (seeds 31--35) | 150 | 140 (93%) | 112 (75%) |
-| S3 held-out (seeds 101--105) | 150 | 138 (92%) | 102 (68%) |
+| S2, 0.06 m/s, 15 objects, realism off | 150 | 142 (95%; was 140) | 112 (75%) |
+| S2, realism on | 150 | 144 (96%; was 142) | 112 (75%; was 114) |
+| S3 practice (seeds 31--35) | 150 | 140 (93%) | 114 (76%; was 112) |
+| S3 held-out (seeds 101--105) | 150 | 140 (93%; was 138) | 104 (69%; was 102) |
 
 S2 and S3 bring an object every 3.3 s at 0.06 m/s (spacing 0.2 m, 15
 objects, about 50 simulated seconds). The oracle sorts everything, so its

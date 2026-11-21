@@ -51,6 +51,9 @@ RUN python3 -m venv --system-site-packages /home/student/.venv \
         PySide6==6.8.3 PySide6-Essentials==6.8.3 PySide6-Addons==6.8.3 \
         shiboken6==6.8.3 pyqtgraph==0.14.0 PyOpenGL==3.1.10 colorama==0.4.6 \
     && /home/student/.venv/bin/python -c "import cv2, numpy, scipy, pyqtgraph, OpenGL; from PySide6 import QtCore; print('OpenCV', cv2.__version__, 'NumPy', numpy.__version__, 'SciPy', scipy.__version__, 'Qt', QtCore.__version__)"
+# Learning packages for HW10 and HW11 (CPU PyTorch, Gymnasium, Stable-Baselines3).
+# NumPy is pinned to the version above so OpenCV and SciPy keep working.
+RUN /home/student/.venv/bin/python -c "import numpy; print('numpy==' + numpy.__version__)" > /tmp/keep-numpy.txt     && /home/student/.venv/bin/python -m pip install --no-cache-dir -c /tmp/keep-numpy.txt         --index-url https://download.pytorch.org/whl/cpu torch==2.15.0     && /home/student/.venv/bin/python -m pip install --no-cache-dir -c /tmp/keep-numpy.txt         gymnasium==1.4.0 stable-baselines3==2.9.2     && /home/student/.venv/bin/python -c "import cv2, numpy, torch, gymnasium, stable_baselines3; print('torch', torch.__version__, 'NumPy', numpy.__version__, 'OpenCV', cv2.__version__)"     && rm /tmp/keep-numpy.txt
 ENV PATH="/home/student/.venv/bin:${PATH}"
 WORKDIR /workspace
 CMD ["/usr/local/bin/start-course-gui"]

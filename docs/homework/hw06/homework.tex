@@ -2,11 +2,36 @@
 \input{../handout.tex}
 \begin{document}
 \courseheader{6}{Configuration space and RRT-Connect}
-\textbf{Schedule:} planning unit; the instructor will set the due date.
+\textbf{Schedule:} problems 1--2 follow the inverse-velocity and IK lecture;
+problems 3--7 follow the planning lectures.
 Use meters for the base, radians for arm joints, and the provided scenes.
 This assignment plans geometric paths; it does not yet assign time to them.
 
 \begin{enumerate}
+\item \textbf{From a desired tool velocity to joint rates.}
+Use only the two position rows, $J_{xy}$ (the first two rows of
+\texttt{jacob\_planar}), and a desired tool velocity $v=[0,\ 0.1]^T$ m/s.
+\begin{enumerate}
+\item For the two-link arm of HW05 problem 1 and problems 2--7 below (lengths
+$0.4$ and $0.3$ m) at $q=[\pi/2,-\pi/2]$, solve
+$J_{xy}\dot q=v$ by hand. Then evaluate $\det J_{xy}$ at $q=[\pi/2,0]$ and
+name the tool direction that cannot be produced there.
+\item In \path{src/intro_robotics/kinematics.py}, complete
+\texttt{damped\_least\_squares(J, v, damping)}, which returns
+$\dot q=J^T(JJ^T+\lambda^2I)^{-1}v$ using one linear solve. Show on paper that
+for $\lambda=0$ and a square, invertible $J$ this equals $J^{-1}v$, and check
+your answer to (a).
+\item Use HW05 problem 3's three-link arm, with link lengths $0.4$, $0.3$,
+and $0.2$ m, at $q=[\pi/2,-\pi/2,\pi/2]$. Compute $\dot q$ with
+$\lambda=0$ and confirm $J_{xy}\dot q=v$. Find a nonzero $n$ with
+$J_{xy}n=0$ (for example, the last row of \texttt{np.linalg.svd(J)[2]}).
+Show that $\dot q+0.5n$ also gives $v$, and compare the norms. Which of the
+infinitely many answers does the formula return?
+\item At the nearly straight pose $q=[\pi/2,\ 0.01,\ 0.01]$, compare
+$\lambda=0$ and $\lambda=0.05$: report $\|\dot q\|$ and the achieved
+$J_{xy}\dot q$. What does damping trade away, and why might a robot prefer it?
+\end{enumerate}
+
 \item \textbf{Turn a tool goal into a joint goal (IK).}
 Tasks are usually given as tool positions, but the planner needs joint
 configurations. The provided planar arm (\texttt{arm\_scene()}) has two
@@ -17,14 +42,14 @@ tool must reach $p_g=[0.4434,\ 0.3429]$ m.
 \texttt{SerialArm.ik\_position}. Repeat: compute the XY
 error $e=p_g-p(q)$; stop when $\|e\|$ is below the tolerance; otherwise take
 the step $q\leftarrow q+$\texttt{damped\_least\_squares}$(J_{xy}(q),e,\lambda)$
-from HW05 and keep each joint within its limits. Return the final $q$ and
+from problem 1 and keep each joint within its limits. Return the final $q$ and
 whether it converged. Why can the step treat $e$ like a velocity?
 \item Run it from $q_0=[0.5,-1]$ and from $q_0=[0,1]$. Report both
 solutions, confirm each with your FK, and sketch the two arm shapes. Check
 both with \texttt{scene.is\_free(q)}.
 \item The start is $q_s=[-1.2,1.3]$. Which solution is closer to it in joint
-space? After problem 5, plan to each goal with the same settings and compare
-the path lengths. Problems 2--6 use $q_g=[1.2,-1.3]$.
+space? After problem 6, plan to each goal with the same settings and compare
+the path lengths. Problems 3--7 use $q_g=[1.2,-1.3]$.
 \end{enumerate}
 
 \item \textbf{A path describes the whole robot.}
@@ -42,10 +67,6 @@ itself is outside the obstacle. Check the start and goal using the supplied
 prove that the motion between them is collision-free.
 \end{enumerate}
 
-\end{enumerate}
-
-\newpage
-\begin{enumerate}[start=3]
 \item \textbf{Trace two trees by hand.}
 In an empty 2D configuration space, the start tree contains a root at
 $(0,0)$, node 1 at $(0.2,0)$ with parent 0, and node 2 at $(0.2,0.2)$ with
@@ -71,10 +92,7 @@ its index and whether it reached the target. For a blocked edge return
 \texttt{(None, False)} without changing the tree. If the target is already a
 node, return that node and \texttt{True}.
 \end{enumerate}
-\end{enumerate}
 
-\newpage
-\begin{enumerate}[start=5]
 \item \textbf{Connect the trees.}
 Complete \texttt{rrt\_connect} in the same file. Endpoint checks, a seeded
 random generator, and the tree class are provided.

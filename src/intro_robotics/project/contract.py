@@ -49,11 +49,18 @@ class Task:
     arm: SerialArm with its world base placement (the arm plane is
         `arm_height` above the belt) and joint limits.
     fixed_camera: (width, height, focal) of the overview camera. Its pose is
-        not given; calibrate a homography from the marks.
-    marks: world XY (meters) of the calibration marks visible on the belt.
+        not given, and the graded evaluation moves it slightly: calibrate a
+        belt-plane homography from calibration_image at the start of every run.
+    calibration_image: (H, W, 3) uint8 RGB from the fixed camera of the
+        stopped, empty belt with the checkerboard lying on it. The board is
+        removed before the episode, so Observation images never show it.
+    board: {"squares": (nx, ny), "square": side (m), "center": (x, y) world}.
+        Its long side runs along the belt; see vision.board_corners.
     tool_camera: intrinsics and T_tool_camera, as a Camera with mount='tool'.
     bins: {name: (x, y, radius)} in world meters.
     rules: {(color, shape): bin name}.
+    marks: world XY of small dark marks on the belt (HW08 and HW09 scenarios
+        only; project scenarios use the board instead).
     """
 
     arm: object
@@ -66,9 +73,11 @@ class Task:
     bins: dict
     rules: dict
     fixed_camera: tuple
-    marks: np.ndarray
     tool_camera: object
     colors: dict = field(default_factory=dict)  # color name -> nominal RGB
+    calibration_image: np.ndarray = None  # project scenarios (with a [board] table)
+    board: dict = None
+    marks: np.ndarray = None  # HW08/HW09 scenarios (with a [marks] table)
 
 
 class Controller:

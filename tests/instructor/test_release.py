@@ -66,7 +66,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn(b"HW01", files["README.md"])
         for name in (
             "camera",
-            "conveyor",
+            "vision",
             "planning",
             "rrt",
             "planar_scene",
@@ -100,7 +100,7 @@ from intro_robotics.visualization_3d import ArmMeshObject
 assert Path(intro_robotics.__file__).resolve().is_relative_to(Path.cwd() / 'src')
 for module in pkgutil.walk_packages(intro_robotics.__path__, 'intro_robotics.'):
     importlib.import_module(module.name)
-for name in ('camera', 'conveyor', 'planning', 'rrt', 'planar_scene', 'waypoint_optimization', 'waypoint_checks', 'waypoint_metrics'):
+for name in ('camera', 'vision', 'planning', 'rrt', 'planar_scene', 'waypoint_optimization', 'waypoint_checks', 'waypoint_metrics'):
     assert importlib.util.find_spec('intro_robotics.' + name) is None
 def empty(function, arguments, label):
     try:
@@ -121,7 +121,7 @@ empty(lambda: ArmMeshObject(arm, q0=[0]), [], 'HW04')
 arm.fk = lambda *args, **kwargs: np.eye(4)
 empty(arm.jacob_planar, [[0]], 'HW05')
 from intro_robotics.kinematics import damped_least_squares
-empty(damped_least_squares, [np.eye(2), [0.0, 0.0]], 'HW05')
+empty(damped_least_squares, [np.eye(2), [0.0, 0.0]], 'HW06')
 empty(arm.ik_position, [[0.0, 0.0], [0.0]], 'HW06')
 from homework.hw03.frame_broadcaster import frame_transforms
 empty(frame_transforms, [], 'HW03')

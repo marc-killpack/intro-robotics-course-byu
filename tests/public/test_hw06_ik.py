@@ -1,4 +1,4 @@
-"""Intentionally limited HW06 problem 1 checkpoint (IK by damped least squares)."""
+"""Intentionally limited HW06 problem 1--2 checkpoints (damped least squares and IK)."""
 
 import unittest
 
@@ -9,6 +9,15 @@ from homework.models import planar_arm
 
 
 class PositionIKChecks(unittest.TestCase):
+    def test_damped_least_squares_square_and_redundant(self):
+        from intro_robotics.kinematics import damped_least_squares
+
+        square = np.array([[1.0, 2.0], [3.0, 4.0]])
+        assert_allclose(damped_least_squares(square, [1.0, -1.0]),
+                        np.linalg.solve(square, [1.0, -1.0]), atol=1e-12)
+        wide = np.array([[1.0, 0.5, -0.2], [0.0, 1.0, 0.3]])
+        assert_allclose(wide @ damped_least_squares(wide, [0.2, 0.1]), [0.2, 0.1], atol=1e-12)
+
     def test_reaches_a_reachable_point(self):
         arm = planar_arm([0.5, 0.4])
         q, converged = arm.ik_position([0.3, 0.6], q0=[0.2, 0.5])

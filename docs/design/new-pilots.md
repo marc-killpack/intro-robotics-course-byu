@@ -7,16 +7,16 @@ none is included in the current HW01--HW05 student manifest.
 python -m homework.hw06.hw06_planning --save tmp/hw06.png
 python -m homework.hw07.hw07_optimization --save tmp/hw07.png
 python examples/oblique_camera_pilot.py
-python examples/vision_measurement_pilot.py
-python -m examples.visual_servo_pilot
-python -m examples.moving_visual_servo_pilot --animation tmp/vision-pilot/moving-sort.gif
 python -m examples.checkerboard_homography
+python -m examples.feature_demo --save tmp/features.png
 ```
 
 The earlier standalone planning and waypoint pilot scripts were removed on
 November 18; the HW06 and HW07 activities (run here with the completed faculty
 masters) show the same planners, optimizers, and scenes and serve as the
-lecture demonstrations. The HW06 image shows a circular base, the two-joint
+lecture demonstrations. The fixed-camera and moving visual-servo pilots were
+removed on November 20; HW09 (tool-camera IBVS on the project runner) and
+`examples/ibvs_lecture_demos.py` replace them. The HW06 image shows a circular base, the two-joint
 arm's configuration space, and arm poses along a computed path. The dashed
 circle in the base panel expands the obstacle by the base radius; the
 configuration-space background is a sampled illustration.
@@ -57,47 +57,13 @@ example saves `tmp/checkerboard/homography.png` with both views and an
 explicitly scaled rectification. The red mark establishes an orientation
 cue; the reference code and data remain outside the current student manifest.
 
-The camera scripts save `tmp/vision-pilot/views.png`, fixed/tool RGB PNGs,
-six timestamped PNG frames, and `measurements.png`. Polygon vertices are
-projected from world z=0 through the same pinhole camera used by the existing
-pilot. The first camera is oblique; the other pose follows a supplied tool
-transform. The frame timestamps and faculty ground truth use separate CSVs.
-The five calibration markers include four fit points and one independent
-check point. Their coordinates are ideal renderer projections, not noisy
-detected corners. Later course data must define how correspondences are
-obtained and keep the independent validation evidence separate.
-
-The simple measurement demo fits a map from the four pairs, thresholds RGB,
-rectifies the mask onto a world-plane grid, and estimates the object's
-centroid and velocity from timestamps. `None` means a lost target. Faculty
-truth is used only afterward for evaluation. The two example shapes have
-different colors; this tiny sequence is not a suitable classifier dataset.
-The additional `visual-servo.png` shows a stationary-target fixed-camera
-feedback loop connected to `ConveyorDemo`. Its controller receives the image,
-joint state, and calibration; the object's true position is used only to draw
-the synthetic image and to evaluate the final error. In one ideal host run it
-reached about 0.008 m true error in 3.00 simulated seconds. During a five-frame
-simulated detection loss the controller requests zero velocity; the simulator
-decelerates within its acceleration limits. The pilot uses NumPy thresholds,
-not OpenCV, and does not pick an object. It does not yet establish moving or
-tool-camera feedback, multi-object association, realistic noise, occlusion,
-lens distortion, or simulation-to-real performance.
-
-The moving-object extension saves `tmp/vision-pilot/moving-sort.png` and,
-with the animation option, `tmp/vision-pilot/moving-sort.gif`. It measures a
-single red object from fixed-camera images, estimates velocity using image
-timestamps, follows the belt during lowering, and transfers to a known bin.
-The controller receives image measurements, calibration, joint state, arm
-geometry, actuator phase, and the bin location. Object truth is used by the
-renderer and for faculty evaluation/animation, not as a control target. Five
-lost image frames request zero velocity and clear the stale estimate; the
-simulator decelerates subject to its acceleration limit. In one ideal run it
-sorted one object in 4.88 simulated seconds, without a failed pick or joint
-limit hit. The GIF is a top-down visualization, not the camera image.
-
-This is still a noiseless, single-object, fixed-camera NumPy faculty pilot.
-It has no OpenCV student workflow, arm occlusion, collision-aware transfer,
-multiple-object association, closed-loop wrist camera, or grading benchmark.
+The oblique camera pilot saves `tmp/vision-pilot/views.png`, fixed and tool
+RGB images, and timestamped frames of an oblique planar scene; its scene
+helpers also draw the checkerboard views. The vision-measurement,
+fixed-camera visual-servo, moving-sort, and one-object conveyor pilots were
+removed on November 20: HW08 (calibration, detection, and tracking on the
+project camera), HW09 (tool-camera IBVS), and the project's
+`SortingSimulator` replace them.
 The flat renderer removes the object from the belt image once it is lifted;
 it does not draw the held object above the plane. These restrictions matter
 when interpreting the successful single run.
@@ -109,8 +75,7 @@ python -m homework.hw06.hw06_planning --save tmp/hw06.png
 ```
 
 Host checks include `tests.instructor.test_planning`,
-`tests.instructor.test_planar_scene`, `tests.instructor.test_waypoint_optimization`,
-`tests.instructor.test_moving_visual_servo_pilot`, and the HW06/HW07 preview
+`tests.instructor.test_planar_scene`, `tests.instructor.test_waypoint_optimization`, and the HW06/HW07 preview
 tests. The previews construct temporary student
 trees and check the assigned stubs. The existing release manifest remains
 limited to HW01--HW05. A separately tagged AMD64 build with GUI-enabled OpenCV

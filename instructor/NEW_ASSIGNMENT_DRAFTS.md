@@ -69,6 +69,10 @@ not CHOMP. RRT*, CHOMP, TrajOpt, and STOMP can be compared in lecture.
 
 ## HW08: calibration, detection, and tracking
 
+*Built Nov 20* to the revised scope below, on the project's fixed camera:
+see the [faculty README](../docs/homework/hw08/README.md). The original
+design that follows is kept for reference.
+
 *Revised scope, Nov 19 (TASKS.md D3):* keep the OpenCV plane map with one
 held-out check, color segmentation and centroid, a new color-and-shape rule
 classifier (contour vertex count), and filtered velocity from timestamps. Move
@@ -101,12 +105,15 @@ and independent data review before becoming a student exercise.
 
 ## HW09: planar visual feedback
 
-*Superseded Nov 19:* HW09 is being rewritten as tool-camera IBVS (TASKS.md
-D5, D3): projection, then the constant-depth image Jacobian by hand; the IBVS
-step on the `Controller` class with the HW05 damped solve; the lost-target
-hold; stationary target only. Moving-target interception moves to project
-scenario S2; the gain/delay study and fixed-camera comparison become lecture
-demonstrations. The fixed-camera draft below is kept as that comparison.
+*Rewritten Nov 19* as tool-camera IBVS (TASKS.md D5, D3); see
+[the handout source](../docs/homework/hw09/README.md) and
+[key](HW09_REFERENCE.md): projection and the constant-depth image Jacobian by
+hand; `ibvs_velocity` and `joint_rates` (HW06 damped solve, heading held) on
+the project `Controller` class and lockstep runner; a camera blackout for
+the lost-target hold; stationary object only. Moving-target interception is
+project S2; the gain/delay study and the measure-then-move comparison are
+lecture demonstrations (`examples/ibvs_lecture_demos.py`). The fixed-camera
+design below is kept only as background for that comparison.
 
 **Outcomes:** VS1--VS3. Begin with a fixed camera and stationary target.
 
@@ -129,6 +136,11 @@ is required. Faculty NumPy pilots exercise stationary feedback and one moving
 fixed-camera pickup; an OpenCV-backed, stripped student activity is pending.
 
 ## HW10: small PyTorch classifier
+
+*Built Nov 20* as a guided lab on generated project-camera crops with
+deliberately hard conditions (see the [faculty README](../docs/homework/hw10/README.md)):
+the HW08 rules score 100% clean and 40% hard, the network 100% and about 97%.
+The design below is kept for reference.
 
 *Revised scope, Nov 19 (TASKS.md D3):* a short guided lab (about 3--4 hours,
 two lectures). Students complete the forward/loss/backward/step lines, train
@@ -162,7 +174,18 @@ in simulation, reward, the policy as a network, PPO intuition, SB3). The short
 homework changes only the reward for a supplied task and compares variants;
 teams may use RL late in the project to improve score and speed. The task
 (state-based interception, with planar reaching as the fallback) is in
-TASKS.md D3. The earlier lab design below is kept for reference.
+TASKS.md D3.
+
+*Built Nov 19 as HW11* ([faculty README](../docs/homework/hw11/README.md)):
+a Gymnasium environment (`src/intro_robotics/rl_interception.py`) with a
+two-link 0.4/0.3 m arm, the project's timing, limits, and one-period delay,
+and an object at 0.05--0.12 m/s; success is 2.5 cm and 5 cm/s held for three
+periods. Students write sparse, distance, and shaped rewards and a
+damped-least-squares interception baseline, train PPO with a supplied
+script (300k steps, a few CPU minutes), and compare all of them on 100
+held-out cases. The CPU pilot met the 10-minute target, so interception is
+kept; reaching is the lecture demonstration, with checkpoints for both. The
+earlier lab design below is kept for reference.
 
 ### Earlier design: week-11 guided RL lab
 

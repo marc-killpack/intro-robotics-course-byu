@@ -25,7 +25,7 @@ Topics (relative names; the launch file puts them under /project):
     actuator/state              conveyor_interfaces/PickupState
     fixed_camera/image_raw      sensor_msgs/Image (rgb8) and .../camera_info
     tool_camera/image_raw       sensor_msgs/Image (rgb8) and .../camera_info
-    scene_markers               visualization_msgs/MarkerArray (belt, bins, marks)
+    scene_markers               visualization_msgs/MarkerArray (belt, bins; marks in HW scenarios)
     truth_markers               visualization_msgs/MarkerArray (only with --truth-markers)
     joint_velocity_command      std_msgs/Float64MultiArray   (subscribed)
     actuator/request            conveyor_interfaces/PickupRequest (subscribed)

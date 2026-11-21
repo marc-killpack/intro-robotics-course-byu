@@ -1,86 +1,108 @@
-% New introductory computer-vision exercise; faculty draft.
+% Introductory computer-vision exercise on the project camera (rewritten Nov 20, TASKS.md D3).
 \input{../handout.tex}
 \begin{document}
-\courseheader{8}{Camera geometry, calibration, and tracking}
-\textbf{Schedule:} week 8. Use meters and seconds for world measurements;
-image coordinates $(u,v)$ are pixels, with $u$ right and $v$ down.
+\courseheader{8}{Calibration, detection, and tracking}
+\textbf{Schedule:} week 8. You will measure objects on the project's moving
+belt with its fixed overview camera: where each object is, what it is, and
+how fast it moves. These functions become your project's perception. Units
+are meters and seconds in the world; image coordinates $(u,v)$ are pixels,
+$u$ right and $v$ down.
 
-\textbf{Faculty draft:} The starter code and the object sequence described
-below still need to be prepared and reviewed before this can be assigned.
+\textbf{Camera.} The fixed camera looks down at the belt at an angle from
+above the arm. Its pose is \emph{not} given to you. Instead, five small dark
+marks lie on the belt at known world positions (\texttt{task.marks}). The
+provided \texttt{find\_marks} returns their pixels in the same order.
+Your code goes in \path{src/intro_robotics/vision.py}.
 
 \begin{enumerate}
-\item \textbf{Project a point by hand.}
-A camera has $f_x=f_y=600$ pixels and principal point $(c_x,c_y)=(320,240)$
-pixels. Its optical axes are X right, Y down, and Z forward.
+\item \textbf{Map image pixels to the belt plane.}
+For points on one plane, a $3\times3$ homography $H$ maps pixels to world
+$XY$: $\alpha\,[X,\ Y,\ 1]^T=H\,[u,\ v,\ 1]^T$.
 \begin{enumerate}
-\item For a point $p_c=[0.12,-0.04,0.80]^T$ m in the camera frame, calculate
-its image location using $u=f_x X_c/Z_c+c_x$ and $v=f_y Y_c/Z_c+c_y$.
-\item Project $p_c'=[0.24,-0.08,1.60]^T$ m. Explain why one image point
-alone cannot tell you a general 3D point's depth.
-\end{enumerate}
-
-\item \textbf{Calibrate a planar workspace.}
-The two supplied checkerboard images show the same fixed board from two
-camera poses. Each square is $0.04$ m wide, and the red dot identifies one
-end of the board. The supplied \texttt{corner\_observations.csv} gives
-corresponding $(u,v)$ pixels and world-plane $(X,Y)$ meters; four rows are
-marked \texttt{fit} and 31 are marked \texttt{check}.
-\begin{enumerate}
-\item Use the four fit pairs for view 2 with \texttt{cv2.findHomography}
-to estimate $H_{P\leftarrow I}$, where
+\item By hand, map the pixel $(200,120)$ with
 \[
-\alpha\begin{bmatrix}X\\Y\\1\end{bmatrix}
-=H_{P\leftarrow I}\begin{bmatrix}u\\v\\1\end{bmatrix}.
+H=\begin{bmatrix}0.0025&0&-0.38\\0&-0.0025&1.02\\0&0.001&1.08\end{bmatrix}.
 \]
-Explain the input and output units and why normalization by the third
-homogeneous coordinate is needed. A CSV loader and point-format helper
-will be supplied.
-\item Map the 31 \emph{check} corners to the plane. Report the root mean
-square and maximum position errors in meters; do not use these corners for
-the fit. Show one annotated image identifying fit and check points.
-\item Repeat the fit for view 1. Explain why a camera change requires a
-new image-to-plane map, even though the board has not moved.
-\end{enumerate}
+Why must you divide by the third entry? Show that $4H$ gives the same
+point. Since scale does not matter, $H$ has 8 unknowns; how many marks are
+needed at least, and why?
+\item Implement \texttt{fit\_plane\_map(pixels, world)} with
+\texttt{cv2.findHomography} and \texttt{to\_plane(h, pixel)}. Then run
+\texttt{python -m homework.hw08.hw08\_checkerboard}: two views of one
+checkerboard (4 cm squares; the red dot marks one end), where each view's
+map is fitted to 4 corners and checked on the other 31. Report the RMS and
+largest check errors in millimeters, and the error on the fit corners. Why
+does the fit-corner error say nothing about the map's quality?
+\item The script also applies view 2's map to view 1's pixels. Report the
+error. The board did not move; explain why a new camera pose needs a new
+map, and why the tool camera cannot use one.
+\item The project's fixed camera has five marks on the belt instead of a
+board (problem 4 fits 4 and checks 1). A map is correct only for points
+\emph{on} its plane. The camera sees an object held $0.25$ m above the
+belt; sketch the camera ray through it. Does the map place the object
+nearer to the camera or farther away?
 \end{enumerate}
 
-\newpage
-\begin{enumerate}[start=3]
-\item \textbf{Segment and measure a planar target.}
-A supplied fixed-camera sequence will show one red target moving on the
-calibration plane. A provided helper will rectify each image onto a grid with
-1,000 pixels per meter; its upper-left pixel center represents
-$(X,Y)=(0.09,0.29)$ m, with X right and Y up. Use the calibration supplied
-for \emph{that sequence's camera}; it may differ from the checkerboard views.
+\item \textbf{Find and classify objects.}
+Each object is one of three colors (\texttt{task.colors}, RGB) and one of
+three shapes. The project's rule table (\texttt{task.rules}) sends each
+color and shape to a bin.
 \begin{enumerate}
-\item In each rectified BGR image, use \texttt{cv2.inRange} to make a red
-mask. The supplied bounds are $(0,0,160)$ through $(90,100,255)$ in BGR
-order. Show one frame and its mask. Report the target's bounding box in pixels.
-\item Use \texttt{cv2.moments(mask, binaryImage=True)} to calculate the mask
-centroid and area. Convert the centroid to world XY using the grid convention,
-and convert the area from pixels to square meters. Explain why a circular
-target alone does not reveal its in-plane orientation.
-\item Return \texttt{None} when the mask has no target pixels. Show one
-such frame and explain why $(0,0)$ would be a misleading substitute.
+\item Implement \texttt{color\_mask(image, rgb, tolerance)} with
+\texttt{cv2.inRange}. The belt is gray $(150,150,150)$. What is the smallest
+tolerance at which belt pixels would count as red $(200,40,40)$?
+\item Implement \texttt{classify\_shape(contour)}: simplify the contour
+with \texttt{cv2.approxPolyDP} and count its corners. Why is the tolerance a
+fraction of the perimeter rather than a fixed number of pixels?
+\item Implement \texttt{find\_objects(image, colors)} (the docstring lists
+the steps). It skips objects cut off by the image border. Give two reasons a
+cut-off object's measurement would be wrong.
 \end{enumerate}
 
-\item \textbf{Estimate motion and discuss limitations.}
+\item \textbf{Estimate velocity from timestamps.}
+A track is one object's detections over time. The camera runs at 50 Hz
+(0.02 s per frame), but frames can be missed.
 \begin{enumerate}
-\item By hand, convert grid centroids $(260,260)$ at $t=1.0$ s and
-$(300,260)$ at $t=2.0$ s into world positions. Calculate the average XY
-velocity in meters per second.
-\item Estimate target positions and velocities from the supplied timestamps.
-Plot them and compare with the separately supplied evaluation values. Mark
-missing detections rather than inventing a position or velocity.
-\item Explain why the planar mapping can be inaccurate for a feature above
-the calibrated plane or for an image with uncorrected lens distortion.
-Why should an extended object's centroid be measured \emph{after} plane
-rectification when a metric plane centroid is desired?
+\item By hand: an object is detected at $X = 0.1002$, $0.1008$, $0.1026$,
+and $0.1048$ m at $t = 0$, $0.02$, $0.04$, and $0.08$ s (the frame at
+$0.06$ s was missed). Compute the three two-point velocities. Then compute
+the least-squares slope
+$v=\sum_i (t_i-\bar t)\,X_i \big/ \sum_i (t_i-\bar t)^2$. The belt moves at
+$0.06$ m/s; which estimate would you trust, and why?
+\item Implement \texttt{fit\_velocity(times, points)}: return \texttt{None}
+for fewer than \texttt{min\_points} detections; otherwise fit a straight line
+through all of them.
+\end{enumerate}
+
+\item \textbf{Run the pipeline on the moving belt.}
+\begin{lstlisting}
+python -m homework.hw08.hw08_perception --save tmp/hw08.png
+python -m homework.hw08.hw08_perception --seed 2 --realism on --drop 0.3
+\end{lstlisting}
+The arm holds still for 15 s while objects pass; the activity tracks your
+detections and grades every frame against the simulator's truth. \texttt{-{}-realism on} adds
+pixel noise and changes the belt speed slightly; \texttt{-{}-drop 0.3} blanks
+30\% of the frames.
+\begin{enumerate}
+\item For both runs, report mark 4's error (the map fitted to marks 0--3),
+the classification accuracy, the median and largest position errors, and the RMS velocity errors of
+\texttt{fit\_velocity} and of the two-point difference. Include your plot.
+\item The belt moves $1.2$ mm per frame. Compare that with your position
+errors to explain why the two-point difference is so poor, even with clean
+images.
+\item Your fit uses each track's last 25 detections (0.5 s). What would a
+longer window improve, and what would it make worse if the belt changed
+speed? Why does \texttt{fit\_velocity} take timestamps instead of assuming
+0.02 s between detections?
+\item For three objects in your plot, give the bin that the rule table
+assigns. Why must a project controller read \texttt{task.rules} rather than
+hard-code the table?
 \end{enumerate}
 \end{enumerate}
 
-\textbf{Project connection:} A calibrated target position and velocity can
-help an arm intercept an object on the conveyor. This exercise assumes a fixed
-camera and one planar target.
+\textbf{Project connection:} the project controller calls these functions
+every period to choose an object, predict where it will be, and pick its
+bin. HW09 uses the tool camera for the final approach.
 
 \submission
 \end{document}

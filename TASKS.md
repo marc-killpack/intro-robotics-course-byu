@@ -1,6 +1,6 @@
 # Course preparation task list
 
-Updated November 19, 2026. **This is the single place for open work.** It has
+Updated November 20, 2026. **This is the single place for open work.** It has
 four parts:
 
 0. [Approach and working schedule](#0-approach-and-working-schedule): how to sequence the work before January
@@ -45,7 +45,11 @@ decided first so later drafts are not rebuilt.
    (decision D10), so there is one canonical implementation.
 5. **Weekly 30-minute pass** down the decisions table; record each outcome
    and date in the table or the design index.
-6. **Critical path:** the project node graph (simulator, camera, controller
+6. **Lecture before homework** (instructor, Nov 20): the lecture covering
+   any homework problem or checkoff is at least one lecture day before it is
+   due. Plan by session *sequence*, not dates; the problem-to-session map is
+   in [the semester plan](docs/design/semester-integration.md#lecture-before-homework-sequence).
+7. **Critical path:** the project node graph (simulator, camera, controller
    wrapper, lockstep runner) is needed by HW09 as well as the project, so it is
    built in December in parallel with the foundation review.
 
@@ -82,11 +86,12 @@ confirmed quickly or changed. D1 and D3--D6 were settled November 18--19.
 
 | # | Decision | Current working default | Context |
 | --- | --- | --- | --- |
-| D2 | **Course learning outcomes.** Eleven outcomes in three tiers, each with sub-points, where it is assessed, and whether students implement, modify, or use the code; outcomes 1--3 and 6 adapt the ME 537 outcomes. Mark each keep, edit, or cut. It feeds the syllabus and lecture outlines ([backward course design](https://www.cmu.edu/teaching/assessment/basics/alignment.html)). | Drafted Nov 19; awaiting review. | [Roadmap: course learning outcomes](COURSE_ROADMAP.md#course-learning-outcomes-draft-for-tasksmd-d2) |
+| D2 | **Course learning outcomes.** Eleven outcomes in three tiers, each with sub-points, where it is assessed, and whether students implement, modify, or use the code; outcomes 1--3 and 6 adapt the ME 537 outcomes. Mark each keep, edit, or cut. It feeds the syllabus and lecture outlines ([backward course design](https://www.cmu.edu/teaching/assessment/basics/alignment.html)). | Drafted Nov 19; the instructor reviews it on Nov 20. | [Roadmap: course learning outcomes](COURSE_ROADMAP.md#course-learning-outcomes-draft-for-tasksmd-d2) |
 | D7 | **Assessments.** *Decided Nov 19:* a midterm and a final exam; the midterm sits at the semester midpoint and covers HW01--HW05 or HW06 (through Jacobians and IK, possibly RRT-Connect, depending on what has been taught); students grade their own homework, and automated checks are spot checks, not autograding. *Still open:* grading weights for homework, exams, project milestones, and the final demonstration (project thresholds wait for the reference controller). | Exams decided; weights open. | [Roadmap](COURSE_ROADMAP.md) |
 | D8 | **Course number, publication license, and student distribution channel.** *Decided Nov 19:* the temporary number is ME EN 495R. The full faculty repository stays private for now; students receive a stripped repository published the same way as the [ME 537 student repository](https://github.com/BYU-ME-537/byu-537-fall-2026). *Still open:* the student repository's name and license (none has been assumed). | Channel decided; license open. | [Release workflow](release_tools/README.md) |
 | D9 | **Planning lecture P6: position-only optimization.** *Decided Nov 19:* students learn a position-only task-space optimization (tool positions must hit Cartesian waypoints; orientation is free), because it can help in the project. Keep it simple and planar: a working in-class example plus a reading that is a simplified, planar version of the Bodily, Allen, and Killpack paper, drafted from the original. Drafted Nov 19: `docs/readings/position_only_branching.tex` and `examples/position_only_branching.py` (fixed base, position only; the movable base is an optional add-on cited from the paper). *Decided Nov 19:* teach the QP solver: each iteration is solved as a QP with the joint stops as constraints (SciPy; `--solver qp`, the default) beside plain least squares plus clipping (`--solver lstsq`); `--animate` shows the branching iteration by iteration. | Decided; draft reading (3 pages) and lecture example done Nov 19, awaiting instructor review. | [Planning brief](instructor/briefs/path_planning.md), [outlines](docs/design/lecture-outlines.md) |
-| D10 | **Retire superseded faculty code.** (a) *Done Nov 18:* deleted the standalone planning and two waypoint pilot scripts (duplicated by the HW06/HW07 activities); lectures P1--P5 now use those activities. (b) When HW08/HW09 and the project nodes are built, promote the reusable functions in `examples/oblique_camera_pilot.py`, `vision_measurement_pilot.py`, and `checkerboard_scene.py` into `src/` or the nodes, then delete the conveyor and visual-servo pilots with their tests. (c) Keep all tests; optionally move the four manual `*_probe.py` scripts into `tests/probes/`. | (b) and (c) await approval when the replacements exist. | [Pilot notes](docs/design/new-pilots.md) |
+| D11 | **HW05 problem 6 and the IK lecture.** *Decided Nov 20:* problem 6 (square solve, `damped_least_squares`, null space, damping) moved to HW06 problem 1, after the IK lecture that teaches it; HW05 is now two pages and HW06 three. Handouts, keys, READMEs, the code label (HW06), public checks, the release test, and every HW09/HW11/project reference were updated. | Done Nov 20. | [Sequence map](docs/design/semester-integration.md#lecture-before-homework-sequence) |
+| D10 | **Retire superseded faculty code.** (a) *Done Nov 18:* deleted the standalone planning and two waypoint pilot scripts (duplicated by the HW06/HW07 activities); lectures P1--P5 now use those activities. (b) When HW08/HW09 and the project nodes are built, promote the reusable functions in `examples/oblique_camera_pilot.py`, `vision_measurement_pilot.py`, and `checkerboard_scene.py` into `src/` or the nodes, then delete the conveyor and visual-servo pilots with their tests. (c) Keep all tests; optionally move the four manual `*_probe.py` scripts into `tests/probes/`. | (b) *Done Nov 20:* deleted `examples/visual_servo_pilot.py`, `moving_visual_servo_pilot.py`, and their two tests (nothing else used them; HW09 and `examples/ibvs_lecture_demos.py` replace them). *Nov 20:* HW08 is built; the faculty `reference.py` now imports the HW08 and HW05 answer keys (`intro_robotics.vision`, `damped_least_squares`) instead of its own copies. *Done Nov 20:* deleted `examples/vision_measurement_pilot.py` (and its one test in `test_planar_scene`), `conveyor_pilot.py`, the `ConveyorDemo` it alone used (`src/intro_robotics/conveyor.py`, `test_conveyor.py`), and `docs/design/conveyor-pilot.md`. `oblique_camera_pilot.py` stays while the checkerboard lecture demonstration imports it. (c) awaits approval. | [Pilot notes](docs/design/new-pilots.md) |
 
 ### Decided (details kept for reference)
 
@@ -110,6 +115,9 @@ specifications.
 ## 2. Review queue
 
 Suggested reading order. Record approval, or requested changes, beside each item.
+Instructor plan (Nov 19): review the homework sequentially after the whole
+drafting round is complete; review the project output (R7) before setting the
+pass and good-grade levels; review the D2 outcomes on Nov 20.
 
 - [ ] **R1. HW01** — [handout source](docs/homework/hw01/README.md),
   [student directions](homework/hw01/README.md), and a generated student copy
@@ -132,17 +140,35 @@ Suggested reading order. Record approval, or requested changes, beside each item
 - [ ] **R5. HW08--HW09 vision and feedback** — handouts,
   [HW08 key](instructor/HW08_REFERENCE.md), [HW09 key](instructor/HW09_REFERENCE.md),
   [checkerboard activity](docs/design/checkerboard-activity.md), and the
-  assignment designs. Student scaffolds and data do not exist yet.
-- [ ] **R6. HW10 guided lab and RL homework designs** — compare the
+  assignment designs. HW08 was rewritten Nov 20 on the project camera
+  (six functions in `src/intro_robotics/vision.py`, activity, checks); the
+  checkerboard is now the lecture demonstration.
+- [ ] **R6. HW10 guided lab and HW11 (RL)** — compare the
   [assignment designs](instructor/NEW_ASSIGNMENT_DRAFTS.md) with the
-  [PyTorch/RL brief](instructor/briefs/pytorch_rl.md).
+  [PyTorch/RL brief](instructor/briefs/pytorch_rl.md). For HW11
+  ([handout](docs/homework/hw11/homework.tex), [key](instructor/HW11_REFERENCE.md)),
+  decide whether to keep the shaped reward's per-step speed term: it slows
+  learning (shaped 98--99% versus distance 99--100%), which is the teaching
+  point, but students may read it as the "better" reward failing. Either keep
+  it and say so in the handout, or drop it.
 - [ ] **R7. Project** — [specification draft](instructor/PROJECT_SPEC_DRAFT.md)
   (including the S1--S3 results table), the [student guide](homework/project/README.md)
   and [scenario files](homework/project/scenarios/), and a live run
   (`ros2 launch homework/project/project.launch.py scenario:=s2 controller:=intro_robotics.project.reference:ReferenceController`),
-  against decisions D1 and D4.
-- [ ] **R8. Lecture outlines** — the [18 timed outlines](docs/design/lecture-outlines.md)
-  for planning, vision, servoing, ML, and RL (later lecture-preparation phase).
+  against decisions D1 and D4. *Nov 20:* the contract now includes the
+  checkerboard calibration (`task.calibration_image`, `task.board`; marks
+  removed from S1--S3), moved fixed cameras in S3 and the held-out file, the
+  `check_calibration` script, and a draft checkoff table in the student
+  guide; the results table was rerun.
+- [ ] **R8. Lecture outlines** — the [19 timed outlines](docs/design/lecture-outlines.md)
+  for IK, planning, vision, servoing, ML, project launch, and RL (reworked
+  Nov 20; later lecture-preparation phase). Answered Nov 20: (a) the
+  calibration checkoff moves to the start of PL2 (lecture-before-due rule);
+  (b) RL2 starts two live training runs with different rewards at the start
+  of class and compares them at the end; (c) HW05 is never due before the
+  lecture covering it: see D11. P3 now has a 20-minute trajectory segment
+  (`JointTrajectory`, Hermite interpolation, the arm node), because HW07
+  problem 5 had no lecture.
 - [ ] **R9. Optional backlog** — skim [improvements](instructor/IMPROVEMENTS.md);
   promote items here or drop them.
 - [ ] **R10. Graduate-course follow-up** — separately review any changes
@@ -154,8 +180,8 @@ Suggested reading order. Record approval, or requested changes, beside each item
 
 ### Platform validation
 
-- [ ] After the rebuild, confirm the image's `python3-scipy` imports alongside the system NumPy (the Dockerfile's check line now prints SciPy's version).
-- [ ] Rebuild the course image (`docker compose build`): the local image predates the Dockerfile's PySide6/pyqtgraph packages, so the pyqtgraph viewer cannot run in it yet (found Nov 19).
+- [x] After the rebuild, confirm the image's `python3-scipy` imports alongside the system NumPy (Nov 20: SciPy 1.11.4 with NumPy 1.26.4).
+- [x] Rebuild the course image (`docker compose build`) with the PySide6/pyqtgraph packages (Nov 20: pyqtgraph 0.14.0, Qt 6.8.3 import in the image; the GUI probe below is still manual).
 - [ ] Repeat the revised HW01 workflow on Apple Silicon; test Linux and Intel Mac.
 - [ ] Repeat the rebuilt image checks (OpenCV, waypoint, ROS) on ARM64 and verify the interactive RViz GUI.
 - [ ] Check OpenCV window interaction through the browser desktop and repeat on ARM64.
@@ -181,13 +207,18 @@ Suggested reading order. Record approval, or requested changes, beside each item
 
 - [ ] Pilot student time budgets for HW01--HW07 with students; adjust problem counts. If HW05 runs long, apply the ordered trims in [its faculty README](docs/homework/hw05/README.md) (Nov 19); HW07 P5 adds about 3 hours.
 - [ ] HW01: catch `rclpy.executors.ExternalShutdownException` beside `KeyboardInterrupt` in `joint_publisher.py` `main()` (Jazzy raises it when SIGINT reaches a node in some shells; the HW07 and project nodes already do).
-- [ ] HW08: pilot the checkerboard homography activity and make a separately stripped student exercise; build the student loader, same-camera object sequence, rectifier, plotter, and scaffold with calibration, independent checks, missed-detection cases, and student/faculty data splits.
+- [x] HW08 (Nov 20): rewritten to the D3 scope on the project's fixed camera, two pages. Students write `fit_plane_map`, `to_plane`, `color_mask`, `classify_shape` (corner count only; 100% on S1--S3 and held-out frames), `find_objects`, and `fit_velocity` in `src/intro_robotics/vision.py`; supplied `find_marks`, scenario (S2 settings, self-contained), and activity with tracking, truth comparison, `--realism`, and `--drop`. Fit-with-four, check-the-fifth error 0.7 mm; positions about 1 mm; velocity RMS 0.4--0.5 mm/s by fit versus 28--35 mm/s by two-point difference. Problem 1 also fits two checkerboard views from a supplied corner file (4 fit, 31 check; view 2's map on view 1 is off by 31 mm RMS); automatic corner detection stays in the lecture demonstration. The reference controller now uses these functions; scores unchanged (S2 144, S3 140; held-out 140, was 138).
+- [ ] Pilot HW08 for the one-week workload target.
 - [x] HW05 P6 (Nov 19): square inverse-velocity solve, `damped_least_squares` (assigned, reused by HW06/HW09/project), null space and minimum norm, and the damping tradeoff near a straight arm. The handout is now three pages; check the 1.5-week limit in the timed pilot.
 - [x] HW06 P1 (Nov 19): `SerialArm.ik_position` by damped least squares; two elbow solutions for the arm's goal, one giving RRT paths about half as long; problems renumbered (now six, three pages).
-- [ ] HW09: rewrite the draft as tool-camera image-based visual servoing on the `Controller` contract and lockstep runner: constant-depth planar interaction matrix for a point feature, combined with the robot Jacobian and the damped solve; stationary target first, then a moving target; contrast with measure-then-move. The existing fixed-camera pilot becomes the comparison case.
-- [ ] Rework the visual-servoing lecture outlines for IBVS (measure-then-move versus image-based; planar image Jacobian; integration and limits), add an outline for the inverse-velocity/IK lecture, condense the supervised-learning and RL outlines to two sessions each, and add the two project-launch sessions (D3).
-- [ ] HW10: build the short guided lab: object-crop dataset with scene-grouped splits, a small model and training scaffold with the four training-loop lines marked, a checkpoint, and the handout; pilot CPU runtime.
-- [ ] RL homework: build the state-based interception environment (Gymnasium, same arm limits and delay as the project) with a reward scaffold; pilot PPO training time on a student-class CPU (target about 10 minutes); fall back to planar reaching if needed; prepare a checkpoint and a reaching demonstration for lecture.
+- [x] HW09 (Nov 19): rewritten as tool-camera IBVS on the project `Controller` class and lockstep runner. Students project points and derive the constant-depth image Jacobian by hand, implement `ibvs_velocity` and `joint_rates` (HW05 damped solve, heading held), and run the loop with a camera blackout; two pages. The reference answer picks on seeds 1--5 in 1.5--1.8 s. Lecture demonstrations (`examples/ibvs_lecture_demos.py`): gain 2/8/20/40 (40 goes unstable with the one-period delay) and measure-then-move versus IBVS with a 3 cm base model error (0/3 versus 3/3 picks).
+- [x] Lecture outlines reworked (Nov 20, `docs/design/lecture-outlines.md`, 19 sessions): new IK1 (6.1); vision V1--V3 match the rebuilt HW08; servoing VS1--VS3 for tool-camera IBVS with the `ibvs_lecture_demos` results; supervised learning condensed to L1--L2 and RL to RL1--RL2; new project-launch PL1--PL2 (PL1 holds the calibration checkoff); project weeks as 8 sessions with the draft checkoffs. Questions are in R8.
+- [x] HW10 (Nov 20): guided lab on generated 48 by 48 crops from the project camera (`homework/hw10/`): 2,400 training scenes of six frames, three quarters under hard conditions (light level and color cast, uneven light, blur, heavy noise, an occluding bar, off-center crops), split by scene. Students write `train_epoch` (the four training-loop lines), `predict`, and `confusion_matrix`; a small CNN trains in about a minute on the CPU. Held-out test: HW08 rules 100% clean and 40% hard (nothing found in a third); network 100% and about 97%. Two-page handout, key, READMEs, fallback checkpoint (0.7 MB), 3 public and 4 instructor tests.
+- [ ] Pilot HW10 on student laptops and in the container with HW11 (training minutes; the 3--4 hour workload).
+- [ ] Project second round (optional): a `[realism]` option for lighting changes, blur, or arm occlusion in the fixed image, so the HW10 network can matter in the project.
+- [x] RL homework, drafted Nov 19 as HW11 (reward shaping for interception): Gymnasium environment `src/intro_robotics/rl_interception.py` (two-link 0.4/0.3 m arm, project timing, limits, and one-period delay; success 2.5 cm and 5 cm/s for three periods), student `rewards.py` (sparse, distance, shaped) and damped-least-squares `baseline.py`, supplied PPO `train.py`/`evaluate.py` on 100 held-out cases, two-page handout, key, and lecture checkpoints. The CPU pilot met the 10-minute target (600k steps in 3.5 min; distance reward 99--100%, shaped 98--99%, sparse 0; baseline 100%), so interception is kept and reaching is the lecture demonstration. *Decided Nov 20:* the name stays HW11; its week-12 placement is still to confirm. The shaped reward's speed term is decided in review R6.
+- [x] *Decided Nov 20:* the course image carries the learning packages (HW10 and HW11). The Nov 19 layer is now in `docker/Dockerfile` (CPU PyTorch 2.15.0, Gymnasium 1.4.0, Stable-Baselines3 2.9.2, NumPy pinned); rebuilt Nov 20 at 5.28 GB (was 4.03) with NumPy and OpenCV unchanged, and all suites pass in it (validation record).
+- [ ] Pilot HW11 on student laptops (training minutes per 600k-step run; the faculty laptop took 3.5 min alone, 6.9 min in the container; also the 5.28 GB image download and disk space) and confirm the about-4-hour workload plus 15--30 min of unattended training.
 - [ ] Expand the release manifest one assignment at a time, only after its review item above is approved.
 
 ### Conveyor project environment
@@ -197,9 +228,10 @@ reference controller, and live ROS graph exist (Nov 19;
 [project spec](instructor/PROJECT_SPEC_DRAFT.md#interface-and-simulated-clock-proposal-for-d1d)).
 
 - [x] S2 and S3 (Nov 19): 0.06 m/s belt, 15 objects every 3.3 s behind a hidden feeder, a `[realism]` switch (off in S2, on in S3), uneven spacing and a new rule table in S3, and a faculty `instructor/project/s3_heldout.toml` (another rule table and seeds 101--105) built on S3 with the new `base` key. The oracle sorts 15/15 on every seed, the reference 92--95%, and a half-speed reference 68--76%, so throughput matters ([results](instructor/PROJECT_SPEC_DRAFT.md#evidence-and-assessment)).
+- [x] Checkerboard calibration (instructor, Nov 20): `task.calibration_image` (stopped, empty belt with a 16 by 6 board of 4 cm squares; never in episode images) and `task.board` replace the five marks in S1--S3; fixed orientation documented, so students only reverse OpenCV's order when needed (about half of detections). Students write `find_board_corners` (one "Project" region in `vision.py`); `board_corners` and `calibrate` are supplied. Accuracy at 320 by 240 (no resolution change needed): the calibration image is area-averaged (drawn 4 by 4 per pixel, like a sensor), giving 0.12--0.23 mm median and under 1 mm worst over the visible belt on every scenario and random warp. The check script requires a median under 1 mm and a worst point under 3 mm: a missing +0.5 pixel shift (about 2 mm median) fails every image, a missing reversal fails on some warps, and omitting `cornerSubPix` passes (OpenCV's detector already refines). S3 practice and the held-out file move the fixed camera (a saved S3 map is off by over 2 cm there); the student guide says the graded camera moves. `homework/project/check_calibration.py` (with `--warp N`) and a draft checkoff table (calibration at launch, S1 week 12, S2 week 13, evaluation week 14). Reference rerun with seeds recorded: S1 60, S2 142/144 (realism off/on), S3 140, held-out 140; half speed 60, 112, 112, 114, 104.
 - [ ] Second round: world obstacles with the "block" collision mode, four colors and shapes, tighter spacing.
 - [ ] Draw held objects and arm occlusion in the camera images, or document their absence for students.
-- [ ] Set provisional pass thresholds and define competition rules. Data now exist (Nov 19): oracle 150 on S2/S3, so 70--80% is 105--120 points; the reference scores 138--142 and a correct half-speed controller 102--114. Choose the percentage and whether it applies per seed or to the mean. Per-step compute budget: the reference takes about 2.5 ms (offline) and 2.1 ms (live) of the 20 ms period.
+- [ ] Set provisional pass and good-grade thresholds and define competition rules, after the instructor reviews the project output (R7; instructor, Nov 19). Data now exist (Nov 19): oracle 150 on S2/S3, so 70--80% is 105--120 points; the reference scores 140--144 and a correct half-speed controller 104--114 (rerun Nov 20 with checkerboard calibration). Choose the percentage and whether it applies per seed or to the mean. Per-step compute budget: the reference takes about 2.5 ms (offline) and 2.1 ms (live) of the 20 ms period.
 - [ ] Supply a Gymnasium wrapper over the same simulator; compare optional RL with conventional methods using the same observations and limits. Add imitation only after the visual controller and logging interfaces work.
 - [ ] Add the project files to a release manifest (the oracle, the held-out file, and the faculty reference controller stay out); include `student_ws/ros2_ws/src/conveyor_interfaces` and add a sentence about it to `student_ws/ros2_ws/src/README.md` (the container's first start then takes about a minute longer to build it); review student interfaces, CPU runtime, and cross-platform packaging.
 
@@ -245,6 +277,12 @@ Evidence for completed checks, with test counts and commands, is in the
 
 ### Course planning and migration
 
+- [x] Nov 20: HW05 problem 6 moved to HW06 problem 1 (D11); lecture-before-homework sequence map; calibration image area-averaged and the check made strict about the half-pixel shift; image-features lecture demo (`examples/feature_demo.py`: Harris, Shi-Tomasi, SIFT, ORB, matching) added to V2; RL2 starts two live training runs.
+- [x] Nov 20: HW10 guided lab with hard conditions; lecture outlines reworked (19 sessions); stale HW09/HW10/HW11 rows fixed in the roadmap and semester integration.
+- [x] Nov 20: project checkerboard calibration (contract, scenarios, moved cameras, reference, check script, guide, spec, 5 instructor and 2 public tests); HW08 checkerboard sub-problem.
+- [x] Nov 20: HW08 rewritten on the project camera (six marked functions in `src/intro_robotics/vision.py`, `homework/hw08/` activity and scenario, two-page handout, key, READMEs, boundary-map row, lecture outline rows, 8 public and 4 instructor tests); the reference controller imports the HW08/HW05 keys; visual-servo pilots deleted (D10b); learning packages added to the course image.
+- [x] Nov 19: HW11 (RL interception) environment, student rewards and baseline, PPO train/evaluate scripts, handout, key, READMEs, boundary-map row, lecture checkpoints, 4 public and 9 instructor tests; optional `learning` extra in `pyproject.toml`; checked in a container layer with the learning packages.
+- [x] Nov 19: HW09 rewritten for tool-camera IBVS: `homework/hw09/` (`ibvs_controller.py` with two marked answers, supplied `vision.py`, `hw09_ibvs.py` activity, `hw09_scenario.toml`), handout, key, READMEs, boundary map, a public check (`test_hw09_ibvs.py`), 5 instructor tests (`test_hw09_ibvs.py`), and `examples/ibvs_lecture_demos.py`.
 - [x] Nov 19: S2/S3 scenarios and the held-out file, scenario `[realism]` switch and `base` key, hidden feeder and spacing jitter, `run.py --seeds/--realism/--video`, the live ROS graph (`sim_node.py`, `controller_node.py`, `ros_bridge.py`, launch and RViz files, `conveyor_interfaces`), `homework/project/README.md`, two reference-controller settings for the moving belt, and 12 more instructor tests (`test_project_runner.py`, new `test_project_ros.py`); checked in a course container.
 - [x] Nov 19: HW07 problem 5 (ROS publish/subscribe) drafted with the faculty `planar_arm.urdf`, `trajectory.py`, `path_publisher.py`, `arm_node.py`, launch/RViz files, key, READMEs, boundary map, a public check (`test_hw07_trajectory.py`), instructor tests (`test_hw07_ros.py`), and the HW07 preview test; checked in a course container.
 - [x] Nov 19: ordered HW05 trims for a long pilot recorded in the HW05 faculty README.

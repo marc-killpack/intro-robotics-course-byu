@@ -20,3 +20,7 @@ seeds = [101, 102, 103, 104, 105]   # the graded seeds
 "yellow circle" = "A"
 "yellow square" = "B"
 "yellow triangle" = "C"
+
+[cameras]                # the fixed camera moves again (students are told it will)
+fixed_location = [-0.04, 0.25, 1.03]
+fixed_target = [-0.03, 0.59, 0.0]

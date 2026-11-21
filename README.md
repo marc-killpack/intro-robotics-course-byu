@@ -114,18 +114,12 @@ python examples/arm_viewer.py --model planar
 Choose `--model spatial` or `--model dh` for the other examples. See the
 [prototype guide](docs/design/arm-prototype.md) for frames, checks, and limits.
 
-## One-object conveyor pilot
+## Conveyor project
 
-```text
-python examples/conveyor_pilot.py
-```
-
-This headless faculty pilot exercises bounded joint motion, a finite-time
-vertical pickup/lift, release over a bin, and both fixed/tool-mounted camera
-images. The supplied debug controller uses true positions; image-based
-tracking and visual servoing remain the next milestone. See
-[the pilot guide](docs/design/conveyor-pilot.md) for outputs and limitations.
-The simulation/camera prototypes are excluded from the student release.
+The project simulator, scenarios, lockstep runner, and live ROS graph are
+described in the [student project guide](homework/project/README.md) and the
+[faculty specification](instructor/PROJECT_SPEC_DRAFT.md). The faculty
+reference controller and oracle are excluded from the student release.
 
 ## Current validation
 

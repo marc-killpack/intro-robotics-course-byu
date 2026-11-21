@@ -167,8 +167,9 @@ def scene_markers(scenario):
     for x, y, r in scenario["bins"].values():
         markers.append(dict(type=CYLINDER, position=[x, y, 0.01], scale=[2 * r, 2 * r, 0.02],
                             color=[0.35, 0.35, 0.35, 1.0]))
-    size = scenario["marks"]["size"]
-    for x, y in scenario["marks"]["xy"]:
+    marks = scenario.get("marks", {"xy": [], "size": 0.0})  # HW08/HW09 scenarios only
+    size = marks["size"]
+    for x, y in marks["xy"]:
         markers.append(dict(type=CUBE, position=[x, y, 0.001], scale=[size, size, 0.002],
                             color=[0.06, 0.06, 0.06, 1.0]))
     return markers

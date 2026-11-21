@@ -17,11 +17,13 @@ from dataclasses import dataclass
 import cv2
 import numpy as np
 
+from ..camera import Camera
 from ..planning import segment_distance
 from .contract import Observation
 from .scenario import make_cameras
 
 SCORE_SORTED, SCORE_DROPPED = 10, -5
+SUPERSAMPLE = 4  # calibration image: draw 4 x 4 subpixels per pixel, then average
 TERMINAL = ("sorted", "wrong_bin", "dropped", "missed")
 
 
@@ -69,6 +71,61 @@ def fill_polygons(camera, polygons, colors, tool_pose=None):
     ends = np.cumsum([len(p) for p in polygons])
     for points, color in zip(np.split(fixed_point, ends[:-1]), colors):
         cv2.fillPoly(image, [points], [int(c) for c in color], lineType=cv2.LINE_8, shift=shift)
+    return image
+
+
+def board_polygons(board):
+    """White board (half-square margin) and its dark squares, as world-XY polygons and colors.
+
+    Square (0, 0) is at the board's -x, -y corner and is dark. The interior
+    corners are intro_robotics.vision.board_corners(board).
+    """
+    (nx, ny), side = board["squares"], board["square"]
+    x0 = board["center"][0] - nx * side / 2
+    y0 = board["center"][1] - ny * side / 2
+    m = side / 2
+    polygons = [np.array([[x0 - m, y0 - m], [x0 + nx * side + m, y0 - m],
+                          [x0 + nx * side + m, y0 + ny * side + m], [x0 - m, y0 + ny * side + m]])]
+    colors = [[235, 235, 235]]
+    for i in range(nx):
+        for j in range(ny):
+            if (i + j) % 2 == 0:
+                polygons.append(square([x0 + (i + 0.5) * side, y0 + (j + 0.5) * side], side))
+                colors.append([20, 20, 20])
+    return polygons, colors
+
+
+def calibration_image(scenario):
+    """The fixed camera's view of the stopped, empty belt with the board on it.
+
+    Given to controllers as task.calibration_image; the board is removed
+    before an episode starts, so it never appears in Observation images.
+    Image noise follows the scenario (realism switch), seeded by its seed.
+
+    Each pixel is the average of the scene over its area, as on a real
+    sensor: the scene is drawn at SUPERSAMPLE times the resolution and
+    shrunk by area averaging. Board corners can then be located to a small
+    fraction of a pixel, so a half-pixel convention error is visible.
+    """
+    fixed, _ = make_cameras(scenario)
+    fine = Camera(fixed.transform, width=fixed.width * SUPERSAMPLE, height=fixed.height * SUPERSAMPLE,
+                  focal=fixed.focal * SUPERSAMPLE)  # principal point at the center: pixel u -> SUPERSAMPLE u
+    belt = scenario["belt"]
+    polygons = [np.array([[belt["x_start"], belt["y"] - belt["width"] / 2],
+                          [belt["x_end"], belt["y"] - belt["width"] / 2],
+                          [belt["x_end"], belt["y"] + belt["width"] / 2],
+                          [belt["x_start"], belt["y"] + belt["width"] / 2]])]
+    colors = [[150, 150, 150]]
+    for x, y, r in scenario["bins"].values():
+        polygons.append(square([x, y], 2 * r))
+        colors.append([90, 90, 90])
+    board_polys, board_colors = board_polygons(scenario["board"])
+    image = fill_polygons(fine, polygons + board_polys, colors + board_colors)
+    image = cv2.resize(image, (fixed.width, fixed.height), interpolation=cv2.INTER_AREA)
+    sigma = scenario["cameras"].get("image_noise", 0.0)
+    if sigma > 0:
+        rng = np.random.default_rng(scenario.get("seed", 0))
+        image = np.clip(image + np.rint(rng.normal(0, sigma, image.shape)), 0, 255).astype(np.uint8)
     return image
 
 
@@ -283,7 +340,7 @@ class SortingSimulator:
 
     # ----- sensing ---------------------------------------------------------
     def render(self, camera):
-        """RGB image of the belt, marks, bins, and objects still on the belt."""
+        """RGB image of the belt, bins, marks (HW08/HW09 scenarios), and objects still on the belt."""
         s = self.scenario
         belt = s["belt"]
         polygons = [np.array([[belt["x_start"], belt["y"] - belt["width"] / 2],
@@ -294,7 +351,7 @@ class SortingSimulator:
         for x, y, r in s["bins"].values():
             polygons.append(square([x, y], 2 * r))
             colors.append([90, 90, 90])
-        for xy in s["marks"]["xy"]:
+        for xy in s.get("marks", {}).get("xy", []):  # HW08/HW09 scenarios only
             polygons.append(square(xy, s["marks"]["size"]))
             colors.append([15, 15, 15])
         for obj in self.objects:

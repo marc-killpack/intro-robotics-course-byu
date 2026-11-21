@@ -1,13 +1,13 @@
 # HW05 faculty draft: planar Jacobians
 
-Three-page handout for late week 4 through week 5. Students
+Two-page handout for late week 4 through week 5. Students
 derive a two-link Jacobian, implement `jacob_planar`, interpret a three-link
 velocity, compare finite displacements, and derive a Jacobian for an
-upstream point. P6 (added Nov 19, TASKS D5(f)) solves for joint rates: a
-square 2-by-2 solve, then `damped_least_squares` for the redundant arm, with
-the null space and the damping tradeoff. A fourth planar joint is optional.
-No singularity theory or spatial velocity implementation is assigned.
-Workload check: P6 adds roughly 1.5--2 hours against the 1.5-week limit.
+upstream point. A fourth planar joint is optional. No singularity theory or
+spatial velocity implementation is assigned. The inverse-velocity problem
+(the former P6: square solve, `damped_least_squares`, null space, damping)
+moved to HW06 problem 1 on Nov 20 (TASKS D11), because it is taught in the
+IK lecture after the Jacobian lectures.
 
 ME 537 basis: HW05 P1 -> P2; interpretation from P2 -> P1/P3; planar
 point-C problem P3 -> P4. An original diagram replaces the textbook asset.
@@ -33,16 +33,10 @@ pilot data):
    project launch.
 2. P3(c), the viewer interpretation (about 20 min): make it optional and
    keep P3(a)--(b), which carry the local-linearization point.
-3. P6(c): supply the null vector $n$ instead of having students find it
-   with the SVD (about 15--20 min); keep the norm comparison and the
-   minimum-norm question.
-4. P4, the point before the last joint (about 45 min): make it optional or
+3. P4, the point before the last joint (about 45 min): make it optional or
    move it to midterm practice. No later code depends on it, but it is the
    only hand Jacobian for a point other than the tip.
-5. Last resort: move all of P6 to open HW06, where P1 uses it immediately.
-   HW06 is also three pages, so cut there as well.
 
-Do not cut P2 (`jacob_planar`) or P6(a), (b), and (d): `damped_least_squares`
-is reused in HW06, HW09, and the project, and the damping tradeoff is the
-reason the project's controllers stay bounded near a straight arm. Track follow-up work in
+Do not cut P2 (`jacob_planar`): HW06, HW09, and the project build on it. (The
+former P6 trim, supplying the null vector, now applies to HW06 problem 1(c).) Track follow-up work in
 [the HW05 backlog](../../../instructor/IMPROVEMENTS.md#hw05-planar-velocity-kinematics).

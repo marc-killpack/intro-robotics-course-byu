@@ -1,8 +1,210 @@
 # Foundation validation record
 
-Updated November 19, 2026. This record covers the uncommitted faculty change
+Updated November 20, 2026. This record covers the uncommitted faculty change
 set, not a published semester release. [TASKS.md](../../TASKS.md) distinguishes
 implemented work from faculty approval and further platform validation.
+
+## November 20: HW05 problem 6 moved to HW06; strict calibration check; features demo
+
+The calibration image is now drawn at 4 by 4 subpixels and area-averaged.
+With the answer key, belt error median / worst: S1 0.14 / 0.51 mm, S3 0.14 /
+0.73 mm, held-out 0.23 / 0.91 mm, and 0.12--0.19 / 0.45--0.81 mm on random
+warps (realism on). Over S1, S2, S3, and the held-out file with five warps
+each (24 images), the stricter check (median under 1 mm, worst under 3 mm)
+passed the key 24/24 and a version without `cornerSubPix` 24/24, and failed
+a version without the +0.5 shift 24/24 and a version without the reversal
+9/24. Rendering with OpenCV's anti-aliasing alone gave 0.3--0.5 mm medians.
+Reference scores after the change (seed sets as above): S1 60/60, S2 off
+142/112, S2 on 144/112, S3 140/114, held-out 140/104, identical seed for seed.
+
+HW05 now builds to two pages and HW06 (with the former HW05 problem 6 as
+problem 1) to three, with no overfull lines. `examples/feature_demo.py`:
+Harris and Shi-Tomasi find all 75 board corners plus about 50 other points;
+SIFT/ORB matching between the two checkerboard views passes RANSAC but is
+wrong by about 95 px (repeated squares), while two belt views with objects
+match within about 2 px. Host: 137 instructor tests (1 skipped, ROS-only) and
+46 public checks passed; the release dry run copied 68 files and removed 14
+blocks.
+
+## November 20: lecture-before-homework sequence and RL2 live runs
+
+Two full HW11 training runs started together on the faculty laptop (600k
+steps each, distance and sparse rewards) both finished in about 7.1 minutes;
+on the 100 held-out cases the distance policy caught 100/100 and the sparse
+policy 4/100. Calibration with and without `cornerSubPix` on S1, S3, and the
+held-out camera gave the same belt error (median 0.4--0.75 mm); omitting the
++0.5 pixel shift raised the median to 1.6--2.0 mm (largest 2.9--3.5 mm).
+
+## November 20: HW10 guided lab and lecture outlines
+
+HW10 data: 48 by 48 crops rendered with the project's fixed camera (HW08
+scenario, camera moved up to 4 cm per scene); 2,400/300/600 scenes of six
+frames for train/validation/test (14,400/1,800/3,600 crops), 75--77% hard
+in each split; generated in about 15 s and cached in `tmp/hw10/`. A first
+version with 600 training scenes reached only about 65% on held-out crops;
+2,400 scenes and batch normalization fixed that. Per-crop normalization made
+no difference and was dropped.
+
+Held-out test, supplied checkpoint (seed 0, 5 epochs, 59 s on 8 threads):
+network 100.0% clean (906 crops) and 97.0% hard (2,694); HW08 rules
+(`find_objects` key) 100.0% and 40.1%, finding nothing in 32.3% of hard
+crops. Seeds 1 and 2 gave 97.1% and 97.3% hard; a sixth epoch (seed 0)
+96.9%. In the course image (OpenCV 4.10) the supplied checkpoint and the
+rules gave the same numbers, and the HW10 tests passed.
+
+Host: 133 instructor tests (1 skipped, ROS-only) and 46 public checks
+passed; the release dry run copied 68 files and removed 14 blocks. HW10 adds
+4 instructor tests and 3 public checks. The handout builds to two pages with
+no overfull lines.
+
+Lecture outlines reworked to 19 sessions (`docs/design/lecture-outlines.md`;
+every row sums to 50 minutes).
+
+## November 20: project calibration from a checkerboard
+
+Board: 16 by 6 squares of 4 cm (15 by 5 interior corners), centered on the
+belt, shown only in `task.calibration_image`. Accuracy probe before the
+change (fixed camera, `cv2.findChessboardCorners` plus `cornerSubPix`, map
+fitted to every corner, error over a grid on the visible belt): at 320 by 240,
+a 7 by 5 board gave 1.5 mm median and 4.8 mm worst; 12 by 6, 0.7 and 3.4 mm;
+16 by 6, 0.5 and 1.7 mm (with or without 4-level noise). 480 by 360 and 640
+by 480 were not better for the long board, so the resolution is unchanged.
+OpenCV's corners sit about -0.4 and -0.5 pixel from the course projection:
+its pixel-center convention (-0.5) plus a small aliasing bias; adding 0.5
+leaves a scatter of about 0.3--0.4 pixel per corner. Across 30 random camera
+moves of up to 5 cm (location and target), the board was found and ordered
+every time, worst 2.0 mm. Raw OpenCV order was reversed in 84 of 164
+detections over S1--S3, the held-out file, and warps, so the reversal step
+matters.
+
+After the change, belt error median / worst: S1 and S2 0.46 / 1.67 mm, S3
+(moved camera) 0.73 / 1.94 mm, held-out (moved again) 0.41 / 2.07 mm, with
+realism on or off; 8 warps of S1 all under 1.9 mm. A map calibrated on S3
+practice is off by over 2 cm (median) on the held-out camera.
+
+Reference scores (5 seeds each: S1 1--5, S2 21--25, S3 31--35, held-out
+101--105), reference / half speed: S1 60/60; S2 realism off 142/112, on
+144/112; S3 140/114; held-out 140/104 (Nov 19 with marks: 140/112, 142/114,
+140/112, 138/102). No wrong-bin, dropped, failed-pick, or collision events.
+
+Host: 129 instructor tests (1 skipped, ROS-only) and 43 public checks
+passed; the release dry run copied 68 files and removed 14 blocks.
+
+Course image (OpenCV 4.10): all 129 instructor tests (none skipped) and 43
+public checks passed after the per-scenario limit was set to the check
+script's 3 mm (the held-out camera's worst point is 2.53 mm with OpenCV 4.10
+against 2.07 mm with 4.14). The full score table above was identical in the
+image, seed for seed. A live `ros2 launch` of S1 with the reference
+controller (calibration image built in the controller node by `make_task`)
+ended at 19.64 s with score 60, 6/6 sorted; RViz exited only because the
+one-off container had no display.
+
+## November 20: checkerboard sub-problem in HW08
+
+`homework/hw08/hw08_checkerboard.py` runs the students' `fit_plane_map` and
+`to_plane` on the supplied corner file (copied byte-for-byte from
+`examples/data/checkerboard/`). Fit corners: 0.000 mm in both views. Check
+corners (31): view 1 0.00001 mm RMS, view 2 0.357 mm RMS and 0.792 mm
+largest. View 2's map on view 1's pixels: 31.4 mm RMS, 58.5 mm largest. The
+handout still builds to two pages. Host: 124 instructor tests (1 skipped,
+ROS-only) and 41 public checks passed; the release dry run copied 68 files
+and removed 14 blocks.
+
+## November 20: remaining camera and conveyor pilots removed (D10b)
+
+Deleted `examples/vision_measurement_pilot.py`, `conveyor_pilot.py`, the
+`ConveyorDemo` module and its test file, the vision pilot's test in
+`test_planar_scene.py`, and the conveyor pilot's design page. The release
+test now checks that `intro_robotics.vision` (HW08 answers) stays out of the
+HW01--HW05 copy. Host: 123 instructor tests (1 skipped, ROS-only) and 41
+public checks passed; the release dry run copied 68 files and removed 14
+blocks.
+
+## November 20: HW08 on the project camera, learning packages in the image
+
+Host: 133 instructor tests (1 skipped, the ROS-only HW07 message test) and
+41 public checks passed; the release dry run copied 68 files and removed 14
+blocks, with no HW08 file. The count fell from 136 because the two
+visual-servo pilot test files (7 tests) were deleted with their pilots
+(D10b); HW08 adds 4 instructor tests and 8 public checks.
+
+Course image rebuilt with `docker compose build` and the learning layer
+(D3/HW11 decision): 5.28 GB; torch 2.15.0+cpu, NumPy 1.26.4 and OpenCV
+4.10.0 unchanged. In it, with `PYTHONPATH=/workspace/src` and the student
+workspace sourced, all 133 instructor tests (none skipped) and 41 public
+checks passed. Four release tests first failed there because git refuses
+the bind-mounted repository ("dubious ownership"); with
+`safe.directory=/workspace` set for that run they passed. The release tool is
+run on the host, so the image is unchanged.
+
+HW08: on the first fixed image of S1, S2, and S3 with realism on (seeds 1--3)
+and the held-out S3 file (seeds 101--103), `find_marks` ordered all five
+marks (within 0.5 px of their projections), the fit-with-four map placed
+the fifth mark within 2 mm, and every detection had the right color and
+shape within 4 mm. A corner-count-only shape rule matched the reference's
+corner-plus-compactness rule on every frame of S1--S3 seeds 1--5 (100%), so
+the compactness test was dropped. Activity (15 s of S2 belt, arm still):
+
+| Run | Detections | Correct | Position median / max | Velocity RMS, fit / two-point |
+| --- | --- | --- | --- | --- |
+| seed 1 | 3049 | 100% | 0.7 / 2.0 mm | 0.48 / 31.9 mm/s |
+| seed 2 | 3055 | 100% | 0.9 / 2.4 mm | 0.52 / 35.5 mm/s |
+| seed 1, realism, 30% dropped | 2145 | 100% | 0.7 / 1.9 mm | 0.37 / 27.9 mm/s |
+| seed 2, realism, 30% dropped | 2125 | 100% | 0.9 / 2.1 mm | 0.49 / 30.0 mm/s |
+
+The check mark mapped 0.7 mm from truth in every run. The handout builds to
+two pages.
+
+Reference controller now importing the HW08 and HW05 keys (seeds 1--5;
+held-out 101--105), mean scores before and after: S1 60 and 60, S2 144 and
+144, S3 140 and 140, held-out 138 and 140 (seed 101 sorted one more object).
+Other counts matched; simulated episode lengths differed by at most 0.08 s.
+
+## November 19: HW09 tool-camera IBVS and HW11 RL interception
+
+Host, final run with both: 136 instructor tests (1 skipped: the HW07
+JointTrajectory message test, which needs ROS) and 33 public checks passed;
+the release dry run copied 68 files and removed 14 blocks, with no HW09 or
+HW11 file. Faculty venv: NumPy 2.5.3, OpenCV 4.14.0, torch 2.15.0+cpu,
+gymnasium 1.4.0, stable-baselines3 2.9.2. One HW09 test run during the
+package installation hit an OpenCV exception; it passed on every rerun.
+
+HW09: 5 instructor tests (`test_hw09_ibvs.py`: hand values, desired pixel
+against the simulator, seeds 1--5, stripped stubs, lecture model-error
+demonstration) and 3 public checks. With the answer key, seeds 1--5 started
+at 32.9--46.2 px of error, requested the pick at 1.52--1.78 s below 4 px,
+picked every object with no failed picks, and sent exactly zero commands in
+all 20 periods of the 0.30--0.70 s camera blackout. The error fell by a
+factor of e in 0.52--0.60 s against `1/lambda = 0.5` s. Lecture
+demonstrations (seed 1, speed limit 1 m/s): gain 2, 8, and 20 picked at
+1.36, 0.72, and 1.34 s (20 rings); gain 40 diverged and lost the object.
+With the arm base modeled 0, 1, and 3 cm from its true position,
+measure-then-move picked 3/3, 3/3, and 0/3 and IBVS 3/3 each time. The
+handout builds to two pages.
+
+HW11: 9 instructor tests (`test_rl_interception.py`: seeded repeatability,
+one-period delay, speed and acceleration limits, observation exactly the
+documented relative state, dwell success, truncation, no homework
+kinematics, baseline success, SB3 `check_env`, checkpoints) and 4 public
+checks (`test_hw11_rewards.py`). Held-out cases 10000--10099. Baseline
+(damped least squares plus velocity feedforward): interception 100/100,
+mean 1.58 s; reaching 100/100, 1.71 s. PPO with `train.py` settings, seeds
+1--3, seven runs in parallel on 8 cores: distance 13--42% at 150k steps,
+85--93% at 300k, 99--100% at 600k (mean 1.31--1.40 s); shaped 2--27%,
+40--54%, 98--99% (1.61--1.99 s); sparse 0--1 at every budget. Reaching
+(distance) 94--95% at 300k. One 600k run alone took 3.5 min (100/100,
+1.38 s). Before tuning (3 cm/s threshold, default exploration noise),
+distance reached only 28% at 300k; either change alone lowered 300k success
+(30/50 and 40/50 against 48/50 on 50 cases). The handout builds to two
+pages.
+
+HW11 container check: the proposed learning layer built on
+`intro-robotics-course:jazzy` under a temporary tag (NumPy 1.26.4 and
+OpenCV 4.10.0 unchanged; image 4.03 to 5.27 GB). The 13 HW11 tests passed,
+both checkpoints reproduced their host results (100/100 and 95/100), and a
+600k-step run took 6.9 min (100/100, 1.34 s). Policies saved under NumPy 2
+failed to load under NumPy 1.26 until `evaluate.load_policy` supplied the
+spaces and skipped saved training state. The temporary image was removed.
 
 ## November 19: S2/S3 scenarios and the live project graph
 

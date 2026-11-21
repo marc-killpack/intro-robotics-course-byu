@@ -181,10 +181,14 @@ class ScenarioFileTests(unittest.TestCase):
         for other in (s3, held["rules"]):
             self.assertTrue(all(s1[k] != other[k] for k in s1))
         self.assertTrue(all(s3[k] != held["rules"][k] for k in s3))
-        # The held-out file changes only its name, seeds, and rules.
+        # The held-out file changes only its name, seeds, rules, and the fixed camera's pose.
         practice = load_scenario("s3")
-        for key in ("belt", "objects", "arm", "cameras", "realism", "duration"):
+        for key in ("belt", "objects", "arm", "realism", "duration", "board"):
             self.assertEqual(held[key], practice[key])
+        moved = {"fixed_location", "fixed_target"}
+        self.assertEqual({k: v for k, v in held["cameras"].items() if k not in moved},
+                         {k: v for k, v in practice["cameras"].items() if k not in moved})
+        self.assertNotEqual(held["cameras"]["fixed_location"], practice["cameras"]["fixed_location"])
 
     def test_realism_switch(self):
         self.assertFalse(load_scenario("s2")["realism"]["enabled"])
@@ -246,14 +250,14 @@ class ReferenceControllerTests(unittest.TestCase):
     """The camera-only key: it uses only Observation and Task."""
 
     def test_perception_finds_every_object_with_the_right_class(self):
-        from intro_robotics.project.reference import find_objects, fit_plane_map, to_plane
+        from intro_robotics.vision import calibrate, find_objects, to_plane
 
         task = make_task(S1)
+        plane = calibrate(task.calibration_image, task.board)
+        self.assertIsNotNone(plane)
         for seed in (1, 2, 3):
             sim = SortingSimulator(S1, seed=seed)
             image = sim.observe().fixed_image
-            plane = fit_plane_map(image, task.marks)
-            self.assertIsNotNone(plane)
             found = sorted((c, s, *to_plane(plane, uv)) for c, s, uv in find_objects(image, task.colors))
             truth = sorted((o.color, o.shape, *o.position) for o in sim.objects)
             self.assertEqual([f[:2] for f in found], [t[:2] for t in truth])

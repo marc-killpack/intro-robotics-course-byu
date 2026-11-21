@@ -16,12 +16,14 @@ tracks the relationship between the two courses' material.
 | HW05: planar Jacobians | Late week 4 through week 5 | [HW05](hw05/README.md) |
 | HW06: configuration space and RRT-Connect | Weeks 6--7: planning unit | [HW06](hw06/README.md) |
 | HW07: waypoint optimization and a ROS arm node | Second part of planning unit | [HW07](hw07/README.md) |
-| HW08: camera geometry, calibration, and tracking | Week 8 | [HW08](hw08/README.md) |
+| HW08: calibration, detection, and tracking | Week 8 | [HW08](hw08/README.md) |
 | HW09: planar visual feedback | Week 9 | [HW09](hw09/README.md) |
+| HW10: learning to classify when rules fail (PyTorch) | Week 10 | [HW10](hw10/README.md) |
+| HW11: reward shaping for interception (RL) | Week 12 | [HW11](hw11/README.md) |
 
 All HW01--HW09 handouts are unreviewed faculty drafts. HW02--HW09 each build
-to two pages using the shared `handout.tex` layout. HW08--HW09 include planned
-code and data that are not yet student-ready. These are schedule targets;
+to two pages using the shared `handout.tex` layout. HW08, HW09, and HW11
+have draft student code and checks that are not yet reviewed. These are schedule targets;
 student workload has not yet been measured. See the
 [private HW02--HW05 key](../../instructor/FOUNDATION_REFERENCE.md),
 [HW06 key](../../instructor/HW06_REFERENCE.md),
@@ -39,6 +41,7 @@ python docs/homework/build_pdfs.py hw02 hw03 hw04 hw05 --render
 python docs/homework/build_pdfs.py hw06 --render
 python docs/homework/build_pdfs.py hw07 --render
 python docs/homework/build_pdfs.py hw08 hw09 --render
+python docs/homework/build_pdfs.py hw11 --render
 ```
 
 The PDF and review PNGs go in ignored `build/hwNN/`. Inspect every page

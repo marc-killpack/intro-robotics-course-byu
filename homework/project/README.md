@@ -15,8 +15,9 @@ velocities, and the pickup actuator's phase) and returns a `Command`
 | `scenarios/s3_evaluation.toml` | as S2, uneven spacing, a different rule table, realism on | practice for the week-14 evaluation |
 
 Every scenario contains every color and shape. The graded evaluation uses
-the S3 structure with seeds and a rule table you have not seen, so read the
-rule table from `self.task.rules`; never hard-code it. In S2 and S3, objects
+the S3 structure with seeds, a rule table, and a fixed-camera pose you have
+not seen, so read the rule table from `self.task.rules` and calibrate from
+`self.task.calibration_image` every run; never hard-code either. In S2 and S3, objects
 arrive a little faster than a slow controller can sort them: speed shows up
 in your score as objects sorted rather than missed.
 
@@ -24,6 +25,63 @@ in your score as objects sorted rather than missed.
 a small random change in belt speed between episodes. Develop with it off,
 turn it on when your pipeline works (`--realism on`), and expect it on in
 graded runs.
+
+## Calibrate the fixed camera first
+
+The fixed camera's pose is not given, and **the graded evaluation moves it
+slightly** (S3 practice is already moved from S1 and S2). Every run, your
+controller must build its own belt-plane map from `self.task.calibration_image`:
+the fixed camera's view of the stopped, empty belt with a checkerboard lying
+on it (`self.task.board`: 16 by 6 squares of 4 cm, so 15 by 5 interior
+corners). The board is removed before the episode, so it never appears in
+`obs.fixed_image`.
+
+The board is always placed the same way: its long side runs along the belt,
+so in the image +x (downstream) is to the right and +y (away from the arm) is
+up. `board_corners(board)` in `src/intro_robotics/vision.py` gives the world
+corners in OpenCV's order, starting at the upper left of the image. You write
+`find_board_corners` in the same file: find and refine the corners with
+OpenCV, and reverse them if OpenCV started from the other end (it does about
+half the time). Then your HW08 `fit_plane_map` gives the map, and
+`calibrate(image, board)` does both steps:
+
+```python
+from intro_robotics.vision import calibrate
+self.image_to_world = calibrate(self.task.calibration_image, self.task.board)
+```
+
+Check it before anything else:
+
+```text
+python -m homework.project.check_calibration --scenario s1 --save tmp/calibration.png
+python -m homework.project.check_calibration --scenario s3 --warp 5
+python -m unittest tests.public.test_project_calibration
+```
+
+The check reports the corner count and order, a fit-on-half/check-on-half
+error you could also compute in your controller, and the map's error over
+the whole visible belt against the simulator's true camera. OK needs a
+typical (median) error under 1 mm and a largest error under 3 mm; the
+answer key gets about 0.2 mm typical and under 1 mm at worst. The
+calibration image is drawn like a real sensor (each pixel averages the scene
+over its area), so corners can be found to a small fraction of a pixel, and
+a pixel-convention mistake of half a pixel shows up as about 2 mm
+everywhere. `--warp N` repeats the check on N copies of the image warped by
+random homographies, as if the camera had moved. That is how to test, before
+the evaluation, that nothing in your calibration depends on where the board
+happens to appear; OpenCV's corner order flips from one image to another, so
+a missing reversal often passes on one image and fails on a warped one. The
+check-on-half error is larger than the belt error because each check corner
+carries its own small detection error, which the full fit averages out.
+
+## Checkoffs (draft)
+
+| When | Checkoff |
+| --- | --- |
+| Second project-launch session (after the calibration lecture) | `check_calibration` reports OK on S1--S3 and with `--warp 5` |
+| Week 12 | S1: every object sorted, offline and live in RViz |
+| Week 13 | S2 with realism on |
+| Week 14 | Graded evaluation: S3 structure, new seeds, new rule table, moved camera |
 
 ## Run offline (graded mode)
 

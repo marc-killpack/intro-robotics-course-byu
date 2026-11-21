@@ -1,23 +1,36 @@
-# HW08 faculty draft: camera geometry and tracking
+# HW08 faculty draft: calibration, detection, and tracking
 
-This unreviewed draft combines a hand-worked pinhole calculation, OpenCV
-checkerboard calibration, planar segmentation, and timestamped velocity.
-The [checkerboard images and measurements](../../../examples/data/checkerboard/README.md)
-exist, as does a completed faculty homography demonstration.
+Rewritten November 20 (TASKS.md D3) on the project's fixed camera, two
+pages. Students map pixels to the belt plane by hand and with
+`cv2.findHomography` (fit with four marks, check the fifth), threshold
+colors, classify shapes by corner count, find whole objects with contours
+and moments, and fit track velocities by least squares over timestamps. The
+supplied activity runs the moving belt (S2 settings) with the arm still,
+links detections into tracks, and grades every frame against the
+simulator's truth, with optional realism and dropped frames. Hand projection
+moved to HW09; area, orientation, rectification, and the written truth
+comparison were cut. Problem 1 also fits two views of a checkerboard
+(`homework/hw08/hw08_checkerboard.py`, data copied from
+`examples/data/checkerboard/`): 4 corners fit, 31 check, and one view's map
+applied to the other. The faculty `examples/checkerboard_homography.py`
+(automatic corner detection, rectification) remains the lecture
+demonstration.
 
-The student starter, CSV/point helpers, compatible rectified object sequence,
-missing-target case, evaluation data, and plotting support are **not yet
-prepared**. The object sequence needs its own calibration for the same camera
-that generated it; do not silently reuse a checkerboard map from another pose.
-No HW08 student release is included in the current manifest.
+Student files: the six marked functions in `src/intro_robotics/vision.py`
+(supplied `find_marks` and `whole` in the same module) and `homework/hw08/`
+(`hw08_checkerboard.py`, `checkerboard/`, `hw08_perception.py`,
+`hw08_scenario.toml`, README). Public check:
+`tests/public/test_hw08_vision.py` (synthetic images); instructor checks:
+`tests/instructor/test_hw08_vision.py` (every project scenario including
+the held-out one, the activity with noise and dropped frames, and the
+stripped stubs). Key: [HW08 reference](../../../instructor/HW08_REFERENCE.md).
+The faculty project reference controller imports these functions, so the
+key is also the project's perception.
 
-See [the proposed boundary map](../../../HOMEWORK_MAP.md),
-[faculty reference](../../../instructor/HW08_REFERENCE.md), and
-[improvement list](../../../instructor/IMPROVEMENTS.md). Build for review:
+Release note: like HW09, the release must add the project's `contract`,
+`scenario`, `simulator`, and `runner` modules (and `planning.py`, released
+with HW06), but not `oracle.py`, `reference.py`, or the project scenario
+files; `hw08_scenario.toml` is self-contained for that reason.
 
-```text
-python docs/homework/build_pdfs.py hw08 --render
-```
-
-Faculty review, student workload trials, supporting code/data, and a separately
-reviewed student-release boundary remain open.
+Build: `python docs/homework/build_pdfs.py hw08 --render`. Workload target is
+one week; pilot it.

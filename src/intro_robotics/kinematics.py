@@ -163,7 +163,7 @@ class SerialArm:
 
 
 def damped_least_squares(jacobian, velocity, damping=0.0):
-    """HW05: joint rates that best produce a task velocity, J^T (J J^T + d^2 I)^-1 v.
+    """HW06: joint rates that best produce a task velocity, J^T (J J^T + d^2 I)^-1 v.
 
     With damping 0 and a square, invertible J this equals J^-1 v. With more
     joints than rows it is the smallest joint-rate vector that achieves v.
@@ -177,9 +177,9 @@ def damped_least_squares(jacobian, velocity, damping=0.0):
     damping = check_scalar(damping, "Damping")
     if damping < 0:
         raise ValueError("Damping must be zero or positive")
-    # HW05: one linear solve; do not form an explicit inverse.
+    # HW06: one linear solve; do not form an explicit inverse (problem 1(b)).
     # BEGIN SOLUTION
     rows = jacobian.shape[0]
     return jacobian.T @ np.linalg.solve(jacobian @ jacobian.T + damping**2 * np.eye(rows), velocity)
     # END SOLUTION
-    raise NotImplementedError("HW05: implement damped_least_squares")
+    raise NotImplementedError("HW06: implement damped_least_squares")

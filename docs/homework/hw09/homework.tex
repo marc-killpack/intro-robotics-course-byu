@@ -1,81 +1,102 @@
-% New introductory visual-servoing exercise; faculty draft.
+% Introductory tool-camera IBVS exercise (rewritten Nov 19, TASKS.md D3/D5).
 \input{../handout.tex}
 \begin{document}
-\courseheader{9}{Planar visual feedback}
-\textbf{Schedule:} week 9. Work in a fixed world-plane XY frame; use meters,
-seconds, and radians. The camera measures a stationary planar target first.
+\courseheader{9}{Tool-camera visual servoing}
+\textbf{Schedule:} week 9. You will steer the project's four-link arm with
+the camera mounted on its tool until an object sits under the tool, then
+pick it up. Feedback comes from the image only: the controller never knows
+where the object is in the world. Units are meters, seconds, radians, and
+pixels.
 
-\textbf{Faculty draft:} The student controller scaffold, detector interface,
-and simulator activity still need to be prepared and reviewed before release.
+\textbf{Camera.} The tool camera looks straight down from $0.05$ m above
+the tool, offset $-0.06$ m along the tool's $x$ axis: camera $x$ = tool $x$,
+camera $y$ = $-$tool $y$, camera $z$ points down. Focal length $f=180$ px;
+images are $320\times240$ with $(u,v)=(160,120)$ on the optical axis ($u$
+right, $v$ down). The tool is $0.25$ m above the belt while the pickup
+actuator is up.
 
 \begin{enumerate}
-\item \textbf{Calculate a feedback command by hand.}
-A measured target is $p_t=[0.42,0.08]^T$ m, and the tool position from FK
-is $p_e=[0.37,0.05]^T$ m, both in the world plane. The gain is
-$k=1.5\ \mathrm{s}^{-1}$ and the current planar Jacobian is
-\[
-J_{\rm planar}=\begin{bmatrix}0.1&0\\0&0.2\\1&1\end{bmatrix}.
-\]
-The two joint rates are in rad/s; the first two rows map them to tool XY
-velocity in m/s, and the third maps them to upright angular velocity.
+\item \textbf{Project points by hand.}
 \begin{enumerate}
-\item Calculate the position error $e=p_t-p_e$ and desired tool velocity
-$v_d=ke$. Sketch both vectors. What are their units?
-\item Use the first two rows $J_p$ to solve $J_p\dot q=v_d$ for this case.
-Then limit each joint rate to the interval $[-0.6,0.6]$ rad/s and calculate
-the resulting XY velocity $J_p\dot q$. Explain why the limited velocity can
-differ from $v_d$.
+\item A point is at $p_c=[0.11,\ -0.025,\ 0.30]^T$ m in the camera frame.
+Using $u=f\,x_c/z_c+160$ and $v=f\,y_c/z_c+120$, find its pixel.
+\item Show that $[0.22,\ -0.05,\ 0.60]^T$ lands on the same pixel. Why can
+one image not give a point's depth? Why is the depth $Z$ of a belt point
+known in this task, and what is it?
+\item The \emph{desired pixel} $s^*$ is where a belt point directly below the
+tool appears. Find $s^*$ and explain why it is not the image center.
 \end{enumerate}
 
-\item \textbf{Implement a small visual-feedback command.}
-The provided interface will supply a planar arm, joint state, fixed-camera
-target detection, a damped velocity-solve helper, and a joint-rate limiter.
-Use the completed FK and \texttt{jacob\_planar} from earlier homeworks.
+\item \textbf{The constant-depth image Jacobian.}
+Let the camera translate parallel to the belt with velocity
+$v_c=[v_x,v_y]^T$ in its own frame, without rotating.
 \begin{enumerate}
-\item Write a short function that obtains the tool XY position from FK,
-forms $e=p_t-p_e$, and asks the supplied solver to map $ke$ to joint rates
-using the first two Jacobian rows. Limit the returned rates.
-\item If detection is missing, return a zero joint-velocity command rather
-than reusing an old target. Explain why the target and tool must be expressed
-in the same frame. The target input comes from an image measurement; do not
-use the simulator's true object position as the controller input.
+\item For a fixed belt point at constant depth $Z$, show that
+$\dot u=-(f/Z)\,v_x$ and $\dot v=-(f/Z)\,v_y$, so $\dot s=L\,v_c$ with
+$L=-(f/Z)I_2$.
+\item With error $e=s-s^*$, find the $v_c$ that makes $\dot e=-\lambda e$
+for a gain $\lambda>0$. What are the units of $\lambda$ and of $Z/f$?
+\item The tool's heading is $\psi$. Write the camera's $x$ and $y$ axes in
+the world and show that the world velocity is
+\[
+v_w=\begin{bmatrix}\cos\psi&\sin\psi\\ \sin\psi&-\cos\psi\end{bmatrix}v_c .
+\]
+\item The object of problem 1(a) is seen at $s=(226,105)$; $\lambda=2$
+s$^{-1}$ and $\psi=\pi/2$. Compute $e$, $v_c$, and $v_w$. Using problem 1,
+find the object's position relative to the tool in the world and show
+that here $v_w=\lambda\,(p_{\rm object}-p_{\rm tool})$, although the
+controller never computed either position.
 \end{enumerate}
 \end{enumerate}
 
 \newpage
 \begin{enumerate}[start=3]
-\item \textbf{Run and examine the closed loop.}
-Use the provided stationary-target simulation and image detector. The
-simulator advances at fixed time steps and limits joint speed and acceleration.
+\item \textbf{Implement the IBVS step.}
+In \path{homework/hw09/ibvs_controller.py}, complete:
 \begin{enumerate}
-\item Run from the supplied initial configuration. Plot measured XY error
-magnitude and commanded joint rates against simulated time. Show an initial
-and a final image or visualization, and report the final measured error.
-Mark missing measurements on the error plot.
-\item Repeat with one changed gain, keeping the initial pose and scene the
-same. Compare the plots and explain one difference or failure. A failure
-should be diagnosed, not hidden; convergence is not guaranteed for every case.
-\item During the supplied detection-loss interval, verify that the requested
-command is zero. Explain why the simulated arm may take time to stop even
-though the request becomes zero immediately.
+\item \texttt{ibvs\_velocity(pixel, target\_pixel, depth, focal, yaw, gain)},
+your problem 2 as code. Check it against 2(d).
+\item \texttt{IBVSController.joint\_rates(pixel, jacobian, yaw)}: if the
+target is lost (\texttt{pixel is None}) return zero joint rates; otherwise
+limit the speed of \texttt{ibvs\_velocity}'s result to \texttt{MAX\_SPEED} and
+solve for joint rates with your HW06 \texttt{damped\_least\_squares}, using
+all three rows of \texttt{jacob\_planar} and a desired heading rate of zero.
+Why does problem 2 need the heading held? How many joints are left over?
+\end{enumerate}
+The provided \texttt{step()} finds the object with a color threshold, calls
+your method, and requests a pick once the error stays under 4 px while the
+tool is nearly still. It is the project's \texttt{Controller} class: the
+command it returns is applied one period (0.02 s) later.
+
+\item \textbf{Run and examine the loop.}
+\begin{lstlisting}
+python -m homework.hw09.hw09_ibvs --save tmp/hw09.png
+python -m homework.hw09.hw09_ibvs --seed 2
+\end{lstlisting}
+The tool camera is blank (a covered lens) from 0.30 to 0.70 s.
+\begin{enumerate}
+\item For seeds 1 and 2, report the first and last pixel error, the pick
+time, and whether the pickup succeeded. Estimate how long the error takes to
+fall by a factor of $e\approx2.7$; compare with $1/\lambda$ and give one
+reason they differ.
+\item Confirm your commands were zero while the camera was blank. Why does
+the error keep shrinking just after the camera goes blank? Why would reusing
+the last measurement be risky with a moving object?
+\item List what the controller took from a model ($f$, $Z$, $s^*$, $\psi$,
+the Jacobian) and what it took from the image. In lecture, a controller that
+measured the object with the fixed camera and moved the modeled tool there
+missed when the arm's base was modeled 3 cm away from its true position;
+IBVS still picked. Use your list to explain why.
+\item In the project the objects move at about $0.06$ m/s. If you add
+nothing to this law, the tool lags so that $\lambda(Z/f)\|e\|$ matches the
+object's speed. Estimate that lag in pixels and meters for $\lambda=2$
+s$^{-1}$. What term would you add to remove it?
+\end{enumerate}
 \end{enumerate}
 
-\item \textbf{Reason about a camera near the tool.}
-\begin{enumerate}
-\item A camera rigidly attached near the tool moves when the arm moves.
-Explain why a homography fitted for a fixed camera generally cannot be
-reused unchanged as the camera moves.
-\item If the camera is offset from the tool, why does placing the target at
-the image center not necessarily put the tool over the target? Describe what
-additional frame relationship or reference observation would be needed.
-\end{enumerate}
-An eye-in-hand implementation and moving-target prediction are optional
-extensions; no general spatial Jacobian or singularity derivation is required.
-\end{enumerate}
-
-\textbf{Project connection:} Use the same image-derived target and bounded
-joint commands to approach a conveyor object before timed pickup. The project
-may use either supported camera after the fixed-camera practice here.
+\textbf{Project connection:} your \texttt{IBVSController} is a project
+\texttt{Controller}. The project adds the fixed camera to choose and time
+objects, the moving belt, and the trip to the bin.
 
 \submission
 \end{document}

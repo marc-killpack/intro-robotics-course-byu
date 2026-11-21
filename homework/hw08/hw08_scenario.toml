@@ -1,0 +1,85 @@
+# HW08: the project's moving belt (as in S2), watched by the fixed camera
+# while the arm holds still. Same arm, cameras, marks, colors, and timing as
+# the project.
+# Distances in meters, angles in radians, times in seconds, colors RGB 0-255.
+# Seeded: the same seed gives the same objects, colors, shapes, and noise.
+
+name = "HW08 fixed-camera measurement"
+duration = 15.0          # simulated seconds watched
+control_period = 0.02    # camera and controller period (50 Hz)
+physics_steps = 4        # physics substeps per control period (0.005 s)
+seed = 1
+
+[arm]                    # redundant 4-link planar arm (decision D4)
+link_lengths = [0.4, 0.3, 0.2, 0.2]
+joint_limits = [[-3.1, 3.1], [-2.6, 2.6], [-2.6, 2.6], [-2.6, 2.6]]
+base_xy = [0.0, -0.2]
+height = 0.25            # arm plane above the belt; the pickup stroke
+q0 = [0.6, 0.9, 0.9, 0.6]
+speed_limit = 1.5        # rad/s, each joint
+acceleration_limit = 4.0 # rad/s^2, each joint
+link_radius = 0.02       # for the self-collision check
+self_collision = "report" # "report" counts overlaps; "block" also stops the motion; "off"
+
+[realism]                # develop with this off; turn it on when your pipeline works
+enabled = false          # or: python -m homework.hw08.hw08_perception --realism on
+image_noise = 4.0        # pixel noise standard deviation (0-255 scale)
+speed_variation = 0.1    # each episode draws belt speed * (1 +/- this fraction)
+
+[pickup]
+lower_seconds = 0.4
+lift_seconds = 0.4
+release_seconds = 0.2
+pick_radius = 0.025          # tool within this XY distance of the object center
+pick_relative_speed = 0.08   # and moving with the object to within this speed
+
+[belt]
+y = 0.6                  # belt centerline
+width = 0.3
+x_start = -0.6           # objects travel toward +x
+x_end = 0.6              # an object past here is missed
+speed = 0.06             # m/s toward +x
+
+[objects]
+count = 15               # objects upstream of x_start wait on a hidden feeder
+first_x = 0.2            # the most downstream object at t = 0
+spacing = 0.2            # gap between object centers along the belt (3.3 s at 0.06 m/s)
+size = 0.07              # nominal object width
+lateral_jitter = 0.03    # random offset across the belt
+spacing_jitter = 0.0     # each gap varies by up to this fraction
+color_names = ["red", "blue", "yellow"]
+shape_names = ["circle", "square", "triangle"]
+
+[colors]
+red = [200, 40, 40]
+blue = [40, 70, 200]
+yellow = [225, 195, 40]
+
+[bins]                   # name = [x, y, radius]; between the arm base and the belt
+A = [-0.40, 0.28, 0.08]
+B = [0.0, 0.25, 0.08]
+C = [0.40, 0.28, 0.08]
+
+[rules]                  # "color shape" = bin
+"red circle" = "A"
+"red square" = "B"
+"red triangle" = "C"
+"blue circle" = "B"
+"blue square" = "C"
+"blue triangle" = "A"
+"yellow circle" = "C"
+"yellow square" = "A"
+"yellow triangle" = "B"
+
+[marks]                  # calibration marks on the belt, world XY
+xy = [[-0.38, 0.47], [0.38, 0.47], [0.38, 0.73], [-0.38, 0.73], [0.15, 0.73]]  # asymmetric: no mirror ambiguity
+size = 0.02
+
+[cameras]
+width = 320              # both cameras; raise for sharper images, slower runs
+height = 240
+fixed_location = [0.0, 0.22, 1.05]
+fixed_target = [0.0, 0.6, 0.0]
+fixed_focal = 400
+tool_offset = [-0.06, 0.0, 0.05]   # camera origin in the tool frame
+tool_focal = 180

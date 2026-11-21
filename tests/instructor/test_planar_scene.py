@@ -8,8 +8,6 @@ from numpy.testing import assert_allclose
 from intro_robotics.camera import Camera
 from intro_robotics.planar_scene import render_planar_polygons
 from intro_robotics.transforms import se3
-from examples.oblique_camera_pilot import cameras, scene
-from examples.vision_measurement_pilot import fit_homography, red_centroid_in_plane
 
 
 def oblique_camera():
@@ -102,24 +100,6 @@ class PlanarSceneTests(unittest.TestCase):
         camera = Camera(np.eye(4))
         with self.assertRaisesRegex(ValueError, "in front"):
             render_planar_polygons(camera, [[[0, 0], [1, 0], [0, 1]]], [[1, 2, 3]])
-
-    def test_image_based_measurement_and_lost_target(self):
-        fixed, _, _ = cameras()
-        _, _, marks, _ = scene(0.34)
-        pixels, _, _ = fixed.project(np.column_stack((marks, np.zeros(len(marks)))))
-        transform = fit_homography(marks, pixels)
-        estimates = []
-        for x in (0.34, 0.38):
-            polygons, colors, _, _ = scene(x)
-            image = render_planar_polygons(fixed, polygons, colors)
-            estimate = red_centroid_in_plane(image, transform)
-            assert_allclose(estimate, [x, 0.03], atol=0.004)
-            estimates.append(estimate)
-        self.assertAlmostEqual(
-            (estimates[1][0] - estimates[0][0]) / 1.0, 0.04, delta=0.005
-        )
-        blank = np.full((fixed.height, fixed.width, 3), 235, dtype=np.uint8)
-        self.assertIsNone(red_centroid_in_plane(blank, transform))
 
 
 if __name__ == "__main__":

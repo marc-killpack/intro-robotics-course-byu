@@ -96,9 +96,9 @@ work, not implied current capabilities. Required current work is checked in
 - [x] Verify regular OpenCV and Matplotlib windows can be created alongside an RViz process in an isolated AMD64 container.
 - [x] Use GUI-enabled OpenCV as the instructor's selected package.
 - [ ] Check browser interaction and ARM64 behavior for OpenCV windows.
-- [ ] Pilot a small student homography exercise and add OpenCV object features/tracking.
-- [ ] Add the board or calibration marks to the conveyor plane after the standalone introduction.
-- [ ] Introduce occlusion, lighting, measurement noise, and lost detections deliberately.
+- [x] Student exercise on the project camera with OpenCV homography, contours, rule classifier, and tracking (Nov 20); a timed pilot remains in TASKS.md.
+- [x] Calibration marks on the conveyor plane (the project's five asymmetric marks).
+- [ ] Introduce occlusion and lighting deliberately (measurement noise and dropped frames exist: `--realism on`, `--drop`).
 - [ ] Add a real-image comparison and optional intrinsic calibration in a later offering.
 
 ## HW09: planar visual servoing

@@ -97,7 +97,7 @@ class MessageFieldTests(unittest.TestCase):
     def test_scene_markers_hold_no_object_truth(self):
         scenario = load_scenario("s1")
         markers = ros_bridge.scene_markers(scenario)
-        self.assertEqual(len(markers), 1 + len(scenario["bins"]) + len(scenario["marks"]["xy"]))
+        self.assertEqual(len(markers), 1 + len(scenario["bins"]))  # belt and bins; the board is gone by then
         sim = SortingSimulator(scenario)
         self.assertEqual(len(ros_bridge.object_markers(sim)), len(sim.objects))
 

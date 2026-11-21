@@ -13,6 +13,9 @@ dependencies = ["numpy>=1.24", "matplotlib>=3.6.3"]
 visualization = ["PySide6==6.8.3", "pyqtgraph==0.14.0", "PyOpenGL==3.1.10"]
 vision = ["opencv-python>=4.10,<5"]
 optimization = ["scipy>=1.11"]  # QP solver for optimization-based planning (lecture P6)
+# HW10/HW11 (PyTorch, RL). Install CPU-only torch first:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+learning = ["torch>=2.4", "gymnasium>=1.0", "stable-baselines3>=2.4"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

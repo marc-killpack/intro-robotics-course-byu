@@ -69,9 +69,10 @@ C = [0.40, 0.28, 0.08]
 "yellow square" = "A"
 "yellow triangle" = "B"
 
-[marks]                  # calibration marks on the belt, world XY
-xy = [[-0.38, 0.47], [0.38, 0.47], [0.38, 0.73], [-0.38, 0.73], [0.15, 0.73]]  # asymmetric: no mirror ambiguity
-size = 0.02
+[board]                  # calibration checkerboard; only in task.calibration_image
+squares = [16, 6]        # along the belt (x), across it (y): 15 x 5 interior corners
+square = 0.04            # side of one square
+center = [0.0, 0.6]      # world XY of the board's center (on the belt centerline)
 
 [cameras]
 width = 320              # both cameras; raise for sharper images, slower runs

@@ -1,6 +1,9 @@
 # Proposed first homography activity
 
-Faculty working draft. Begin with the same stationary checkerboard from two
+Faculty working draft. *Nov 20:* the automatic-detection version is the
+week-8 lecture demonstration; HW08 problem 1 uses the supplied corner file
+(4 fit, 31 check, and one view's map on the other view) and then calibrates
+the project camera from its marks. Begin with the same stationary checkerboard from two
 camera poses, then put an equivalent calibration pattern on the conveyor
 plane for the later object-tracking assignment. This separates perspective
 and coordinate frames from object motion while preserving the project link.

@@ -20,7 +20,7 @@ def build(homework, render=False):
         output = ROOT / "build" / homework
         name = homework.split("/")[1]
     else:
-        raise ValueError("Use hw01 ... hw10, or readings/<name> for docs/readings")
+        raise ValueError("Use hw01 ... hw11, or readings/<name> for docs/readings")
     if not source.is_file():
         raise FileNotFoundError(source)
     compiler = shutil.which("pdflatex")
