@@ -31,76 +31,132 @@ SUPPLIED = Path(__file__).with_name("checkpoints") / "cnn.pt"
 
 def rule_predict(images):
     """Provided: your HW08 rule classifier on each crop; -1 where it finds nothing."""
-    colors = {name: tuple(rgb) for name, rgb in load_scenario(SCENARIO)["colors"].items()}
+    scenario_colors = load_scenario(SCENARIO)["colors"]
+    colors = {}  # {name: (r, g, b)}, as find_objects expects
+    for name in scenario_colors:
+        colors[name] = tuple(scenario_colors[name])
     guesses = []
     for crop in images:
         found = find_objects(crop, colors)
-        if not found:
+        if len(found) == 0:
             guesses.append(-1)
             continue
-        color, shape, _ = min(found, key=lambda d: (d.pixel[0] - CROP / 2) ** 2 + (d.pixel[1] - CROP / 2) ** 2)
-        guesses.append(3 * COLORS.index(color) + SHAPES.index(shape))
+        # The answer is the detection nearest the crop's center. Each
+        # detection is (color, shape, pixel), with pixel = (u, v).
+        for k in range(len(found)):
+            color, shape, pixel = found[k]
+            du = pixel[0] - CROP / 2
+            dv = pixel[1] - CROP / 2
+            distance = du ** 2 + dv ** 2  # squared pixels
+            if k == 0 or distance < nearest_distance:
+                nearest_color = color
+                nearest_shape = shape
+                nearest_distance = distance
+        guesses.append(3 * COLORS.index(nearest_color) + SHAPES.index(nearest_shape))
     return np.array(guesses)
 
 
 def load_model(path):
+    """A SmallCNN with the trained weights saved at path."""
     model = SmallCNN()
-    model.load_state_dict(torch.load(path, map_location="cpu", weights_only=True))
+    weights = torch.load(path, map_location="cpu", weights_only=True)  # the saved state_dict
+    model.load_state_dict(weights)
     return model
 
 
 def evaluate(checkpoint):
+    """Run both classifiers on the test split; return the data and both sets of guesses in a dictionary."""
     images, labels, hard, scene = load("test")
     network = predict(load_model(checkpoint), to_tensor(images))
     rule = rule_predict(images)
-    return dict(images=images, labels=labels, hard=hard, scene=scene, network=network, rule=rule)
+    return {"images": images, "labels": labels, "hard": hard, "scene": scene,
+            "network": network, "rule": rule}
 
 
-def report(r):
+def worst_confusions(matrix, count=3):
+    """The `count` largest off-diagonal entries of a confusion matrix, as text."""
+    confusions = []  # (number, true class, predicted class) for each kind of mistake
+    for i in range(len(CLASSES)):
+        for j in range(len(CLASSES)):
+            if i != j and matrix[i, j] > 0:
+                confusions.append((matrix[i, j], i, j))
+    confusions.sort(reverse=True)  # most common first
+    parts = []
+    for k in range(min(count, len(confusions))):
+        number = confusions[k][0]
+        i = confusions[k][1]
+        j = confusions[k][2]
+        parts.append(f"{CLASSES[i]} as {CLASSES[j]} ({number})")
+    if len(parts) == 0:
+        return "none"
+    return ", ".join(parts)
+
+
+def report(results):
+    """Text summary: each classifier's accuracy on clean and hard crops and its worst confusions."""
+    labels = results["labels"]
+    hard = results["hard"]
+    clean = ~hard  # ~ is "not" for each entry of a boolean array
     lines = []
-    for name in ("network", "rule"):
-        guesses = r[name]
-        parts = []
-        for condition, mask in (("clean", ~r["hard"]), ("hard", r["hard"])):
-            right = (guesses[mask] == r["labels"][mask]).mean()
-            parts.append(f"{condition} {right:.1%} of {mask.sum()}")
-        missed = (guesses[r["hard"]] == -1).mean()
-        lines.append(f"{name:>8}: " + ", ".join(parts) + (f"; found nothing in {missed:.1%} of hard crops"
-                                                          if name == "rule" else ""))
-        matrix = confusion_matrix(r["labels"][r["hard"]], guesses[r["hard"]], len(CLASSES))
-        off = [(matrix[i, j], i, j) for i in range(len(CLASSES)) for j in range(len(CLASSES)) if i != j]
-        worst = ", ".join(f"{CLASSES[i]} as {CLASSES[j]} ({n})" for n, i, j in sorted(off, reverse=True)[:3] if n)
-        lines.append(f"{'':>10}most common hard-scene confusions: {worst or 'none'}")
+    for name in ["network", "rule"]:
+        guesses = results[name]
+        clean_accuracy = (guesses[clean] == labels[clean]).mean()
+        hard_accuracy = (guesses[hard] == labels[hard]).mean()
+        line = (f"{name:>8}: clean {clean_accuracy:.1%} of {clean.sum()}, "
+                f"hard {hard_accuracy:.1%} of {hard.sum()}")
+        if name == "rule":
+            missed = (guesses[hard] == -1).mean()
+            line = line + f"; found nothing in {missed:.1%} of hard crops"
+        lines.append(line)
+        matrix = confusion_matrix(labels[hard], guesses[hard], len(CLASSES))
+        lines.append(f"{'':>10}most common hard-scene confusions: {worst_confusions(matrix)}")
     return "\n".join(lines)
 
 
-def plot(r, path=None, show=False):
+def plot(results, path=None, show=False):
+    """Both confusion matrices on hard scenes, and the network's first mistake in up to 12 scenes."""
     import matplotlib
 
     if not show:
         matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
+    labels = results["labels"]
+    hard = results["hard"]
     fig = plt.figure(figsize=(13, 7.4))
     grid = fig.add_gridspec(4, 12)
-    for k, name in enumerate(("network", "rule")):
+    names = ["network", "rule"]
+    for k in range(len(names)):
+        name = names[k]
         ax = fig.add_subplot(grid[:3, 6 * k:6 * k + 6])
-        matrix = confusion_matrix(r["labels"][r["hard"]], r[name][r["hard"]], len(CLASSES))
+        matrix = confusion_matrix(labels[hard], results[name][hard], len(CLASSES))
         ax.imshow(matrix, cmap="Blues")
         for i in range(len(CLASSES)):
             for j in range(len(CLASSES)):
-                if matrix[i, j]:
-                    ax.text(j, i, matrix[i, j], ha="center", va="center", fontsize=7,
-                            color="w" if matrix[i, j] > matrix.max() / 2 else "k")
+                if matrix[i, j] == 0:
+                    continue
+                if matrix[i, j] > matrix.max() / 2:
+                    text_color = "w"  # white on dark cells
+                else:
+                    text_color = "k"
+                ax.text(j, i, matrix[i, j], ha="center", va="center", fontsize=7, color=text_color)
         ax.set_xticks(range(len(CLASSES)), CLASSES, rotation=60, ha="right", fontsize=7)
         ax.set_yticks(range(len(CLASSES)), CLASSES, fontsize=7)
         ax.set(xlabel="predicted", ylabel="true", title=f"{name}, hard test scenes")
-    wrong = np.flatnonzero(r["network"] != r["labels"])
-    wrong = wrong[np.r_[True, r["scene"][wrong][1:] != r["scene"][wrong][:-1]]][:12]  # one per scene
-    for k, i in enumerate(wrong):
+
+    mistakes = []  # the network's first wrong crop in each scene, up to 12
+    last_scene = -1
+    for i in range(len(labels)):
+        if len(mistakes) == 12:
+            break
+        if results["network"][i] != labels[i] and results["scene"][i] != last_scene:
+            mistakes.append(i)
+            last_scene = results["scene"][i]
+    for k in range(len(mistakes)):
+        i = mistakes[k]
         ax = fig.add_subplot(grid[3, k])
-        ax.imshow(r["images"][i])
-        ax.set_title(f"{CLASSES[r['labels'][i]]}\nsaid {CLASSES[r['network'][i]]}", fontsize=6)
+        ax.imshow(results["images"][i])
+        ax.set_title(f"{CLASSES[labels[i]]}\nsaid {CLASSES[results['network'][i]]}", fontsize=6)
         ax.axis("off")
     fig.tight_layout()
     if path:
@@ -120,10 +176,10 @@ def main():
     if not args.checkpoint.exists():
         print(f"{args.checkpoint} not found; using the supplied {SUPPLIED}")
         args.checkpoint = SUPPLIED
-    r = evaluate(args.checkpoint)
-    print(report(r))
+    results = evaluate(args.checkpoint)
+    print(report(results))
     if args.save or args.show:
-        plot(r, args.save, args.show)
+        plot(results, args.save, args.show)
 
 
 if __name__ == "__main__":

@@ -21,9 +21,9 @@ def render_planar_polygons(camera, polygons, colors, tool_pose=None):
     if len(polygons) != len(colors):
         raise ValueError("Supply one RGB color for each polygon")
     image = np.full((camera.height, camera.width, 3), 235, dtype=np.uint8)
-    for polygon, color in zip(polygons, colors):
-        vertices = np.asarray(polygon, dtype=float)
-        color = np.asarray(color, dtype=float)
+    for k in range(len(polygons)):
+        vertices = np.asarray(polygons[k], dtype=float)
+        color = np.asarray(colors[k], dtype=float)
         if vertices.ndim != 2 or vertices.shape[1] != 2 or len(vertices) < 3:
             raise ValueError("Each plane polygon needs at least three XY vertices")
         if not np.all(np.isfinite(vertices)):

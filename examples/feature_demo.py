@@ -103,11 +103,21 @@ def checkerboard_pair():
 
 
 def belt_pair():
-    """One S2 frame with objects from the project camera and from a moved camera, plus true belt points."""
+    """One S2 frame with objects from the project camera and from a moved camera, plus true belt points.
+
+    The frame is taken 16 s in, when about five objects are on the belt. At
+    the start (two objects) there were too few keypoints, and the match was
+    right with one OpenCV version and wrong with another.
+    """
     scenario = load_scenario("s2")
     moved = copy.deepcopy(scenario)
     moved["cameras"].update(MOVED_CAMERA)
-    images = [SortingSimulator(s, seed=1).observe().fixed_image for s in (scenario, moved)]
+    images = []
+    for s in (scenario, moved):
+        simulator = SortingSimulator(s, seed=1)
+        for period in range(800):  # 800 periods of 0.02 s = 16 s, arm still
+            simulator.advance_period(np.zeros(4), "hold")
+        images.append(simulator.observe().fixed_image)
     grid = np.array([[x, y, 0.0] for x in np.linspace(-0.4, 0.4, 9) for y in np.linspace(0.5, 0.7, 5)])
     truth = [make_cameras(s)[0].project(grid)[0] - 0.5 for s in (scenario, moved)]
     return images, truth

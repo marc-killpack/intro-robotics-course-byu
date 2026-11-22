@@ -31,7 +31,8 @@ def frame_transforms():
     # BEGIN SOLUTION
     t_w_b = se3(rotz(np.pi / 2), [0.1, 0.1, 0])
     t_w_c = se3(np.diag([1.0, -1.0, -1.0]), [0.4, -0.2, 0.8])
-    t_c_o = se3(inv(t_w_c)[:3, :3], P_C)
+    r_c_w = inv(t_w_c)[:3, :3]  # the object is oriented like the world frame
+    t_c_o = se3(r_c_w, P_C)
     return [
         ("world", "base", t_w_b),
         ("world", "camera", t_w_c),
@@ -42,7 +43,9 @@ def frame_transforms():
 
 
 def main():
+    # ROS is imported here, so frame_transforms() can be checked without ROS.
     import rclpy
+    from rclpy.executors import ExternalShutdownException
     from rclpy.node import Node
     from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
@@ -52,16 +55,17 @@ def main():
     node = Node("hw03_frame_broadcaster")
     broadcaster = StaticTransformBroadcaster(node)
     stamp = node.get_clock().now().to_msg()
-    entries = frame_transforms()
-    broadcaster.sendTransform(
-        [transform_message(parent, child, t, stamp) for parent, child, t in entries]
-    )
-    for parent, child, t in entries:
-        print(f"{parent} -> {child}:\n{np.array2string(np.asarray(t), precision=3, suppress_small=True)}")
+    np.set_printoptions(precision=3, suppress=True)
+    messages = []
+    for parent, child, transform in frame_transforms():
+        messages.append(transform_message(parent, child, transform, stamp))
+        print(f"{parent} -> {child}:")
+        print(np.asarray(transform))
+    broadcaster.sendTransform(messages)
     print("Static frames published; press Ctrl+C to stop.")
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):  # Ctrl+C
         pass
     finally:
         node.destroy_node()

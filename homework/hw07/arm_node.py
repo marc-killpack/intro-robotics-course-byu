@@ -23,6 +23,8 @@ from homework.hw07.trajectory import interpolate
 
 
 class ArmNode(Node):
+    """Subscribes to a trajectory and publishes the interpolated joint state."""
+
     def __init__(self):
         super().__init__("hw07_arm")
         self.publisher = self.create_publisher(JointState, "/hw07/joint_states", 10)
@@ -40,10 +42,14 @@ class ArmNode(Node):
         # HW07: convert each point's time_from_start (sec + nanosec) to seconds.
         # BEGIN SOLUTION
         self.names = list(message.joint_names)
-        self.times = np.array(
-            [p.time_from_start.sec + p.time_from_start.nanosec * 1e-9 for p in message.points]
-        )
-        self.path = np.array([list(p.positions) for p in message.points])
+        times = []
+        positions = []
+        for point in message.points:
+            seconds = point.time_from_start.sec + point.time_from_start.nanosec * 1e-9
+            times.append(seconds)
+            positions.append(list(point.positions))
+        self.times = np.array(times)
+        self.path = np.array(positions)
         self.start_time = self.get_clock().now()
         self.get_logger().info(
             f"Received {len(self.times)} waypoints lasting {self.times[-1]:.2f} s"

@@ -14,10 +14,14 @@ JOINT_LIMITS = [(-1.57, 1.57), (-0.5, 0.5), (-0.5, 0.5)]
 def check_joint_positions(positions):
     if len(positions) != len(JOINT_NAMES):
         raise ValueError("Supply three angles: head, left leg, right leg (radians)")
-    positions = [float(value) for value in positions]
-    for name, angle, (lower, upper) in zip(JOINT_NAMES, positions, JOINT_LIMITS):
-        if not math.isfinite(angle) or not lower <= angle <= upper:
+    checked = []
+    for i in range(len(JOINT_NAMES)):
+        angle = float(positions[i])
+        lower = JOINT_LIMITS[i][0]
+        upper = JOINT_LIMITS[i][1]
+        if not math.isfinite(angle) or angle < lower or angle > upper:
             raise ValueError(
-                f"{name} must be a finite angle from {lower} to {upper} radians"
+                f"{JOINT_NAMES[i]} must be a finite angle from {lower} to {upper} radians"
             )
-    return positions
+        checked.append(angle)
+    return checked

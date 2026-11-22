@@ -30,8 +30,9 @@ threads, PyTorch 2.15.0+cpu, OpenCV 4.14); the data are deterministic.
    probability goes to zero, so a confident mistake produces a large loss and
    large gradients, while an unsure answer costs about `ln 9 = 2.2` for 9
    classes.
-   (b) `loss = loss_fn(model(images), labels)`, `optimizer.zero_grad()`,
-   `loss.backward()`, `optimizer.step()`, then `losses.append(loss.item())`.
+   (b) `scores = model(images)`, `loss = loss_fn(scores, labels)`,
+   `optimizer.zero_grad()`, `loss.backward()`, `optimizer.step()`, then
+   `losses.append(loss.item())`.
    `backward` computes the gradient of the loss with respect to every weight
    (backpropagation, the chain rule through the layers) and stores it in each
    parameter's `.grad`. PyTorch *adds* new gradients to `.grad`; without

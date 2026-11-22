@@ -29,16 +29,20 @@ class Blackout(Controller):
 
     def __init__(self, inner, interval):
         super().__init__(inner.task)
-        self.inner, self.interval = inner, interval
+        self.inner = inner  # the controller being tested
+        self.interval = interval  # (start, end) in s, or None for no blackout
         self.commands = []  # (time, dq) sent while blank
         self.pick_image = None  # the tool image when the pick was requested
 
     def reset(self):
         self.inner.reset()
-        self.commands, self.pick_image = [], None
+        self.commands = []
+        self.pick_image = None
 
     def step(self, obs):
-        blank = self.interval is not None and self.interval[0] <= obs.time < self.interval[1]
+        blank = False
+        if self.interval is not None:
+            blank = self.interval[0] <= obs.time < self.interval[1]
         if blank:
             obs = replace(obs, tool_image=np.full_like(obs.tool_image, 40))
         command = self.inner.step(obs)
@@ -50,7 +54,7 @@ class Blackout(Controller):
 
 
 def run(seed=1, blackout=BLACKOUT, controller_class=IBVSController):
-    """Run one episode; return (controller, simulator, result, wrapper)."""
+    """Run one episode; return (controller, simulator, result, wrapper, first observation)."""
     scenario = load_scenario(SCENARIO)
     task = make_task(scenario)
     controller = controller_class(task)
@@ -62,18 +66,34 @@ def run(seed=1, blackout=BLACKOUT, controller_class=IBVSController):
 
 
 def report(controller, simulator, wrapper):
+    """Provided: (report text, pixel error each period in px, NaN where the target was lost)."""
     log = controller.log
-    errors = [np.nan if p is None else np.linalg.norm(p - controller.target_pixel) for p in log["pixel"]]
+    errors = []
+    seen = []  # the errors while the target was visible
+    for pixel in log["pixel"]:
+        if pixel is None:
+            errors.append(np.nan)
+        else:
+            error = np.linalg.norm(pixel - controller.target_pixel)
+            errors.append(error)
+            seen.append(error)
     lines = [f"desired pixel {np.round(controller.target_pixel, 1)}; depth {controller.depth:.3f} m"]
-    seen = [e for e in errors if np.isfinite(e)]
     lines.append(f"pixel error: first {seen[0]:.1f} px, last {seen[-1]:.1f} px")
-    pick_time = log["time"][-1] if controller.picked else None
-    lines.append("pick requested at " + (f"{pick_time:.2f} s (applied one period later)"
-                                         if pick_time is not None else "-- never"))
-    lines.append(f"pickup {'succeeded' if simulator.held is not None else 'FAILED'} "
-                 f"(failed picks: {simulator.counts['failed_picks']})")
+    if controller.picked:
+        pick_time = log["time"][-1]  # the controller stops logging once it picks
+        lines.append(f"pick requested at {pick_time:.2f} s (applied one period later)")
+    else:
+        lines.append("pick requested at -- never")
+    if simulator.held is not None:
+        outcome = "succeeded"
+    else:
+        outcome = "FAILED"
+    lines.append(f"pickup {outcome} (failed picks: {simulator.counts['failed_picks']})")
     if wrapper.interval is not None:
-        largest = max((np.abs(dq).max() for _, dq in wrapper.commands), default=0.0)
+        largest = 0.0  # largest |dq| sent while the camera was blank
+        for command in wrapper.commands:
+            dq = command[1]
+            largest = max(largest, np.abs(dq).max())
         lines.append(f"camera blank {wrapper.interval[0]:.2f}-{wrapper.interval[1]:.2f} s: "
                      f"{len(wrapper.commands)} commands, largest |dq| {largest:.3g} rad/s")
     return "\n".join(lines), errors
@@ -92,19 +112,26 @@ def plot(controller, simulator, wrapper, first, errors, path=None, show=False):
     ax = axes[0, 0]
     ax.plot(times, errors, ".-", ms=3)
     if wrapper.interval is not None:
-        ax.axvspan(*wrapper.interval, color="0.85", label="camera blank")
+        ax.axvspan(wrapper.interval[0], wrapper.interval[1], color="0.85", label="camera blank")
         ax.legend()
     ax.set(xlabel="simulated time (s)", ylabel="pixel error (px)", title="Image error")
     ax = axes[0, 1]
     ax.plot(times, np.array(log["dq"]))
     ax.set(xlabel="simulated time (s)", ylabel="commanded rate (rad/s)", title="Joint-rate commands")
-    last = wrapper.pick_image if wrapper.pick_image is not None else simulator.render(simulator.tool_camera)
-    for ax, image, title in ((axes[1, 0], first.tool_image, "tool camera, t = 0"),
-                             (axes[1, 1], last, "tool camera, when picking" if wrapper.pick_image is not None
-                              else "tool camera, end (no pick)")):
-        ax.imshow(image)
-        ax.plot(*(controller.target_pixel - 0.5), "c+", ms=14, mew=2, label="desired pixel")
-        ax.set_title(title)
+    if wrapper.pick_image is not None:
+        last = wrapper.pick_image
+        last_title = "tool camera, when picking"
+    else:
+        last = simulator.render(simulator.tool_camera)
+        last_title = "tool camera, end (no pick)"
+    images = [first.tool_image, last]
+    titles = ["tool camera, t = 0", last_title]
+    marker = controller.target_pixel - 0.5  # imshow centers pixels at integers
+    for k in range(2):
+        ax = axes[1, k]
+        ax.imshow(images[k])
+        ax.plot(marker[0], marker[1], "c+", ms=14, mew=2, label="desired pixel")
+        ax.set_title(titles[k])
         ax.legend(loc="lower right")
     fig.tight_layout()
     if path:
@@ -122,7 +149,11 @@ def main():
     parser.add_argument("--save", type=Path, help="save the plots to this image file")
     parser.add_argument("--show", action="store_true", help="open the plots in a window")
     args = parser.parse_args()
-    controller, simulator, _, wrapper, first = run(args.seed, None if args.no_blackout else BLACKOUT)
+    if args.no_blackout:
+        blackout = None
+    else:
+        blackout = BLACKOUT
+    controller, simulator, _, wrapper, first = run(args.seed, blackout)
     text, errors = report(controller, simulator, wrapper)
     print(text)
     if args.save or args.show:

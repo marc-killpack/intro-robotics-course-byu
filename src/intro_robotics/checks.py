@@ -14,11 +14,11 @@ def check_scalar(value, name):
 def check_rotation(value, name="Rotation"):
     """Require a right-handed 2x2 or 3x3 rotation matrix."""
     value = np.asarray(value, dtype=float)
-    if value.shape not in {(2, 2), (3, 3)} or not np.all(np.isfinite(value)):
+    if value.shape not in [(2, 2), (3, 3)] or not np.all(np.isfinite(value)):
         raise ValueError(f"{name} must be a finite 2x2 or 3x3 rotation matrix")
-    if not np.allclose(
-        value.T @ value, np.eye(len(value)), atol=1e-9, rtol=0
-    ) or not np.isclose(np.linalg.det(value), 1, atol=1e-9, rtol=0):
+    orthonormal = np.allclose(value.T @ value, np.eye(len(value)), atol=1e-9, rtol=0)
+    right_handed = np.isclose(np.linalg.det(value), 1, atol=1e-9, rtol=0)
+    if not orthonormal or not right_handed:
         raise ValueError(f"{name} must contain a right-handed rotation matrix")
     return value.copy()
 
@@ -78,6 +78,7 @@ def check_axis(axis):
 
 
 def check_limits(limits):
+    """Allow no limits (None) or [lower, upper] with lower < upper."""
     if limits is None:
         return None
     limits = check_vector(limits, 2, "Joint limits")
@@ -88,15 +89,15 @@ def check_limits(limits):
 
 def check_planar_axes(axes, joint_types):
     """Check motion in XY with rotation only about the upright Z axis."""
-    for number, (axis, joint_type) in enumerate(zip(axes, joint_types), 1):
-        planar = (
-            abs(axis[2]) < 1e-9
-            if joint_type == "p"
-            else np.isclose(abs(axis[2]), 1, atol=1e-9, rtol=0)
-        )
+    for i in range(len(axes)):
+        axis = axes[i]
+        if joint_types[i] == "p":
+            planar = abs(axis[2]) < 1e-9  # slides within XY
+        else:
+            planar = np.isclose(abs(axis[2]), 1, atol=1e-9, rtol=0)  # turns about upright Z
         if not planar:
             raise ValueError(
-                f"Joint {number} is outside jacob_planar's XY/upright-axis scope. "
+                f"Joint {i + 1} is outside jacob_planar's XY/upright-axis scope. "
                 "Use fk() to study this spatial arm. Spatial velocity kinematics "
                 "belongs in the next robotics class. Model a vertical pickup "
                 "stroke as a separate timed actuator."

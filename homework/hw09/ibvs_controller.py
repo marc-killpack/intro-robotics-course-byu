@@ -29,7 +29,9 @@ def desired_pixel(task):
     """
     tool_pose = np.eye(4)
     tool_pose[2, 3] = task.arm_height  # tool above the world origin, actuator up
-    return task.tool_camera.project(np.zeros((1, 3)), tool_pose)[0][0]
+    belt_point = np.zeros((1, 3))  # the world origin, on the belt
+    pixels, depths, visible = task.tool_camera.project(belt_point, tool_pose)
+    return pixels[0]
 
 
 def belt_depth(task):
@@ -46,12 +48,16 @@ def ibvs_velocity(pixel, target_pixel, depth, focal, yaw, gain):
     e = pixel - target_pixel decays as de/dt = -gain * e, then express v_c
     in the world frame using the tool heading yaw.
     """
-    # HW09: about four lines (problem 3(a)).
+    # HW09: about six lines (problem 3(a)).
     # BEGIN SOLUTION
     error = np.asarray(pixel, float) - np.asarray(target_pixel, float)
-    camera_velocity = gain * depth / focal * error
-    c, s = np.cos(yaw), np.sin(yaw)
-    return np.array([[c, s], [s, -c]]) @ camera_velocity  # R_z(yaw) @ diag(1, -1)
+    camera_velocity = gain * depth / focal * error  # camera-frame (x, y), m/s
+    c = np.cos(yaw)
+    s = np.sin(yaw)
+    # Camera x = tool x and camera y = -tool y, then turn the tool frame by yaw:
+    # R_z(yaw) @ diag(1, -1).
+    r_world_camera = np.array([[c, s], [s, -c]])
+    return r_world_camera @ camera_velocity
     # END SOLUTION
     raise NotImplementedError("HW09: implement ibvs_velocity")
 
@@ -86,16 +92,17 @@ class IBVSController(Controller):
         rates with your damped_least_squares, asking for zero heading rate so
         the camera does not spin.
         """
-        # HW09: about seven lines (problem 3(b)).
+        # HW09: about nine lines (problem 3(b)).
         # BEGIN SOLUTION
         if pixel is None:
-            return np.zeros(jacobian.shape[1])
-        velocity = ibvs_velocity(pixel, self.target_pixel, self.depth,
-                                 self.task.tool_camera.focal, yaw, self.GAIN)
+            return np.zeros(jacobian.shape[1])  # target lost: hold still
+        focal = self.task.tool_camera.focal
+        velocity = ibvs_velocity(pixel, self.target_pixel, self.depth, focal, yaw, self.GAIN)
         speed = np.linalg.norm(velocity)
         if speed > self.MAX_SPEED:
             velocity = velocity * self.MAX_SPEED / speed
-        return damped_least_squares(jacobian, np.append(velocity, 0.0), self.DAMPING)
+        desired = np.array([velocity[0], velocity[1], 0.0])  # vx, vy, zero heading rate
+        return damped_least_squares(jacobian, desired, self.DAMPING)
         # END SOLUTION
         raise NotImplementedError("HW09: implement IBVSController.joint_rates")
 
@@ -110,16 +117,25 @@ class IBVSController(Controller):
         pixel = find_blob(obs.tool_image, self.color)
         dq = self.joint_rates(pixel, jacobian, yaw)
         self.log["time"].append(obs.time)
-        self.log["pixel"].append(None if pixel is None else np.asarray(pixel, float))
+        if pixel is None:
+            self.log["pixel"].append(None)
+        else:
+            self.log["pixel"].append(np.asarray(pixel, float))
         self.log["dq"].append(np.asarray(dq, float))
 
+        # Pick once the target has been centered, with the tool nearly
+        # stopped, for ALIGN_PERIODS periods in a row.
         request = "hold"
         if pixel is not None:
             error = np.linalg.norm(np.asarray(pixel) - self.target_pixel)
-            slow = np.linalg.norm(jacobian[:2] @ obs.dq) < 0.02
-            self.aligned = self.aligned + 1 if error < self.ALIGN_PIXELS and slow else 0
+            slow = np.linalg.norm(jacobian[:2] @ obs.dq) < 0.02  # tool speed, m/s
+            if error < self.ALIGN_PIXELS and slow:
+                self.aligned = self.aligned + 1
+            else:
+                self.aligned = 0
             if self.aligned >= self.ALIGN_PERIODS:
-                request, self.picked = "pick", True
+                request = "pick"
+                self.picked = True
         else:
             self.aligned = 0
         return Command(dq, request)

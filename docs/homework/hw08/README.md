@@ -17,7 +17,7 @@ applied to the other. The faculty `examples/checkerboard_homography.py`
 demonstration.
 
 Student files: the six marked functions in `src/intro_robotics/vision.py`
-(supplied `find_marks` and `whole` in the same module) and `homework/hw08/`
+(supplied `all_orderings`, `find_marks`, and `whole` in the same module) and `homework/hw08/`
 (`hw08_checkerboard.py`, `checkerboard/`, `hw08_perception.py`,
 `hw08_scenario.toml`, README). Public check:
 `tests/public/test_hw08_vision.py` (synthetic images); instructor checks:

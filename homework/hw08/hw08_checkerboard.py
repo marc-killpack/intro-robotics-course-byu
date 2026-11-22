@@ -23,11 +23,17 @@ def load_corners(path=DATA / "corner_observations.csv"):
     """Provided: (world (35, 2) m, {1: view-1 pixels, 2: view-2 pixels}, fit mask)."""
     with Path(path).open(newline="") as file:
         rows = list(csv.DictReader(file))
-    world = np.array([[float(r["x_m"]), float(r["y_m"])] for r in rows])
-    pixels = {view: np.array([[float(r[f"u{view}_px"]), float(r[f"v{view}_px"])] for r in rows])
-              for view in (1, 2)}
-    fit = np.array([r["role"] == "fit" for r in rows])
-    return world, pixels, fit
+    world = []
+    pixels_1 = []
+    pixels_2 = []
+    fit = []
+    for row in rows:
+        world.append([float(row["x_m"]), float(row["y_m"])])
+        pixels_1.append([float(row["u1_px"]), float(row["v1_px"])])
+        pixels_2.append([float(row["u2_px"]), float(row["v2_px"])])
+        fit.append(row["role"] == "fit")
+    pixels = {1: np.array(pixels_1), 2: np.array(pixels_2)}
+    return np.array(world), pixels, np.array(fit)
 
 
 def errors(h, pixels, world):
@@ -38,20 +44,25 @@ def errors(h, pixels, world):
 
 def run():
     world, pixels, fit = load_corners()
-    maps = {view: fit_plane_map(pixels[view][fit], world[fit]) for view in (1, 2)}
+    check = ~fit  # the corners not used for fitting
+    maps = {}
+    for view in (1, 2):
+        maps[view] = fit_plane_map(pixels[view][fit], world[fit])
     results = {}
     for view in (1, 2):
         results[f"view {view}, fit corners"] = errors(maps[view], pixels[view][fit], world[fit])
-        results[f"view {view}, check corners"] = errors(maps[view], pixels[view][~fit], world[~fit])
+        results[f"view {view}, check corners"] = errors(maps[view], pixels[view][check], world[check])
     results["view 2's map on view 1's pixels"] = errors(maps[2], pixels[1], world)
     return world, pixels, fit, maps, results
 
 
 def report(results):
     lines = []
-    for name, e in results.items():
-        lines.append(f"{name:>32}: {len(e):2d} corners, RMS {1000 * np.sqrt(np.mean(e**2)):7.3f} mm, "
-                     f"largest {1000 * e.max():7.3f} mm")
+    for name in results:
+        e = results[name]
+        rms_mm = 1000 * np.sqrt(np.mean(e**2))
+        largest_mm = 1000 * e.max()
+        lines.append(f"{name:>32}: {len(e):2d} corners, RMS {rms_mm:7.3f} mm, largest {largest_mm:7.3f} mm")
     return "\n".join(lines)
 
 
@@ -62,17 +73,21 @@ def plot(world, pixels, fit, maps, path=None, show=False):
         matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
+    check = ~fit
     fig, axes = plt.subplots(1, 3, figsize=(14, 4.2))
-    for ax, view in zip(axes[:2], (1, 2)):
+    for view in (1, 2):
+        ax = axes[view - 1]
         ax.imshow(plt.imread(DATA / f"view_{view}.png"))
-        ax.plot(*pixels[view][~fit].T, "c.", ms=6, label="check corners")
-        ax.plot(*pixels[view][fit].T, "m+", ms=12, mew=2, label="fit corners")
+        ax.plot(pixels[view][check, 0], pixels[view][check, 1], "c.", ms=6, label="check corners")
+        ax.plot(pixels[view][fit, 0], pixels[view][fit, 1], "m+", ms=12, mew=2, label="fit corners")
         ax.set_title(f"view {view}")
         ax.legend(loc="lower right", fontsize=8)
     ax = axes[2]
-    for view, style, label in ((2, "o", "view 2's map, view 2 pixels"), (1, "x", "view 2's map, view 1 pixels")):
-        ax.plot(*np.array([to_plane(maps[2], p) for p in pixels[view]]).T, style, ms=5, mfc="none", label=label)
-    ax.plot(*world.T, "k.", ms=3, label="true corners")
+    mapped_2 = np.array([to_plane(maps[2], p) for p in pixels[2]])
+    mapped_1 = np.array([to_plane(maps[2], p) for p in pixels[1]])
+    ax.plot(mapped_2[:, 0], mapped_2[:, 1], "o", ms=5, mfc="none", label="view 2's map, view 2 pixels")
+    ax.plot(mapped_1[:, 0], mapped_1[:, 1], "x", ms=5, mfc="none", label="view 2's map, view 1 pixels")
+    ax.plot(world[:, 0], world[:, 1], "k.", ms=3, label="true corners")
     ax.set(xlabel="world X (m)", ylabel="world Y (m)", title="corners mapped to the plane", aspect="equal")
     ax.legend(fontsize=8)
     fig.tight_layout()

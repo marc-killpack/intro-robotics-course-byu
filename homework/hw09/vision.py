@@ -16,12 +16,14 @@ def find_blob(image, rgb, tolerance=40, min_pixels=30):
     no region has at least min_pixels pixels (the target is lost).
     """
     rgb = np.asarray(rgb, int)
-    mask = cv2.inRange(image, np.clip(rgb - tolerance, 0, 255).astype(np.uint8),
-                       np.clip(rgb + tolerance, 0, 255).astype(np.uint8))
+    low = np.clip(rgb - tolerance, 0, 255).astype(np.uint8)
+    high = np.clip(rgb + tolerance, 0, 255).astype(np.uint8)
+    mask = cv2.inRange(image, low, high)
     count, labels, stats, centroids = cv2.connectedComponentsWithStats(mask)
     if count < 2:
-        return None
-    largest = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+        return None  # only the background (region 0) was found
+    areas = stats[1:, cv2.CC_STAT_AREA]  # pixel counts of regions 1, 2, ...
+    largest = 1 + int(np.argmax(areas))
     if stats[largest, cv2.CC_STAT_AREA] < min_pixels:
         return None
     return centroids[largest] + 0.5  # OpenCV centers pixels at integers

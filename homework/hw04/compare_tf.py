@@ -12,67 +12,73 @@ comparing; the two readings are taken a few milliseconds apart.
 """
 
 import numpy as np
+import rclpy
+from rclpy.executors import ExternalShutdownException
+from rclpy.node import Node
+from rclpy.time import Time
+from sensor_msgs.msg import JointState
+from tf2_ros import Buffer, TransformException, TransformListener
 
-from homework.models import spatial_arm
-from intro_robotics import SerialArm
-from intro_robotics.transforms import rotz, se3
+from homework.models import placed_arm
+from homework.ros_frames import quaternion_to_rotation
 
 JOINT_NAMES = ["joint1", "joint2", "joint3"]
 
 
-def placed_arm():
-    """spatial_arm() with problem 4(a)'s world placement and tool offset."""
-    return SerialArm(
-        spatial_arm().joints,
-        base=se3(rotz(np.pi / 2), [1, 0.2, 0]),
-        tip=se3(translation=[0, 0, 0.1]),
-    )
+class CompareTF(Node):
+    """Subscribes to the slider joint states and asks TF for the tool pose once a second."""
 
+    def __init__(self):
+        super().__init__("hw04_compare_tf")
+        self.arm = placed_arm()
+        self.joint_angles = {}  # the latest angle for each joint name
+        self.buffer = Buffer()
+        self.listener = TransformListener(self.buffer, self)
+        self.subscription = self.create_subscription(
+            JointState, "/hw04/joint_states", self.store_joint_state, 10
+        )
+        self.timer = self.create_timer(1.0, self.compare)
 
-def main():
-    import rclpy
-    from rclpy.node import Node
-    from rclpy.time import Time
-    from sensor_msgs.msg import JointState
-    from tf2_ros import Buffer, TransformException, TransformListener
+    def store_joint_state(self, message):
+        for i in range(len(message.name)):
+            self.joint_angles[message.name[i]] = message.position[i]
 
-    from homework.ros_frames import quaternion_to_rotation
-
-    arm = placed_arm()
-    rclpy.init()
-    node = Node("hw04_compare_tf")
-    buffer = Buffer()
-    TransformListener(buffer, node)
-    latest = {}
-
-    def store(message):
-        latest.update(zip(message.name, message.position))
-
-    def compare():
-        if not all(name in latest for name in JOINT_NAMES):
-            print("Waiting for /hw04/joint_states (is view_arm.launch.py running?)")
-            return
+    def compare(self):
+        for name in JOINT_NAMES:
+            if name not in self.joint_angles:
+                print("Waiting for /hw04/joint_states (is view_arm.launch.py running?)")
+                return
         try:
-            stamped = buffer.lookup_transform("world", "arm_tool", Time())
+            stamped = self.buffer.lookup_transform("world", "arm_tool", Time())
         except TransformException as error:
             print(f"TF has no world -> arm_tool yet; check your URDF joints. ({error})")
             return
-        q = np.array([latest[name] for name in JOINT_NAMES])
-        t, r = stamped.transform.translation, stamped.transform.rotation
-        tf_position = np.array([t.x, t.y, t.z])
-        tf_rotation = quaternion_to_rotation(r.x, r.y, r.z, r.w)
-        pose = arm.fk(q, base=True, tip=True)
+
+        q = []
+        for name in JOINT_NAMES:
+            q.append(self.joint_angles[name])
+        q = np.array(q)
+        translation = stamped.transform.translation
+        rotation = stamped.transform.rotation
+        tf_position = np.array([translation.x, translation.y, translation.z])
+        tf_rotation = quaternion_to_rotation(rotation.x, rotation.y, rotation.z, rotation.w)
+
+        pose = self.arm.fk(q, base=True, tip=True)
+        position_difference = np.linalg.norm(tf_position - pose[:3, 3])
+        rotation_difference = np.max(np.abs(tf_rotation - pose[:3, :3]))
         np.set_printoptions(precision=4, suppress=True)
         print(f"q = {q}")
         print(f"  TF position: {tf_position}   fk position: {pose[:3, 3]}")
-        print(f"  position difference {np.linalg.norm(tf_position - pose[:3, 3]):.2e} m, "
-              f"largest rotation-entry difference {np.abs(tf_rotation - pose[:3, :3]).max():.2e}")
+        print(f"  position difference {position_difference:.2e} m, "
+              f"largest rotation-entry difference {rotation_difference:.2e}")
 
-    node.create_subscription(JointState, "/hw04/joint_states", store, 10)
-    node.create_timer(1.0, compare)
+
+def main():
+    rclpy.init()
+    node = CompareTF()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()

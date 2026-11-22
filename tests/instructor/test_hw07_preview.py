@@ -94,7 +94,7 @@ empty(lambda: smoothness_cost([[0, 0], [1, 0], [2, 0]]), 'HW07: implement smooth
 from homework.hw07.trajectory import interpolate, waypoint_times
 empty(lambda: interpolate([0, 1], [[0, 0], [1, 1]], 0.5), 'HW07: implement interpolate')
 assert waypoint_times([[0, 0], [1, 0]])[-1] == 2.0
-import homework.hw07.path_publisher  # imports without ROS
+from homework.hw07.scenes import JOINT_NAMES, TOOL_Z, optimized_path  # ROS-free parts of problem 5
 """
             result = subprocess.run(
                 [sys.executable, "-c", probe],

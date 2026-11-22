@@ -38,7 +38,10 @@ class PlanningView:
                 "A planning attempt failed. Inspect your code or try a different seed."
             )
 
-        self.fig, (base_ax, config_ax, arm_ax) = plt.subplots(1, 3, figsize=(15, 4.5))
+        self.fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
+        base_ax = axes[0]
+        config_ax = axes[1]
+        arm_ax = axes[2]
         base_ax.add_patch(Circle((0, 0), 0.30, color="lightgray"))
         base_ax.add_patch(
             Circle((0, 0), 0.36, fill=False, linestyle="--", color="gray")
@@ -46,8 +49,8 @@ class PlanningView:
         base_ax.plot(
             base_path[:, 0], base_path[:, 1], "-o", color="steelblue", markersize=3
         )
-        base_ax.plot(*base_path[0], "go", label="Start")
-        base_ax.plot(*base_path[-1], "r*", markersize=10, label="Goal")
+        base_ax.plot(base_path[0, 0], base_path[0, 1], "go", label="Start")
+        base_ax.plot(base_path[-1, 0], base_path[-1, 1], "r*", markersize=10, label="Goal")
         base_ax.set(
             xlim=(-1, 1),
             ylim=(-1, 1),
@@ -58,8 +61,12 @@ class PlanningView:
         )
         base_ax.legend(loc="upper right", fontsize="small")
 
+        # Shade blocked configurations: row j is q2 = grid[j], column i is q1 = grid[i].
         grid = np.linspace(-2.8, 2.8, 45)
-        blocked = np.array([[not scene.is_free([x, y]) for x in grid] for y in grid])
+        blocked = np.zeros((len(grid), len(grid)), dtype=bool)
+        for j in range(len(grid)):
+            for i in range(len(grid)):
+                blocked[j, i] = not scene.is_free([grid[i], grid[j]])
         config_ax.imshow(
             blocked,
             origin="lower",
@@ -70,8 +77,8 @@ class PlanningView:
         config_ax.plot(
             arm_path[:, 0], arm_path[:, 1], "-o", color="steelblue", markersize=3
         )
-        config_ax.plot(*arm_path[0], "go")
-        config_ax.plot(*arm_path[-1], "r*", markersize=10)
+        config_ax.plot(arm_path[0, 0], arm_path[0, 1], "go")
+        config_ax.plot(arm_path[-1, 0], arm_path[-1, 1], "r*", markersize=10)
         config_ax.set(
             xlabel="q1 (rad)",
             ylabel="q2 (rad)",
@@ -81,12 +88,15 @@ class PlanningView:
 
         arm_ax.add_patch(Circle((0.55, 0), 0.07, color="gray"))
         for index in np.unique(np.linspace(0, len(arm_path) - 1, 7, dtype=int)):
-            color = (
-                "green"
-                if index == 0
-                else "firebrick" if index == len(arm_path) - 1 else "steelblue"
-            )
-            for _, start, end in arm_segments(arm, arm_path[index]):
+            if index == 0:
+                color = "green"
+            elif index == len(arm_path) - 1:
+                color = "firebrick"
+            else:
+                color = "steelblue"
+            for segment in arm_segments(arm, arm_path[index]):
+                start = segment[1]
+                end = segment[2]
                 arm_ax.plot(
                     [start[0], end[0]],
                     [start[1], end[1]],

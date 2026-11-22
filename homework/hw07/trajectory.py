@@ -28,6 +28,9 @@ def check_times_and_path(times, path):
 def waypoint_times(path, max_speed=0.5):
     """Provided: time for each waypoint, starting at 0 seconds.
 
+    path: N-by-joints waypoint array, rad. max_speed: rad/s.
+    Returns the N waypoint times in seconds.
+
     Each segment takes as long as its largest joint change needs at
     max_speed (rad/s), but at least MIN_SEGMENT_SECONDS. The waypoint index
     is not time: this function is one simple choice of timing.
@@ -37,12 +40,21 @@ def waypoint_times(path, max_speed=0.5):
         raise ValueError("Use an N-by-joints array of finite waypoints, N >= 2")
     if not np.isfinite(max_speed) or max_speed <= 0:
         raise ValueError("max_speed must be positive")
-    steps = np.max(np.abs(np.diff(path, axis=0)), axis=1) / max_speed
-    return np.r_[0.0, np.cumsum(np.maximum(steps, MIN_SEGMENT_SECONDS))]
+    times = [0.0]
+    for i in range(len(path) - 1):
+        largest_change = np.max(np.abs(path[i + 1] - path[i]))  # rad
+        duration = max(largest_change / max_speed, MIN_SEGMENT_SECONDS)
+        times.append(times[i] + duration)
+    return np.array(times)
 
 
 def interpolate(times, path, t):
     """Return joint positions and velocities (q, dq) at time t.
+
+    times: waypoint times (N,), seconds, strictly increasing.
+    path: waypoint joint positions, N-by-joints, rad.
+    t: the time to evaluate, seconds.
+    Returns q (joints,) in rad and dq (joints,) in rad/s.
 
     Use a cubic Hermite polynomial on the segment containing t. Waypoint
     velocities: zero at the first and last waypoint; at each interior
@@ -54,19 +66,42 @@ def interpolate(times, path, t):
     # HW07: compute waypoint velocities, find the segment, and evaluate the
     # Hermite basis and its derivative (see the handout).
     # BEGIN SOLUTION
+    joints = path.shape[1]
+    # Outside the time range, hold the nearest endpoint at rest.
     if t <= times[0]:
-        return path[0].copy(), np.zeros(path.shape[1])
+        return path[0].copy(), np.zeros(joints)
     if t >= times[-1]:
-        return path[-1].copy(), np.zeros(path.shape[1])
-    slopes = np.diff(path, axis=0) / np.diff(times)[:, None]
-    velocities = np.zeros_like(path)
-    velocities[1:-1] = (slopes[:-1] + slopes[1:]) / 2
-    i = int(np.searchsorted(times, t, side="right")) - 1
+        return path[-1].copy(), np.zeros(joints)
+
+    # Waypoint velocities: zero at the ends, the average of the two
+    # neighboring segment slopes at each interior waypoint.
+    velocities = np.zeros((len(times), joints))
+    for k in range(1, len(times) - 1):
+        slope_before = (path[k] - path[k - 1]) / (times[k] - times[k - 1])
+        slope_after = (path[k + 1] - path[k]) / (times[k + 1] - times[k])
+        velocities[k] = (slope_before + slope_after) / 2
+
+    # Find segment i, the one with times[i] <= t < times[i + 1].
+    i = 0
+    while times[i + 1] <= t:
+        i = i + 1
     h = times[i + 1] - times[i]
     s = (t - times[i]) / h
-    h00, h10, h01, h11 = 2 * s**3 - 3 * s**2 + 1, s**3 - 2 * s**2 + s, -2 * s**3 + 3 * s**2, s**3 - s**2
-    d00, d10, d01, d11 = 6 * s**2 - 6 * s, 3 * s**2 - 4 * s + 1, -6 * s**2 + 6 * s, 3 * s**2 - 2 * s
-    q = h00 * path[i] + h10 * h * velocities[i] + h01 * path[i + 1] + h11 * h * velocities[i + 1]
+
+    # Hermite basis functions of s (handout problem 5(c)) ...
+    h00 = 2 * s**3 - 3 * s**2 + 1
+    h10 = s**3 - 2 * s**2 + s
+    h01 = -2 * s**3 + 3 * s**2
+    h11 = s**3 - s**2
+    # ... and their derivatives with respect to s.
+    d00 = 6 * s**2 - 6 * s
+    d10 = 3 * s**2 - 4 * s + 1
+    d01 = -6 * s**2 + 6 * s
+    d11 = 3 * s**2 - 2 * s
+
+    q = (h00 * path[i] + h10 * h * velocities[i]
+         + h01 * path[i + 1] + h11 * h * velocities[i + 1])
+    # dq/dt = (dq/ds) / h; the velocity terms were already multiplied by h.
     dq = (d00 * path[i] + d01 * path[i + 1]) / h + d10 * velocities[i] + d11 * velocities[i + 1]
     return q, dq
     # END SOLUTION

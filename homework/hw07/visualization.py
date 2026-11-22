@@ -35,11 +35,15 @@ class OptimizationView:
                 "The supplied arm seed is invalid at the chosen resolution"
             )
         arm_fine = sampled_path_is_free(arm_path, arm["nominal"].is_free, 0.005)
-        print(
-            f"Arm path: length={path_length(arm_path):.3f}, smoothness={smoothness_cost(arm_path):.3f}, finer sampled valid={arm_fine}"
-        )
+        length = path_length(arm_path)
+        smoothness = smoothness_cost(arm_path)
+        print(f"Arm path: length={length:.3f}, smoothness={smoothness:.3f}, "
+              f"finer sampled valid={arm_fine}")
 
-        self.fig, (base_ax, arm_ax, cost_ax) = plt.subplots(1, 3, figsize=(15, 4.5))
+        self.fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
+        base_ax = axes[0]
+        arm_ax = axes[1]
+        cost_ax = axes[2]
         base_ax.add_patch(Circle((0, 0), 0.30, color="lightgray"))
         base_ax.add_patch(
             Circle((0, 0), 0.36, fill=False, linestyle="--", color="gray")
@@ -69,10 +73,12 @@ class OptimizationView:
             aspect="equal",
         )
         base_ax.legend(fontsize="small")
+        # Shade blocked configurations: row j is q2 = grid[j], column i is q1 = grid[i].
         grid = np.linspace(-2.8, 2.8, 35)
-        blocked = np.array(
-            [[not arm["clearance"].is_free([x, y]) for x in grid] for y in grid]
-        )
+        blocked = np.zeros((len(grid), len(grid)), dtype=bool)
+        for j in range(len(grid)):
+            for i in range(len(grid)):
+                blocked[j, i] = not arm["clearance"].is_free([grid[i], grid[j]])
         arm_ax.imshow(
             blocked,
             origin="lower",

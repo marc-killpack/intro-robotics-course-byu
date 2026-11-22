@@ -1,6 +1,6 @@
 # Course preparation task list
 
-Updated November 20, 2026. **This is the single place for open work.** It has
+Updated November 21, 2026. **This is the single place for open work.** It has
 four parts:
 
 0. [Approach and working schedule](#0-approach-and-working-schedule): how to sequence the work before January
@@ -119,6 +119,35 @@ Instructor plan (Nov 19): review the homework sequentially after the whole
 drafting round is complete; review the project output (R7) before setting the
 pass and good-grade levels; review the D2 outcomes on Nov 20.
 
+- [ ] **Readability pass (instructor, Nov 21).** Simplify the code students
+  write, read, or compare against for mechanical engineering students with
+  one introductory Python course, following the rules in the
+  [design index](docs/design/README.md#students-and-code-style) (style of the
+  earlier `byu_robotics_hw_key`). Flag every change to an assigned interface.
+  *Pilot done Nov 21:* HW01--HW05 (`transforms.py`, `checks.py`, `kinematics.py`
+  through `jacob_planar`, `homework/models.py`, `ros_frames.py`, the HW01
+  support check, the HW03 broadcaster, the HW04 URDF reader and TF
+  comparison, and the HW05 scene). No assigned interface changed; the
+  supplied `placed_arm()` moved from `homework/hw04/compare_tf.py` to
+  `homework/models.py`, so the TF comparison is a module-level `Node`
+  subclass like HW01. The instructor approved this level the same day.
+  *Rest done Nov 21:* HW06--HW11 (IK, RRT, waypoint metrics and optimizer,
+  the HW07 nodes, `vision.py` and the camera model, HW08 scripts, IBVS,
+  HW10 learning code, HW11 rewards, baseline, and environment), the project
+  contract, runner, scenario, RL wrapper and scripts, and the reference
+  controller. Outputs and the reference scores are unchanged
+  ([validation](docs/design/validation.md)). No assigned function changed.
+  Flagged supplied-code moves: `optimized_path`, `JOINT_NAMES`, `TOOL_Z`, and
+  `ARM_PLANE_Z` moved from `homework/hw07/path_publisher.py` (now a `Node`
+  subclass) to `homework/hw07/scenes.py`; `find_marks` uses a new supplied
+  `all_orderings` instead of `itertools.permutations`; HW10's
+  `rule_predict` now accepts plain `(color, shape, pixel)` tuples. Stub
+  "about N lines" hints and the HW08--HW10 reference keys were updated to the
+  longer, one-idea-per-line keys. Left for the instructor: `Detection` is
+  still a `namedtuple` (callers unpack it as a tuple; the handout names
+  it); HW10 problem 2(b) says "four lines" where the key now uses five
+  (`scores` on its own line); `project.launch.py` keeps a comprehension and
+  `*` unpacking (students do not edit it). **Awaiting instructor review.**
 - [ ] **R1. HW01** — [handout source](docs/homework/hw01/README.md),
   [student directions](homework/hw01/README.md), and a generated student copy
   ([release workflow](release_tools/README.md)).
@@ -159,7 +188,11 @@ pass and good-grade levels; review the D2 outcomes on Nov 20.
   checkerboard calibration (`task.calibration_image`, `task.board`; marks
   removed from S1--S3), moved fixed cameras in S3 and the held-out file, the
   `check_calibration` script, and a draft checkoff table in the student
-  guide; the results table was rerun.
+  guide; the results table was rerun. *Nov 21:* also review the optional RL
+  wrapper (spec "RL wrapper" block and the guide's "Optional: reinforcement
+  learning" section). Decide whether the guide keeps the faculty results and
+  the from-scratch comparison, which cost about 2.2 hours of laptop CPU to
+  reproduce, or keeps only the residual example.
 - [ ] **R8. Lecture outlines** — the [19 timed outlines](docs/design/lecture-outlines.md)
   for IK, planning, vision, servoing, ML, project launch, and RL (reworked
   Nov 20; later lecture-preparation phase). Answered Nov 20: (a) the
@@ -185,6 +218,7 @@ pass and good-grade levels; review the D2 outcomes on Nov 20.
 - [ ] Repeat the revised HW01 workflow on Apple Silicon; test Linux and Intel Mac.
 - [ ] Repeat the rebuilt image checks (OpenCV, waypoint, ROS) on ARM64 and verify the interactive RViz GUI.
 - [ ] Check OpenCV window interaction through the browser desktop and repeat on ARM64.
+- [x] `test_feature_demo` passes in the course image (Nov 21). The belt-pair match used the first S2 frame, with about 16 SIFT keypoints, and was right under OpenCV 4.14 (host) but wrong by 36 px under 4.10 (image). The demo now uses the frame at 16 s (about five objects): SIFT and ORB within 0.7 px under both versions.
 - [ ] Measure resource use and set minimum computer requirements and training/runtime budgets. Include the live project graph's real-time factor: with RViz in software rendering the simulator ran at about 0.73x real time on the faculty laptop (0.89x without RViz), which is harmless in simulated time but makes demonstrations slower.
 
 ### Arm and visualization
@@ -206,7 +240,7 @@ pass and good-grade levels; review the D2 outcomes on Nov 20.
 ### Homework scaffolds and pilots
 
 - [ ] Pilot student time budgets for HW01--HW07 with students; adjust problem counts. If HW05 runs long, apply the ordered trims in [its faculty README](docs/homework/hw05/README.md) (Nov 19); HW07 P5 adds about 3 hours.
-- [ ] HW01: catch `rclpy.executors.ExternalShutdownException` beside `KeyboardInterrupt` in `joint_publisher.py` `main()` (Jazzy raises it when SIGINT reaches a node in some shells; the HW07 and project nodes already do).
+- [x] HW01 (Nov 21): `joint_publisher.py` catches `ExternalShutdownException` beside `KeyboardInterrupt`; so do the HW03 broadcaster and HW04 TF comparison.
 - [x] HW08 (Nov 20): rewritten to the D3 scope on the project's fixed camera, two pages. Students write `fit_plane_map`, `to_plane`, `color_mask`, `classify_shape` (corner count only; 100% on S1--S3 and held-out frames), `find_objects`, and `fit_velocity` in `src/intro_robotics/vision.py`; supplied `find_marks`, scenario (S2 settings, self-contained), and activity with tracking, truth comparison, `--realism`, and `--drop`. Fit-with-four, check-the-fifth error 0.7 mm; positions about 1 mm; velocity RMS 0.4--0.5 mm/s by fit versus 28--35 mm/s by two-point difference. Problem 1 also fits two checkerboard views from a supplied corner file (4 fit, 31 check; view 2's map on view 1 is off by 31 mm RMS); automatic corner detection stays in the lecture demonstration. The reference controller now uses these functions; scores unchanged (S2 144, S3 140; held-out 140, was 138).
 - [ ] Pilot HW08 for the one-week workload target.
 - [x] HW05 P6 (Nov 19): square inverse-velocity solve, `damped_least_squares` (assigned, reused by HW06/HW09/project), null space and minimum norm, and the damping tradeoff near a straight arm. The handout is now three pages; check the 1.5-week limit in the timed pilot.
@@ -230,10 +264,11 @@ reference controller, and live ROS graph exist (Nov 19;
 - [x] S2 and S3 (Nov 19): 0.06 m/s belt, 15 objects every 3.3 s behind a hidden feeder, a `[realism]` switch (off in S2, on in S3), uneven spacing and a new rule table in S3, and a faculty `instructor/project/s3_heldout.toml` (another rule table and seeds 101--105) built on S3 with the new `base` key. The oracle sorts 15/15 on every seed, the reference 92--95%, and a half-speed reference 68--76%, so throughput matters ([results](instructor/PROJECT_SPEC_DRAFT.md#evidence-and-assessment)).
 - [x] Checkerboard calibration (instructor, Nov 20): `task.calibration_image` (stopped, empty belt with a 16 by 6 board of 4 cm squares; never in episode images) and `task.board` replace the five marks in S1--S3; fixed orientation documented, so students only reverse OpenCV's order when needed (about half of detections). Students write `find_board_corners` (one "Project" region in `vision.py`); `board_corners` and `calibrate` are supplied. Accuracy at 320 by 240 (no resolution change needed): the calibration image is area-averaged (drawn 4 by 4 per pixel, like a sensor), giving 0.12--0.23 mm median and under 1 mm worst over the visible belt on every scenario and random warp. The check script requires a median under 1 mm and a worst point under 3 mm: a missing +0.5 pixel shift (about 2 mm median) fails every image, a missing reversal fails on some warps, and omitting `cornerSubPix` passes (OpenCV's detector already refines). S3 practice and the held-out file move the fixed camera (a saved S3 map is off by over 2 cm there); the student guide says the graded camera moves. `homework/project/check_calibration.py` (with `--warp N`) and a draft checkoff table (calibration at launch, S1 week 12, S2 week 13, evaluation week 14). Reference rerun with seeds recorded: S1 60, S2 142/144 (realism off/on), S3 140, held-out 140; half speed 60, 112, 112, 114, 104.
 - [ ] Second round: world obstacles with the "block" collision mode, four colors and shapes, tighter spacing.
-- [ ] Draw held objects and arm occlusion in the camera images, or document their absence for students.
+- [ ] Draw held objects and arm occlusion in the camera images. *Nov 21:* their absence is now documented in the student guide ("What the cameras show"); drawing them stays a second-round option.
 - [ ] Set provisional pass and good-grade thresholds and define competition rules, after the instructor reviews the project output (R7; instructor, Nov 19). Data now exist (Nov 19): oracle 150 on S2/S3, so 70--80% is 105--120 points; the reference scores 140--144 and a correct half-speed controller 104--114 (rerun Nov 20 with checkerboard calibration). Choose the percentage and whether it applies per seed or to the mean. Per-step compute budget: the reference takes about 2.5 ms (offline) and 2.1 ms (live) of the 20 ms period.
-- [ ] Supply a Gymnasium wrapper over the same simulator; compare optional RL with conventional methods using the same observations and limits. Add imitation only after the visual controller and logging interfaces work.
-- [ ] Add the project files to a release manifest (the oracle, the held-out file, and the faculty reference controller stay out); include `student_ws/ros2_ws/src/conveyor_interfaces` and add a sentence about it to `student_ws/ros2_ws/src/README.md` (the container's first start then takes about a minute longer to build it); review student interfaces, CPU runtime, and cross-platform packaging.
+- [x] Gymnasium wrapper (Nov 20--21; [spec](instructor/PROJECT_SPEC_DRAFT.md#optional-learning-extensions)). `src/intro_robotics/project/skill_env.py` (`SkillEnv`, `PolicyController`, `load_policy`) runs the graded simulator, lockstep order, limits, and score. The policy learns one sub-skill that the controller hands it through two optional `Controller` hooks (`skill_features`, `skill_command`; a hooked `step()` is both in sequence, so grading is unchanged). The faculty sub-skill is the tool-camera IBVS approach as a bounded residual (24 features, 3 actions). The reward is the score change, observations are only the controller's features, and training seeds are 1000 and up. Supplied `homework/project/train_rl.py` (PPO, 8 processes, about 25 min per 100k steps) and `evaluate_rl.py`; guide section; 11 instructor tests, including `check_env` and a zero-action run identical to the graded runner. Held-out 101--115 means: conventional 136.7, one-line retune 139.3, residual (150k steps, 35 min) 144.0. From scratch with no IBVS law (`ScratchApproachController`, faculty only): 6 after 150k steps, 139.3 after 900k (133 min).
+- [ ] Imitation learning for the project, only after the visual controller and logging interfaces work.
+- [ ] Add the project files to a release manifest (the oracle, the held-out file, and the faculty reference controller, including `ScratchApproachController`, stay out; `skill_env.py`, `train_rl.py`, and `evaluate_rl.py` go in, and the contract's hook methods are already in `contract.py`); include `student_ws/ros2_ws/src/conveyor_interfaces` and add a sentence about it to `student_ws/ros2_ws/src/README.md` (the container's first start then takes about a minute longer to build it); review student interfaces, CPU runtime, and cross-platform packaging.
 
 ### Release and publication
 
@@ -277,6 +312,7 @@ Evidence for completed checks, with test counts and commands, is in the
 
 ### Course planning and migration
 
+- [x] Nov 21: optional project RL wrapper (`skill_env.py`, the two `Controller` hooks, residual and from-scratch faculty variants, supplied train/evaluate scripts, guide and spec sections, 11 instructor tests).
 - [x] Nov 20: HW05 problem 6 moved to HW06 problem 1 (D11); lecture-before-homework sequence map; calibration image area-averaged and the check made strict about the half-pixel shift; image-features lecture demo (`examples/feature_demo.py`: Harris, Shi-Tomasi, SIFT, ORB, matching) added to V2; RL2 starts two live training runs.
 - [x] Nov 20: HW10 guided lab with hard conditions; lecture outlines reworked (19 sessions); stale HW09/HW10/HW11 rows fixed in the roadmap and semester integration.
 - [x] Nov 20: project checkerboard calibration (contract, scenarios, moved cameras, reference, check script, guide, spec, 5 instructor and 2 public tests); HW08 checkerboard sub-problem.

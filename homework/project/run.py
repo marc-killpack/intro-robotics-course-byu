@@ -20,9 +20,14 @@ from intro_robotics.project import SortingSimulator, load_scenario, run_episode
 from intro_robotics.project.scenario import make_task
 
 
+MARKERS = {"circle": "o", "square": "s", "triangle": "^"}  # matplotlib marker for each shape
+
+
 def load_class(spec):
-    module, _, name = spec.partition(":")
-    return getattr(import_module(module), name)
+    """A class from 'package.module:ClassName'."""
+    parts = spec.split(":")
+    module = import_module(parts[0])
+    return getattr(module, parts[1])
 
 
 def plot_episode(result, simulator, first_obs, path):
@@ -40,14 +45,18 @@ def plot_episode(result, simulator, first_obs, path):
     b = s["belt"]
     ax.add_patch(plt.Rectangle((b["x_start"], b["y"] - b["width"] / 2), b["x_end"] - b["x_start"],
                                b["width"], color="0.8", zorder=0))
-    for name, (x, y, r) in s["bins"].items():
-        ax.add_patch(plt.Circle((x, y), r, fill=False))
+    for name in s["bins"]:
+        x = s["bins"][name][0]
+        y = s["bins"][name][1]
+        radius = s["bins"][name][2]
+        ax.add_patch(plt.Circle((x, y), radius, fill=False))
         ax.text(x, y, name, ha="center", va="center")
     for obj in simulator.objects:
-        ax.plot(*obj.position, marker={"circle": "o", "square": "s", "triangle": "^"}[obj.shape],
-                color=np.array(s["colors"][obj.color]) / 255, markeredgecolor="black")
+        color = np.array(s["colors"][obj.color]) / 255
+        ax.plot(obj.position[0], obj.position[1], marker=MARKERS[obj.shape], color=color,
+                markeredgecolor="black")
         ax.annotate(obj.state, obj.position, fontsize=7, xytext=(4, 4), textcoords="offset points")
-    ax.plot(*simulator.base_xy, "k+", markersize=12)
+    ax.plot(simulator.base_xy[0], simulator.base_xy[1], "k+", markersize=12)
     ax.set_aspect("equal")
     ax.set_title(f"score {result.score}: final object states")
     axes[1].imshow(first_obs.fixed_image)
@@ -64,13 +73,16 @@ class VideoWriter:
     """Write the fixed and tool images side by side, with time and score."""
 
     def __init__(self, path, every=2):
-        self.path, self.every, self.count, self.writer = Path(path), every, 0, None
+        self.path = Path(path)
+        self.every = every  # keep one period in this many
+        self.count = 0
+        self.writer = None  # opened at the first frame, when its size is known
 
     def __call__(self, obs, simulator):
         import cv2
 
         self.count += 1
-        if (self.count - 1) % self.every:
+        if (self.count - 1) % self.every != 0:
             return
         frame = cv2.cvtColor(np.hstack((obs.fixed_image, obs.tool_image)), cv2.COLOR_RGB2BGR)
         frame = cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
@@ -79,8 +91,10 @@ class VideoWriter:
         if self.writer is None:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             fps = 1 / (simulator.scenario["control_period"] * self.every)
-            height, width = frame.shape[:2]
-            self.writer = cv2.VideoWriter(str(self.path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
+            height = frame.shape[0]
+            width = frame.shape[1]
+            codec = cv2.VideoWriter_fourcc("m", "p", "4", "v")
+            self.writer = cv2.VideoWriter(str(self.path), codec, fps, (width, height))
         self.writer.write(frame)
 
     def close(self):
@@ -101,24 +115,35 @@ def main():
     parser.add_argument("--video", type=Path, help="save an .mp4 of both camera images")
     args = parser.parse_args()
 
-    realism = None if args.realism is None else args.realism == "on"
+    realism = None  # the file's setting
+    if args.realism is not None:
+        realism = args.realism == "on"
     scenario = load_scenario(args.scenario, realism=realism)
-    seeds = args.seeds or [args.seed if args.seed is not None else scenario["seed"]]
+    if args.seeds:
+        seeds = args.seeds
+    elif args.seed is not None:
+        seeds = [args.seed]
+    else:
+        seeds = [scenario["seed"]]
+    realism_text = "off"
+    if scenario.get("realism", {}).get("enabled"):
+        realism_text = "on"
     controller_class = load_class(args.controller)
     scores = []
     for seed in seeds:
         simulator = SortingSimulator(scenario, seed=seed)
         controller = controller_class(make_task(scenario))
         first_obs = simulator.observe()
-        video = VideoWriter(args.video) if args.video and len(seeds) == 1 else None
+        video = None
+        if args.video and len(seeds) == 1:
+            video = VideoWriter(args.video)
         try:
             result = run_episode(controller, simulator, record=args.plot is not None, watch=video)
         finally:
             if video is not None:
                 video.close()
         scores.append(result.score)
-        print(f"{scenario['name']} (seed {seed}, realism "
-              f"{'on' if scenario.get('realism', {}).get('enabled') else 'off'}): {result.summary()}")
+        print(f"{scenario['name']} (seed {seed}, realism {realism_text}): {result.summary()}")
         if args.plot and len(seeds) == 1:
             plot_episode(result, simulator, first_obs, args.plot)
     if len(seeds) > 1:

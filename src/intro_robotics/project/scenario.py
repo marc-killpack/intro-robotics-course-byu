@@ -61,6 +61,7 @@ def merge(base, changes):
 
 
 def read_scenario(path):
+    """The scenario file as a dict, with its `base` file (if any) merged in first."""
     with Path(path).open("rb") as file:
         scenario = tomllib.load(file)
     if "base" in scenario:
@@ -82,9 +83,12 @@ def set_realism(scenario, enabled=None):
         return scenario
     if enabled is not None:
         realism["enabled"] = bool(enabled)
-    on = realism.get("enabled", False)
-    scenario["cameras"]["image_noise"] = realism["image_noise"] if on else 0.0
-    scenario["belt"]["speed_variation"] = realism["speed_variation"] if on else 0.0
+    if realism.get("enabled", False):
+        scenario["cameras"]["image_noise"] = realism["image_noise"]
+        scenario["belt"]["speed_variation"] = realism["speed_variation"]
+    else:
+        scenario["cameras"]["image_noise"] = 0.0
+        scenario["belt"]["speed_variation"] = 0.0
     return scenario
 
 
@@ -103,11 +107,14 @@ def load_scenario(name_or_path, realism=None):
 def make_arm(scenario):
     """Planar revolute arm; its plane is arm.height above the belt (z = 0)."""
     arm = scenario["arm"]
-    joints = [
-        Joint("z", tip=pose(translation=[length, 0, 0]), limits=tuple(limits))
-        for length, limits in zip(arm["link_lengths"], arm["joint_limits"])
-    ]
-    return SerialArm(joints, base=pose(translation=[*arm["base_xy"], arm["height"]]))
+    joints = []
+    for i in range(len(arm["link_lengths"])):
+        link = pose(translation=[arm["link_lengths"][i], 0, 0])
+        limits = tuple(arm["joint_limits"][i])
+        joints.append(Joint("z", tip=link, limits=limits))
+    base_xy = arm["base_xy"]
+    base = pose(translation=[base_xy[0], base_xy[1], arm["height"]])
+    return SerialArm(joints, base=base)
 
 
 def look_at(location, target):
@@ -142,8 +149,9 @@ def board(scenario):
     if "board" not in scenario:
         return None
     b = scenario["board"]
-    return {"squares": tuple(int(n) for n in b["squares"]), "square": float(b["square"]),
-            "center": tuple(float(c) for c in b["center"])}
+    squares = (int(b["squares"][0]), int(b["squares"][1]))
+    center = (float(b["center"][0]), float(b["center"][1]))
+    return {"squares": squares, "square": float(b["square"]), "center": center}
 
 
 def make_task(scenario):
@@ -152,7 +160,24 @@ def make_task(scenario):
 
     arm = make_arm(scenario)
     fixed, tool = make_cameras(scenario)
-    rules = {tuple(key.split()): value for key, value in scenario["rules"].items()}
+    rules = {}  # "red circle" = "A" in the file becomes ("red", "circle"): "A"
+    for key in scenario["rules"]:
+        rules[tuple(key.split())] = scenario["rules"][key]
+    belt = {}
+    for key in ("y", "width", "x_start", "x_end"):  # not the speed: estimate it
+        belt[key] = scenario["belt"][key]
+    bins = {}
+    for name in scenario["bins"]:
+        bins[name] = tuple(scenario["bins"][name])
+    colors = {}
+    for name in scenario["colors"]:
+        colors[name] = tuple(scenario["colors"][name])
+    calibration = None
+    if "board" in scenario:
+        calibration = calibration_image(scenario)
+    marks = None
+    if "marks" in scenario:
+        marks = np.array(scenario["marks"]["xy"], float)
     return Task(
         arm=arm,
         arm_height=scenario["arm"]["height"],
@@ -160,13 +185,13 @@ def make_task(scenario):
         acceleration_limit=scenario["arm"]["acceleration_limit"],
         control_period=scenario["control_period"],
         pickup=dict(scenario["pickup"]),
-        belt={k: scenario["belt"][k] for k in ("y", "width", "x_start", "x_end")},
-        bins={name: tuple(v) for name, v in scenario["bins"].items()},
+        belt=belt,
+        bins=bins,
         rules=rules,
         fixed_camera=(fixed.width, fixed.height, fixed.focal),
         tool_camera=tool,
-        colors={k: tuple(v) for k, v in scenario["colors"].items()},
-        calibration_image=calibration_image(scenario) if "board" in scenario else None,
+        colors=colors,
+        calibration_image=calibration,
         board=board(scenario),
-        marks=np.array(scenario["marks"]["xy"], float) if "marks" in scenario else None,
+        marks=marks,
     )

@@ -14,7 +14,8 @@ def rot2(angle):
     """HW02: a positive right-handed rotation in the XY plane, shape (2, 2)."""
     angle = check_scalar(angle, "Angle in radians")
     # BEGIN SOLUTION
-    c, s = np.cos(angle), np.sin(angle)
+    c = np.cos(angle)
+    s = np.sin(angle)
     return np.array([[c, -s], [s, c]])
     # END SOLUTION
     raise NotImplementedError("HW02: implement rot2")
@@ -24,7 +25,8 @@ def rotx(angle):
     """HW02: rotation about X, shape (3, 3)."""
     angle = check_scalar(angle, "Angle in radians")
     # BEGIN SOLUTION
-    c, s = np.cos(angle), np.sin(angle)
+    c = np.cos(angle)
+    s = np.sin(angle)
     return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
     # END SOLUTION
     raise NotImplementedError("HW02: implement rotx")
@@ -34,7 +36,8 @@ def roty(angle):
     """HW02: rotation about Y, shape (3, 3)."""
     angle = check_scalar(angle, "Angle in radians")
     # BEGIN SOLUTION
-    c, s = np.cos(angle), np.sin(angle)
+    c = np.cos(angle)
+    s = np.sin(angle)
     return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
     # END SOLUTION
     raise NotImplementedError("HW02: implement roty")
@@ -44,7 +47,8 @@ def rotz(angle):
     """HW02: rotation about Z, shape (3, 3)."""
     angle = check_scalar(angle, "Angle in radians")
     # BEGIN SOLUTION
-    c, s = np.cos(angle), np.sin(angle)
+    c = np.cos(angle)
+    s = np.sin(angle)
     return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
     # END SOLUTION
     raise NotImplementedError("HW02: implement rotz")
@@ -54,7 +58,7 @@ def rot_inv(rotation):
     """HW02: inverse of a 2D or 3D rotation, using its geometric property."""
     rotation = check_rotation(rotation)
     # BEGIN SOLUTION
-    return rotation.T.copy()
+    return rotation.T
     # END SOLUTION
     raise NotImplementedError("HW02: implement rot_inv")
 
@@ -65,12 +69,14 @@ def se3(rotation=None, translation=None):
     Omitted rotation/translation mean identity/zero. This preserves the model
     constructors' simple se3(translation=[...]) convenience.
     """
-    rotation = check_rotation(np.eye(3) if rotation is None else rotation)
+    if rotation is None:
+        rotation = np.eye(3)
+    if translation is None:
+        translation = np.zeros(3)
+    rotation = check_rotation(rotation)
     if rotation.shape != (3, 3):
         raise ValueError("se3 needs a 3x3 rotation")
-    translation = check_vector(
-        np.zeros(3) if translation is None else translation, 3, "Translation in meters"
-    )
+    translation = check_vector(translation, 3, "Translation in meters")
     # BEGIN SOLUTION
     transform = np.eye(4)
     transform[:3, :3] = rotation
@@ -101,6 +107,9 @@ def axis_rotation(axis, angle):
     axis matrices directly, rather than calling this supplied helper. General
     orientation parameterization/conversion is not part of this course.
     """
-    x, y, z = axis
-    cross = np.array([[0, -z, y], [z, 0, -x], [-y, x, 0]])
+    x = axis[0]
+    y = axis[1]
+    z = axis[2]
+    cross = np.array([[0, -z, y], [z, 0, -x], [-y, x, 0]])  # cross @ v equals axis x v
+    # Rodrigues' formula
     return np.eye(3) + np.sin(angle) * cross + (1 - np.cos(angle)) * (cross @ cross)

@@ -21,20 +21,31 @@ DEFAULT_STEPS = 600_000  # 3.5 CPU minutes alone on the faculty laptop (Nov 19 p
 
 
 def make_env(reward, reach=False):
-    speed = (0.0, 0.0) if reach else (0.05, 0.12)
+    """One environment using the reward function named `reward` (a key of REWARDS)."""
+    if reach:
+        speed = (0.0, 0.0)  # m/s: a still object, planar reaching
+    else:
+        speed = (0.05, 0.12)
     return InterceptionEnv(reward=REWARDS[reward], object_speed=speed)
 
 
 def train(reward, steps=DEFAULT_STEPS, seed=1, reach=False, envs=8, out=None):
+    """Train PPO for `steps` environment steps; return (model, training minutes).
+
+    envs copies of the environment run side by side. If out is given, the
+    policy is saved there (.zip).
+    """
     from stable_baselines3 import PPO
     from stable_baselines3.common.env_util import make_vec_env
 
-    vector = make_vec_env(lambda: make_env(reward, reach), n_envs=envs, seed=seed)
+    # make_vec_env builds `envs` environments by calling make_env(reward=..., reach=...).
+    vector = make_vec_env(make_env, n_envs=envs, seed=seed,
+                          env_kwargs={"reward": reward, "reach": reach})
     # log_std_init=-1 starts exploration at about a third of the speed limit;
     # the default (one full speed limit) made precise velocity matching slow to learn.
     model = PPO("MlpPolicy", vector, n_steps=512, batch_size=256, gamma=0.99,
                 learning_rate=3e-4, ent_coef=0.0, seed=seed, device="cpu", verbose=0,
-                policy_kwargs=dict(log_std_init=-1.0))
+                policy_kwargs={"log_std_init": -1.0})
     start = time.perf_counter()
     model.learn(total_timesteps=steps)
     minutes = (time.perf_counter() - start) / 60
@@ -54,7 +65,10 @@ def main():
     args = parser.parse_args()
     _, minutes = train(args.reward, args.steps, args.seed, args.reach, out=args.out)
     print(f"Trained {args.steps} steps with the {args.reward} reward in {minutes:.1f} min; saved {args.out}")
-    print(f"Evaluate: python -m homework.hw11.evaluate --policy {args.out}{' --reach' if args.reach else ''}")
+    command = f"python -m homework.hw11.evaluate --policy {args.out}"
+    if args.reach:
+        command = command + " --reach"
+    print(f"Evaluate: {command}")
 
 
 if __name__ == "__main__":

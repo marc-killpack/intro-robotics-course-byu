@@ -73,6 +73,9 @@ and an RViz window showing the arm, TF, the red obstacle, and the orange
 tool path. The arm node publishes nothing until a trajectory arrives, so the
 arm appears once the publisher runs. `python3 -m homework.hw07.path_publisher
 --seed direct` sends the straight-line path, which hits the obstacle.
+`optimized_path()` in `homework/hw07/scenes.py` returns `(arm, path, valid)`
+for the path the publisher sends and runs without ROS, so you can compute
+`arm.fk(path[-1])` for problem 5(d).
 
 This is a faculty draft; the current student release covers HW01--HW05 only.
 Review and generate a separately stripped copy before distribution.

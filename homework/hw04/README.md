@@ -18,10 +18,12 @@ browser desktop, or use a native Python environment described in
 pyqtgraph solid-arm viewer; the second uses the Matplotlib line viewer.
 `--save tmp/hw04.png` also works on the activity module.
 
-`homework/models.py` supplies three physical-geometry examples. The written
+`homework/models.py` supplies the physical-geometry examples. The written
 assignment uses `spatial_arm()`, with local Z/Y/Y revolute axes and offsets
-h=0.2 m, L1=0.4 m, and L2=0.3 m. `slider_arm()` demonstrates a local-X
-prismatic joint after a yaw joint. A planar model supports HW05.
+h=0.2 m, L1=0.4 m, and L2=0.3 m; `placed_arm()` is the same arm with problem
+4(a)'s world placement and tool offset, which the URDF check compares with.
+`slider_arm()` demonstrates a local-X prismatic joint after a yaw joint. A
+planar model supports HW05.
 
 Each physical joint provides `origin @ motion(q) @ tip`, mapping the
 following link frame into the preceding link frame. FK composes these

@@ -66,6 +66,33 @@ Keep more extensive behavioral tests in the instructor test tree. Avoid
 framework layers, deep inheritance, and defensive boilerplate in student
 calculations. A supplied helper should be readable and explain its utility.
 
+*Readable code for mechanical engineers* (instructor, Nov 21). Most students
+have had one introductory Python course. Code they write, keys they compare
+against, and supplied code they read follow the style of the earlier ME 537
+key (`byu_robotics_hw_key`). Difficulty can grow through the semester, but
+syntax should not get ahead of the students:
+
+- One idea per line, with named intermediate variables (`c = np.cos(angle)`,
+  then `s = np.sin(angle)`). Avoid tuple assignments that compute several
+  things at once.
+- Write a plain `if`/`else` block instead of a one-line conditional
+  expression, and a `for` loop with an index or a single loop variable instead
+  of `zip`/`enumerate` unpacking, comprehensions with conditions, generator
+  expressions, `lambda`, `*` unpacking, and helpers from `itertools`,
+  `functools`, or `collections`. A simple list comprehension
+  (`[f(x) for x in items]`) is fine from HW06 on.
+- No type hints in student-facing code. Each docstring gives every argument's
+  shape, units, and frame in words (for example "q: joint angles (n,), rad").
+  The project contract's dataclasses are the one place annotations appear,
+  with a comment saying what they are.
+- Comments explain the step or cite the equation or handout problem, not the
+  Python. Name things after the robotics quantity (`t_w_c` for T_W_C).
+- ROS nodes follow the HW01 pattern: a small `Node` subclass with a publisher
+  or subscription and a timer, not nested functions inside `main()`.
+- Faculty-only internals students never open (the 3D viewer, the simulator
+  internals, ROS bridge nodes, and release tools) are exempt, though their
+  public docstrings should still read plainly.
+
 ### Curriculum design principles
 
 - Decide learning outcomes, the minimum project, and the assignment map

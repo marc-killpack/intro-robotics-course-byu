@@ -4,7 +4,7 @@ Rewritten November 19 (TASKS.md D3, D5): tool-camera image-based visual
 servoing (IBVS) on the project's `Controller` class and lockstep runner,
 stationary object, two pages. Students project points by hand (moved from
 HW08), derive the constant-depth planar image Jacobian and the IBVS law,
-implement `ibvs_velocity` and `IBVSController.joint_rates` (with their HW05
+implement `ibvs_velocity` and `IBVSController.joint_rates` (with their HW06
 `damped_least_squares` and a held heading), run the loop with a camera
 blackout, and answer why IBVS tolerates model error and how much a moving
 object would lag without feedforward. Moving-target interception is project

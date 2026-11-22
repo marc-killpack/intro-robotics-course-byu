@@ -8,6 +8,7 @@ Run inside the ROS-enabled course shell from /workspace.
 import math
 
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 
@@ -54,7 +55,7 @@ def main():
     node = JointPublisher()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):  # Ctrl+C
         pass
     finally:
         node.destroy_node()

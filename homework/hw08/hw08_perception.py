@@ -16,7 +16,6 @@ track's timestamps are no longer evenly spaced.
 """
 
 import argparse
-from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -36,18 +35,25 @@ class Track:
     """Provided: one object's recent detections (same color and shape)."""
 
     def __init__(self, color, shape, time, xy):
-        self.color, self.shape = color, shape
-        self.times, self.points = [time], [np.asarray(xy, float)]
+        self.color = color
+        self.shape = shape
+        self.times = [time]  # seconds
+        self.points = [np.asarray(xy, float)]  # world XY (m)
         self.velocity = None  # your fit_velocity, updated with each detection
         self.difference = None  # last two points only, for comparison
 
     def predict(self, time):
-        velocity = np.zeros(2) if self.velocity is None else self.velocity
-        return self.points[-1] + velocity * (time - self.times[-1])
+        """Where the object should be at `time`, moving at the fitted velocity."""
+        if self.velocity is None:
+            return self.points[-1]
+        return self.points[-1] + self.velocity * (time - self.times[-1])
 
     def add(self, time, xy):
-        self.times = (self.times + [time])[-WINDOW:]
-        self.points = (self.points + [np.asarray(xy, float)])[-WINDOW:]
+        self.times.append(time)
+        self.points.append(np.asarray(xy, float))
+        # Keep only the most recent WINDOW points.
+        self.times = self.times[-WINDOW:]
+        self.points = self.points[-WINDOW:]
         self.velocity = fit_velocity(self.times, self.points)
         self.difference = (self.points[-1] - self.points[-2]) / (self.times[-1] - self.times[-2])
 
@@ -64,15 +70,32 @@ def calibrate(image, marks):
 
 def associate(tracks, time, color, shape, xy):
     """Provided: add a detection to the nearest matching track, or start one."""
-    near = [t for t in tracks if (t.color, t.shape) == (color, shape)
-            and np.linalg.norm(t.predict(time) - xy) < GATE]
-    if near:
-        track = min(near, key=lambda t: np.linalg.norm(t.predict(time) - xy))
-        track.add(time, xy)
+    # Look for the track of the same color and shape whose prediction is
+    # closest to xy, and no farther than GATE.
+    best = None
+    best_distance = GATE
+    for track in tracks:
+        if track.color != color or track.shape != shape:
+            continue
+        distance = np.linalg.norm(track.predict(time) - xy)
+        if distance < best_distance:
+            best = track
+            best_distance = distance
+    if best is None:
+        best = Track(color, shape, time, xy)
+        tracks.append(best)
     else:
-        track = Track(color, shape, time, xy)
-        tracks.append(track)
-    return track
+        best.add(time, xy)
+    return best
+
+
+def nearest_object(objects, xy):
+    """Provided: the simulator object closest to world point xy (m)."""
+    nearest = objects[0]
+    for obj in objects:
+        if np.linalg.norm(obj.position - xy) < np.linalg.norm(nearest.position - xy):
+            nearest = obj
+    return nearest
 
 
 def run(seed=1, realism=None, drop=0.0, scenario_path=SCENARIO):
@@ -84,59 +107,99 @@ def run(seed=1, realism=None, drop=0.0, scenario_path=SCENARIO):
     first = simulator.observe()
     plane, check_error, mark_pixels = calibrate(first.fixed_image, task.marks)
 
-    tracks, rows, missed = [], [], 0
+    tracks = []
+    rows = []  # one per detection, with the truth beside it
+    missed = 0
     hold = np.zeros(task.arm.n)
     while simulator.time < scenario["duration"] - 1e-9:
         obs = simulator.observe()
         if drop > 0 and frames.random() < drop:
             missed += 1
         else:
-            truth = [o for o in simulator.objects if simulator.on_belt(o)]
-            for color, shape, pixel in find_objects(obs.fixed_image, task.colors):
+            truth = []  # objects on the belt (the simulator's truth)
+            for obj in simulator.objects:
+                if simulator.on_belt(obj):
+                    truth.append(obj)
+            for detection in find_objects(obs.fixed_image, task.colors):
+                color, shape, pixel = detection
                 xy = to_plane(plane, pixel)
                 track = associate(tracks, obs.time, color, shape, xy)
-                nearest = min(truth, key=lambda o: np.linalg.norm(o.position - xy))
-                rows.append(dict(time=obs.time, color=color, shape=shape, xy=xy,
-                                 true_color=nearest.color, true_shape=nearest.shape,
-                                 error=np.linalg.norm(nearest.position - xy),
-                                 velocity=track.velocity, difference=track.difference))
+                nearest = nearest_object(truth, xy)
+                rows.append({"time": obs.time, "color": color, "shape": shape, "xy": xy,
+                             "true_color": nearest.color, "true_shape": nearest.shape,
+                             "error": np.linalg.norm(nearest.position - xy),
+                             "velocity": track.velocity, "difference": track.difference})
         simulator.advance_period(hold, "hold")
-        tracks = [t for t in tracks if simulator.time - t.times[-1] < 0.3]  # forget lost tracks
+        # Forget tracks that have not been seen for 0.3 s.
+        recent = []
+        for track in tracks:
+            if simulator.time - track.times[-1] < 0.3:
+                recent.append(track)
+        tracks = recent
     return dict(task=task, simulator=simulator, first=first, plane=plane, check_error=check_error,
                 mark_pixels=mark_pixels, rows=rows, missed=missed,
                 belt_velocity=np.array([simulator.belt_speed, 0.0]))
 
 
+def rms_error(estimates, truth):
+    """Root-mean-square length (m/s) of estimates (N, 2) minus truth (2,)."""
+    return np.sqrt(np.mean(np.sum((estimates - truth) ** 2, axis=1)))
+
+
 def report(result):
-    rows, task = result["rows"], result["task"]
+    rows = result["rows"]
+    task = result["task"]
     lines = [f"Problem 1: plane map from marks {FIT_MARKS}; mark {CHECK_MARK} maps "
              f"{1000 * result['check_error']:.1f} mm from its true position"]
     if not rows:
         lines.append("Problem 2: no detections -- check find_objects")
         return "\n".join(lines)
-    right = sum(r["color"] == r["true_color"] and r["shape"] == r["true_shape"] for r in rows)
+
+    # Problem 2: classification and position.
+    right = 0
+    wrong = {}  # "true -> reported" names: how many times
+    for r in rows:
+        if r["color"] == r["true_color"] and r["shape"] == r["true_shape"]:
+            right += 1
+        else:
+            key = (r["true_color"] + " " + r["true_shape"], r["color"] + " " + r["shape"])
+            wrong[key] = wrong.get(key, 0) + 1
     errors = np.array([r["error"] for r in rows])
     lines.append(f"Problem 2: {len(rows)} detections, {right} classified correctly "
                  f"({100 * right / len(rows):.1f}%); position error median "
                  f"{1000 * np.median(errors):.1f} mm, largest {1000 * errors.max():.1f} mm")
-    wrong = Counter((r["true_color"] + " " + r["true_shape"], r["color"] + " " + r["shape"])
-                    for r in rows if (r["color"], r["shape"]) != (r["true_color"], r["true_shape"]))
-    for (true, said), count in wrong.most_common(5):
-        lines.append(f"    {count} x {true} reported as {said}")
-    seen = sorted({(r["color"], r["shape"]) for r in rows})
-    lines.append("    bins by the rule table: " + ", ".join(
-        f"{c} {s} -> {task.rules.get((c, s), '?')}" for c, s in seen))
+    most_common = sorted(wrong, key=wrong.get, reverse=True)  # largest count first
+    for key in most_common[:5]:
+        lines.append(f"    {wrong[key]} x {key[0]} reported as {key[1]}")
+    seen = []  # each (color, shape) reported, once
+    for r in rows:
+        if (r["color"], r["shape"]) not in seen:
+            seen.append((r["color"], r["shape"]))
+    seen.sort()
+    bins = []
+    for pair in seen:
+        bins.append(f"{pair[0]} {pair[1]} -> {task.rules.get(pair, '?')}")
+    lines.append("    bins by the rule table: " + ", ".join(bins))
+
+    # Problem 3: velocity, fitted versus a two-point difference.
     truth = result["belt_velocity"]
-    fitted = np.array([r["velocity"] for r in rows if r["velocity"] is not None])
-    differences = np.array([r["difference"] for r in rows if r["difference"] is not None])
+    fitted = []
+    differences = []
+    for r in rows:
+        if r["velocity"] is not None:
+            fitted.append(r["velocity"])
+        if r["difference"] is not None:
+            differences.append(r["difference"])
     lines.append(f"Problem 3: true belt velocity ({truth[0]:.4f}, {truth[1]:.4f}) m/s; "
                  f"{result['missed']} frames dropped")
-    for name, values in (("fit_velocity", fitted), ("two-point difference", differences)):
-        if len(values):
-            rms = np.sqrt(np.mean(np.sum((values - truth) ** 2, axis=1)))
-            lines.append(f"    {name:>20}: {len(values)} estimates, RMS error {1000 * rms:.2f} mm/s")
+    names = ["fit_velocity", "two-point difference"]
+    estimates = [fitted, differences]
+    for k in range(2):
+        if estimates[k]:
+            rms = rms_error(np.array(estimates[k]), truth)
+            lines.append(f"    {names[k]:>20}: {len(estimates[k])} estimates, RMS error {1000 * rms:.2f} mm/s")
         else:
-            lines.append(f"    {name:>20}: no estimates yet")
+            lines.append(f"    {names[k]:>20}: no estimates yet")
     return "\n".join(lines)
 
 
@@ -149,39 +212,50 @@ def plot(result, path=None, show=False):
 
     from intro_robotics.vision import color_mask
 
-    task, first, rows = result["task"], result["first"], result["rows"]
+    task = result["task"]
+    first = result["first"]
+    rows = result["rows"]
     fig, axes = plt.subplots(2, 2, figsize=(11, 7.5))
     ax = axes[0, 0]
     ax.imshow(first.fixed_image)
     pixels = result["mark_pixels"] - 0.5  # imshow centers pixels at integers
-    ax.plot(*pixels[FIT_MARKS].T, "c+", ms=12, mew=2, label="fit marks")
-    ax.plot(*pixels[CHECK_MARK], "mx", ms=12, mew=2, label="check mark")
-    for color, shape, (u, v) in find_objects(first.fixed_image, task.colors):
-        ax.annotate(f"{color} {shape}", (u - 0.5, v - 0.5), color="w", fontsize=7,
+    ax.plot(pixels[FIT_MARKS, 0], pixels[FIT_MARKS, 1], "c+", ms=12, mew=2, label="fit marks")
+    ax.plot(pixels[CHECK_MARK, 0], pixels[CHECK_MARK, 1], "mx", ms=12, mew=2, label="check mark")
+    for detection in find_objects(first.fixed_image, task.colors):
+        color, shape, pixel = detection
+        u = pixel[0] - 0.5
+        v = pixel[1] - 0.5
+        ax.annotate(f"{color} {shape}", (u, v), color="w", fontsize=7,
                     xytext=(0, 9), textcoords="offset points", ha="center")
-        ax.plot(u - 0.5, v - 0.5, "w.", ms=5)
+        ax.plot(u, v, "w.", ms=5)
     ax.set_title("fixed camera, t = 0")
     ax.legend(loc="lower right", fontsize=8)
     ax = axes[0, 1]
-    name = next(iter(task.colors))
+    name = list(task.colors)[0]  # the first color
     ax.imshow(color_mask(first.fixed_image, task.colors[name]), cmap="gray")
     ax.set_title(f"color_mask for {name}")
     ax = axes[1, 0]
     if rows:
         xy = np.array([r["xy"] for r in rows])
         ok = np.array([(r["color"], r["shape"]) == (r["true_color"], r["true_shape"]) for r in rows])
-        ax.plot(*xy[ok].T, ".", ms=2, label="classified correctly")
-        ax.plot(*xy[~ok].T, "rx", ms=5, label="misclassified")
-    ax.plot(*task.marks.T, "ks", ms=5, label="marks")
+        ax.plot(xy[ok, 0], xy[ok, 1], ".", ms=2, label="classified correctly")
+        ax.plot(xy[~ok, 0], xy[~ok, 1], "rx", ms=5, label="misclassified")
+    ax.plot(task.marks[:, 0], task.marks[:, 1], "ks", ms=5, label="marks")
     ax.set(xlabel="world X (m)", ylabel="world Y (m)", title="detections on the belt plane", aspect="equal")
     ax.legend(fontsize=8)
     ax = axes[1, 1]
-    truth = result["belt_velocity"][0]
-    for key, style, label in (("difference", ".", "two-point difference"), ("velocity", ".", "fit_velocity")):
-        points = [(r["time"], r[key][0]) for r in rows if r[key] is not None]
-        if points:
-            ax.plot(*np.array(points).T, style, ms=2, label=label)
-    ax.axhline(truth, color="k", lw=1, label="true belt speed")
+    keys = ["difference", "velocity"]
+    labels = ["two-point difference", "fit_velocity"]
+    for k in range(2):
+        times = []
+        speeds = []
+        for r in rows:
+            if r[keys[k]] is not None:
+                times.append(r["time"])
+                speeds.append(r[keys[k]][0])
+        if times:
+            ax.plot(times, speeds, ".", ms=2, label=labels[k])
+    ax.axhline(result["belt_velocity"][0], color="k", lw=1, label="true belt speed")
     ax.set(xlabel="simulated time (s)", ylabel="estimated X velocity (m/s)", title="velocity estimates")
     ax.legend(fontsize=8)
     fig.tight_layout()
@@ -201,7 +275,10 @@ def main():
     parser.add_argument("--save", type=Path, help="save the plots to this image file")
     parser.add_argument("--show", action="store_true", help="open the plots in a window")
     args = parser.parse_args()
-    realism = None if args.realism is None else args.realism == "on"
+    if args.realism is None:
+        realism = None  # use the scenario file's setting
+    else:
+        realism = args.realism == "on"
     result = run(args.seed, realism, args.drop)
     print(report(result))
     if args.save or args.show:

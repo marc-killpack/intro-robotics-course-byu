@@ -3,7 +3,7 @@
 Complete the six functions marked HW08 in `src/intro_robotics/vision.py`:
 `fit_plane_map` and `to_plane` (problem 1), `color_mask`, `classify_shape`,
 and `find_objects` (problem 2), and `fit_velocity` (problem 3). The
-mark finder (`find_marks`), the border check (`whole`), the checkerboard
+mark finder (`find_marks`, which uses `all_orderings`), the border check (`whole`), the checkerboard
 views and corner file (`checkerboard/`), the scenario (`hw08_scenario.toml`),
 and both scripts are provided. Your project
 controller will import these same functions.

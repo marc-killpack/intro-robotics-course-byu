@@ -120,7 +120,8 @@ deterministic run; image size and rates are scenario-file parameters so they
 can be raised later at the cost of run time.
 
 **Student contract** (class name `Controller`, November 19). The same class runs in the ROS wrapper, the graded
-runner, offline unit tests, and the optional Gymnasium wrapper.
+runner, offline unit tests, and the optional Gymnasium wrapper (which needs
+two optional hook methods; see [the RL wrapper](#optional-learning-extensions)).
 
 ```python
 class Controller:
@@ -397,6 +398,93 @@ clone is not automatically a compatible SB3 PPO policy; a tested adapter or
 separate RL policy would be needed. Compare with a reasonably tuned classical
 controller under the same observations and limits. A faster learned policy
 is an investigation, not a project completion requirement.
+
+**RL wrapper** (built Nov 20; instructor chose the design the same day).
+`src/intro_robotics/project/skill_env.py` is a Gymnasium environment on
+`SortingSimulator` for one learned **sub-skill**, with the team's own
+controller doing the rest. The default sub-skill is the tool-camera IBVS
+final approach, learned as a bounded residual. Rejected: raw images (the
+policy would relearn HW08/HW09 perception; days of CPU) and the whole task
+from features (episodes of about 2,400 periods with a rare +10; likely more
+than 10M steps). Choosing the next object is moot while spacing allows one
+object in the pick zone.
+
+- *Hooks.* `Controller` gains two optional methods: `skill_features(obs)`
+  (perception and state machine for the period; a feature vector while the
+  skill is active, else `None`) and `skill_command(obs, action)` (the
+  period's `Command`; `action=None` is the conventional controller). A
+  hooked `step()` is the two in sequence, so grading, the ROS node, and
+  offline tests are unchanged. The reference has them: 24 features (pixel
+  error and its change, tool velocity relative to the estimated belt in
+  camera axes, estimated belt velocity, `cos q`, `sin q`, `dq`, the pending
+  action, the aligned count) and 3 actions (a residual of up to 0.15 m/s in
+  camera axes, and one number that scales both pick tolerances, the 5-pixel
+  alignment and the 0.03 m/s speed match, by `2**a`). A first version scaled
+  only the pixel threshold. That action did nothing (fixed 7.5 and 10 px
+  scored exactly like 5 px), because the speed match decides when to pick.
+- *Environment.* One step is one period in which the policy acts; periods
+  the controller handles alone run inside `step()` in the same lockstep
+  order as `run_episode`, so a zero action reproduces the graded runner
+  exactly (tested). The reward is the score change (+10 sorted, -5 dropped
+  or wrong bin), so an episode's return is its score. Episodes are whole
+  seeded scenarios, *terminated* when every object is finished and
+  *truncated* at the duration. Training seeds are 1000 and up. Observations
+  are only the controller's features, built from `Observation` and `Task`.
+- *Scripts.* `homework/project/train_rl.py` (SB3 PPO, 8 processes,
+  `log_std_init=-1.5` so early exploration is small) and `evaluate_rl.py`
+  (the same controller with and without the policy in `run_episode` on the
+  same seeds; refuses training seeds). `PolicyController` wraps a hooked
+  controller and a policy as an ordinary `Controller`.
+- *Cost.* One process runs about 42 policy steps/s (about 600 per S3
+  episode, which takes about 14 s with images and perception). SB3's
+  synchronous vector environment waits for the slowest process each step,
+  and some steps fast-forward through a whole transfer. As a result, 4 and
+  8 processes gave only 66 and 71 steps/s on the faculty laptop (8 cores):
+  about 25 minutes per 100k policy steps.
+
+*Results* (Nov 20--21, faculty laptop; mean scores, realism on, seeds never
+trained on; per-seed scores are in the validation record). Every learned
+version uses the same 24 features, PPO settings, and score reward. Once a
+version could pick, it had no failed picks, wrong bins, or drops, so the
+differences between those versions are objects missed off the end of the
+belt. "Tuned" is the conventional reference with its speed-match
+tolerance raised from 0.03 to 0.05 m/s, the best of four one-parameter
+changes on S3 practice (IBVS gain 8 and 12 scored 116--132; tolerance 0.07
+scored 144).
+
+| Version (training) | S3 practice 31--35 | Held-out 101--115 | S2 21--25 |
+| --- | --- | --- | --- |
+| Conventional reference | 140 | 136.7 | 144 |
+| Tuned conventional (no training) | 146 | 139.3 | 148 |
+| Residual on IBVS (150k steps, 35 min) | 148 | 144.0 | 150 |
+| From scratch, no IBVS (150k steps, 6 min) | 14 | 6 (seeds 101--105) | -- |
+| From scratch, no IBVS (900k steps, 133 min) | 146 | 139.3 | 148 |
+
+The residual policy (the supplied example) never scored below the
+conventional or tuned versions on any held-out seed. Its gain over a
+one-line retune is small (about 5 points, half an object per episode)
+and comes from speed. The from-scratch policy keeps the same pick rule,
+detection, coarse approach, and transfer, but has no IBVS law or belt
+feed-forward, so its action is the whole approach velocity. For its first
+250k steps it almost never completed a pick: the score reward told it
+nothing, and episodes ran about 2,450 policy steps (versus about 600).
+Steps were cheap in that phase (about 440 steps/s, since nearly every step
+was one period and the processes stayed in step with each other). It then
+learned to pick between about 250k and 400k steps. Its training score was
+15 at 256k steps, 106 at 358k, 133 at 436k (35 min, when the residual run
+was finished at about 144), and about 140 from 512k on. Steps slowed to the
+residual run's rate once episodes included transfers. In the end it matched
+the one-line retune and stayed below the residual: against the residual, 7
+of 15 held-out seeds were worse (by 10 to 20 points) and none were better.
+
+That is the teaching comparison. Structure and a model give a working
+controller with no training. RL on top of them gives a modest gain within a
+laptop budget. RL with only the same information and no control law reaches
+about the level of a hand-tuned controller, after about 6 times the
+experience and 4 times the time, with nothing working until it is half
+done. Even the from-scratch policy rests on structure: the features come
+from the conventional perception, and the pick rule, target choice, and
+transfer are the conventional controller's.
 
 ## Build and validation milestones
 

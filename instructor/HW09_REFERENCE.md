@@ -27,8 +27,8 @@ with them. The earlier fixed-camera draft is now a lecture comparison
    offset `R_z(pi/2)(0.05, 0.025) = (-0.025, 0.05)` m; times lambda = 2 it
    equals `v_w`. With constant depth and no camera rotation, IBVS commands the
    same velocity as position feedback would, without knowing either position.
-3. (a) `ibvs_velocity` is four lines (error, `gain*depth/focal*error`, the
-   2-by-2 rotation). (b) `joint_rates`: zero vector on `None`; otherwise limit
+3. (a) `ibvs_velocity` is six lines (error, `gain*depth/focal*error`, cos
+   and sin, the 2-by-2 rotation). (b) `joint_rates`: zero vector on `None`; otherwise limit
    the speed and call `damped_least_squares(jacobian, [vx, vy, 0], damping)`.
    The heading is held because problem 2 assumed a camera that does not
    rotate; a rotating camera turns the image about the optical axis and adds
@@ -64,7 +64,7 @@ speed limit raised to 1 m/s): gain 2 picks at 1.36 s; gain 8 at 0.72 s; gain
 amplitude, loses the object, and never picks. The one-period delay and the
 acceleration limit set the usable gain.
 
-Review notes: workload target is one week (two problems by hand, about 11
+Review notes: workload target is one week (two problems by hand, about 15
 lines of code, short runs). The supplied detector is a color threshold;
 HW08 teaches detection. No spatial Jacobian, camera rotation term, or
 singularity theory is required.

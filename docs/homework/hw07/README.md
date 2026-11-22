@@ -21,8 +21,9 @@ Assigned: `path_length` and `smoothness_cost` in
 (`homework/hw07/trajectory.py`); `trajectory_message`
 (`path_publisher.py`); `receive_trajectory` and `publish_joint_state`
 (`arm_node.py`); the URDF edits. Input checks, scenes, optimizers, plotting,
-`waypoint_times`, markers, the launch file, and the RViz configuration are
-supplied. The faculty master has six marked answer regions; the current
+`waypoint_times`, the published path (`optimized_path` in `scenes.py`, which
+runs without ROS), the publisher node and markers, the launch file, and the
+RViz configuration are supplied. The faculty master has six marked answer regions; the current
 HW01--HW05 release excludes all HW06--HW07 files and planning/optimization
 modules. A separate temporary preview verifies stripping.
 

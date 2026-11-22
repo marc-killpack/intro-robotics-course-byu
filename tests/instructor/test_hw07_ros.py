@@ -8,7 +8,7 @@ import numpy as np
 
 from homework.hw04.urdf_chain import link_pose
 from homework.hw06.scenes import arm_scene
-from homework.hw07.path_publisher import JOINT_NAMES, TOOL_Z, optimized_path
+from homework.hw07.scenes import JOINT_NAMES, TOOL_Z, optimized_path
 from homework.hw07.trajectory import interpolate, waypoint_times
 
 HW07 = Path(__file__).resolve().parents[2] / "homework" / "hw07"

@@ -40,8 +40,11 @@ def belt_truth(scenario, margin=2):
     fixed, _ = make_cameras(scenario)
     belt = scenario["belt"]
     half = belt["width"] / 2 - 0.02
-    grid = np.array([[x, y] for x in np.linspace(belt["x_start"], belt["x_end"], 61)
-                     for y in np.linspace(belt["y"] - half, belt["y"] + half, 13)])
+    grid = []
+    for x in np.linspace(belt["x_start"], belt["x_end"], 61):
+        for y in np.linspace(belt["y"] - half, belt["y"] + half, 13):
+            grid.append([x, y])
+    grid = np.array(grid)
     pixels = fixed.project(np.column_stack((grid, np.zeros(len(grid)))))[0]
     visible = ((pixels[:, 0] > margin) & (pixels[:, 0] < fixed.width - margin)
                & (pixels[:, 1] > margin) & (pixels[:, 1] < fixed.height - margin))
@@ -60,6 +63,14 @@ def warp_pixels(g, pixels):
     return cv2.perspectiveTransform((pixels - 0.5).reshape(-1, 1, 2), g).reshape(-1, 2) + 0.5
 
 
+def plane_errors(h, pixels, world):
+    """Distance (m) between to_plane(h, pixel) and the true world XY, for each point."""
+    differences = np.zeros((len(pixels), 2))
+    for i in range(len(pixels)):
+        differences[i] = to_plane(h, pixels[i]) - world[i]
+    return np.linalg.norm(differences, axis=1)
+
+
 def check(image, board, grid, grid_pixels):
     """Return a dict of results for one calibration image (grid_pixels: truth in that image)."""
     pixels = find_board_corners(image, board)
@@ -68,29 +79,39 @@ def check(image, board, grid, grid_pixels):
         return {"found": False}
     if len(pixels) != len(world):
         return {"found": True, "count": len(pixels), "expected": len(world)}
-    nx = board["squares"][0] - 1
+    nx = board["squares"][0] - 1  # corners per row
+    # Upper left: left of the last corner in the first row, above the last corner.
+    upper_left = pixels[0, 0] < pixels[nx - 1, 0] and pixels[0, 1] < pixels[-1, 1]
     result = {"found": True, "count": len(pixels), "expected": len(world), "pixels": pixels,
-              "upper_left": pixels[0, 0] < pixels[nx - 1, 0] and pixels[0, 1] < pixels[-1, 1]}
-    fit = np.arange(len(world)) % 2 == 0
+              "upper_left": upper_left}
+    fit = np.arange(len(world)) % 2 == 0  # every other corner
     h = fit_plane_map(pixels[fit], world[fit])
-    check_errors = np.linalg.norm([to_plane(h, p) - w for p, w in zip(pixels[~fit], world[~fit])], axis=1)
+    check_errors = plane_errors(h, pixels[~fit], world[~fit])
     result["check_rms"] = np.sqrt(np.mean(check_errors**2))
     h = fit_plane_map(pixels, world)  # what a controller would use
-    truth_errors = np.linalg.norm([to_plane(h, p) - w for p, w in zip(grid_pixels, grid)], axis=1)
-    result["truth_median"], result["truth_max"] = np.median(truth_errors), truth_errors.max()
+    truth_errors = plane_errors(h, grid_pixels, grid)
+    result["truth_median"] = np.median(truth_errors)
+    result["truth_max"] = truth_errors.max()
     return result
 
 
 def describe(name, r):
+    """One line (or two) of text about one check() result."""
     if not r["found"]:
         return f"{name}: board NOT found (find_board_corners returned None)"
     if r["count"] != r["expected"]:
         return f"{name}: found {r['count']} corners, expected {r['expected']}"
     good = (r["upper_left"] and r["truth_median"] < GOOD_MEDIAN_MM / 1000
             and r["truth_max"] < GOOD_MM / 1000)
-    text = (f"{name}: {r['count']} corners, first corner {'at' if r['upper_left'] else 'NOT at'} the upper left; "
+    corner_text = "NOT at"
+    if r["upper_left"]:
+        corner_text = "at"
+    verdict = "CHECK THIS"
+    if good:
+        verdict = "OK"
+    text = (f"{name}: {r['count']} corners, first corner {corner_text} the upper left; "
             f"fit/check RMS {1000 * r['check_rms']:.2f} mm; belt error median {1000 * r['truth_median']:.2f} mm, "
-            f"largest {1000 * r['truth_max']:.2f} mm -> {'OK' if good else 'CHECK THIS'}")
+            f"largest {1000 * r['truth_max']:.2f} mm -> {verdict}")
     if r["upper_left"] and r["truth_median"] >= GOOD_MEDIAN_MM / 1000:
         text += ("\n    the typical error is too large for this board; an error of a few millimeters"
                  " everywhere usually means every corner is shifted the same way (pixel convention?)")
@@ -105,7 +126,10 @@ def main():
     parser.add_argument("--seed", type=int, default=0, help="seed for the random warps")
     parser.add_argument("--save", type=Path, help="save the calibration image with your corners")
     args = parser.parse_args()
-    scenario = load_scenario(args.scenario, realism=None if args.realism is None else args.realism == "on")
+    realism = None  # the file's setting
+    if args.realism is not None:
+        realism = args.realism == "on"
+    scenario = load_scenario(args.scenario, realism=realism)
     task = make_task(scenario)
     grid, grid_pixels = belt_truth(scenario)
     image = task.calibration_image
@@ -123,8 +147,13 @@ def main():
     if args.save:
         picture = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         if first.get("pixels") is not None:
-            for i, (u, v) in enumerate(first["pixels"] - 0.5):
-                cv2.circle(picture, (int(round(u)), int(round(v))), 2, (255, 255, 0) if i else (0, 0, 255), -1)
+            corners = first["pixels"] - 0.5  # OpenCV centers pixels at integers
+            for i in range(len(corners)):
+                center = (int(round(corners[i, 0])), int(round(corners[i, 1])))
+                color = (255, 255, 0)  # BGR cyan
+                if i == 0:
+                    color = (0, 0, 255)  # BGR red: the first corner
+                cv2.circle(picture, center, 2, color, -1)
         args.save.parent.mkdir(parents=True, exist_ok=True)
         cv2.imwrite(str(args.save), picture)
         print(f"Saved {args.save} (red: first corner)")

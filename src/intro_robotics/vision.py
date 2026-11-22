@@ -1,56 +1,87 @@
 """HW08 and the project: measure objects on the belt plane from the fixed camera.
 
-Students complete the functions marked HW08, then find_board_corners in
-the project; the project controller reuses them all. Pixels: u to the right, v down; a pixel (u, v) covers
-[u, u+1) x [v, v+1), so its center is at u + 0.5, as in the course Camera
-(OpenCV puts pixel centers at integers, hence the + 0.5 below). World XY is
-on the belt plane (z = 0), in meters. Images are (H, W, 3) uint8 RGB.
+Students complete the functions marked HW08, then find_board_corners in the
+project; the project controller reuses them all. Pixels: u to the right, v
+down; a pixel (u, v) covers [u, u+1) x [v, v+1), so its center is at u + 0.5,
+as in the course Camera (OpenCV puts pixel centers at integers, hence the
++ 0.5 below). World XY is on the belt plane (z = 0), in meters. Images are
+(H, W, 3) uint8 RGB.
 """
 
 from collections import namedtuple
-from itertools import permutations
 
 import cv2
 import numpy as np
 
+# One whole object in an image: color name, shape name, centroid (u, v) in
+# pixels. It works like the tuple (color, shape, pixel), and its parts can
+# also be read by name, as detection.color, detection.shape, detection.pixel.
 Detection = namedtuple("Detection", "color shape pixel")
-"""One whole object in an image: color name, shape name, centroid (u, v) in pixels."""
 
 SHAPES = ("circle", "square", "triangle")
 
 # ----- provided ---------------------------------------------------------------
 
 
+def all_orderings(n):
+    """Provided: every ordering of 0, 1, ..., n-1, as lists, in increasing order.
+
+    For n = 3: [0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0].
+    """
+    orderings = []
+    # Count through every n-digit number in base n and keep the ones whose
+    # digits are all different (for n = 5, 120 of the 3125 numbers).
+    for number in range(n**n):
+        digits = []
+        for place in range(n - 1, -1, -1):
+            digits.append((number // n**place) % n)
+        if len(set(digits)) == n:
+            orderings.append(digits)
+    return orderings
+
+
 def find_marks(image, marks, threshold=60, min_area=3, max_area=400):
     """Provided: image pixels (u, v) of the dark calibration marks, ordered as `marks`.
 
-    marks: (N, 2) world XY of the marks (task.marks). Returns an (N, 2) array
-    whose row i is the pixel of marks[i], or None if the number of dark
-    regions found is not N. The marks are deliberately asymmetric, so the
-    ordering that best fits an affine map (a rough plane map, which ignores
-    perspective) is the right one.
+    image: (H, W, 3) uint8 RGB from the fixed camera.
+    marks: (N, 2) world XY of the marks in meters (task.marks).
+    Returns an (N, 2) array whose row i is the pixel of marks[i], or None if
+    the number of dark regions found is not N. The marks are deliberately
+    asymmetric, so the ordering that best fits an affine map (a rough plane
+    map, which ignores perspective) is the right one.
     """
+    # Dark pixels (every channel below threshold) form one region per mark.
     mask = np.all(image < threshold, axis=2).astype(np.uint8)
     count, _, stats, centroids = cv2.connectedComponentsWithStats(mask, connectivity=8)
-    keep = [i for i in range(1, count) if min_area <= stats[i, cv2.CC_STAT_AREA] <= max_area]
+    keep = []
+    for i in range(1, count):  # region 0 is the background
+        area = stats[i, cv2.CC_STAT_AREA]
+        if min_area <= area <= max_area:
+            keep.append(i)
     pixels = centroids[keep] + 0.5
     marks = np.asarray(marks, float)
     if len(pixels) != len(marks):
         return None
-    best = None
-    for order in permutations(range(len(marks))):
-        rows = np.column_stack((pixels[list(order)], np.ones(len(marks))))
+
+    # Try every way of matching pixels to marks; keep the one whose affine
+    # fit [u, v, 1] @ fit = [X, Y] has the smallest residual.
+    best_residual = None
+    best_order = None
+    for order in all_orderings(len(marks)):
+        rows = np.column_stack((pixels[order], np.ones(len(marks))))
         fit = np.linalg.lstsq(rows, marks, rcond=None)[0]
         residual = np.linalg.norm(rows @ fit - marks)
-        if best is None or residual < best[0]:
-            best = (residual, order)
-    return pixels[list(best[1])]
+        if best_residual is None or residual < best_residual:
+            best_residual = residual
+            best_order = order
+    return pixels[best_order]
 
 
 def whole(contour, image_shape):
     """Provided: False if the contour touches the image border (the object is cut off)."""
-    x, y, w, h = cv2.boundingRect(contour)
-    height, width = image_shape[:2]
+    x, y, w, h = cv2.boundingRect(contour)  # bounding box in pixels
+    height = image_shape[0]
+    width = image_shape[1]
     return x > 0 and y > 0 and x + w < width and y + h < height
 
 
@@ -107,11 +138,16 @@ def classify_shape(contour, epsilon=0.04):
     epsilon times its perimeter (cv2.arcLength, closed). Three corners is a
     triangle, four is a square, and anything else is a circle.
     """
-    # HW08: about four lines (problem 2(b)).
+    # HW08: about eight lines (problem 2(b)).
     # BEGIN SOLUTION
     perimeter = cv2.arcLength(contour, True)
-    corners = len(cv2.approxPolyDP(contour, epsilon * perimeter, True))
-    return {3: "triangle", 4: "square"}.get(corners, "circle")
+    corners = cv2.approxPolyDP(contour, epsilon * perimeter, True)
+    if len(corners) == 3:
+        return "triangle"
+    elif len(corners) == 4:
+        return "square"
+    else:
+        return "circle"
     # END SOLUTION
     raise NotImplementedError("HW08: implement classify_shape")
 
@@ -127,18 +163,21 @@ def find_objects(image, colors, tolerance=50, min_area=12):
     (m10 / m00, m01 / m00), plus 0.5 for the course pixel convention.
     Return an empty list if nothing is found; never invent a detection.
     """
-    # HW08: about ten lines (problem 2(c)).
+    # HW08: about fourteen lines (problem 2(c)).
     # BEGIN SOLUTION
     found = []
-    for name, rgb in colors.items():
-        contours, _ = cv2.findContours(color_mask(image, rgb, tolerance),
-                                       cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    for name in colors:
+        mask = color_mask(image, colors[name], tolerance)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         for contour in contours:
-            if cv2.contourArea(contour) < min_area or not whole(contour, image.shape):
-                continue
+            if cv2.contourArea(contour) < min_area:
+                continue  # noise
+            if not whole(contour, image.shape):
+                continue  # cut off by the border
             m = cv2.moments(contour)
-            pixel = (m["m10"] / m["m00"] + 0.5, m["m01"] / m["m00"] + 0.5)
-            found.append(Detection(name, classify_shape(contour), pixel))
+            u = m["m10"] / m["m00"] + 0.5
+            v = m["m01"] / m["m00"] + 0.5
+            found.append(Detection(name, classify_shape(contour), (u, v)))
     return found
     # END SOLUTION
     raise NotImplementedError("HW08: implement find_objects")
@@ -146,8 +185,8 @@ def find_objects(image, colors, tolerance=50, min_area=12):
 
 # ----- Project: calibrate the fixed camera from the checkerboard -------------
 
+# Stop cv2.cornerSubPix after 50 iterations or a 0.001-pixel step.
 SUBPIX_CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 50, 0.001)
-"""Stop cv2.cornerSubPix after 50 iterations or a 0.001-pixel step."""
 
 
 def board_corners(board):
@@ -161,10 +200,17 @@ def board_corners(board):
     so row 0 is the far row (largest y), and each row runs toward +x.
     Returns an ((nx - 1) * (ny - 1), 2) array in that order.
     """
-    (nx, ny), side = board["squares"], board["square"]
+    nx = board["squares"][0]  # squares along x
+    ny = board["squares"][1]  # squares along y
+    side = board["square"]
+    # Outer corner of the board with the smallest x and y.
     x0 = board["center"][0] - nx * side / 2
     y0 = board["center"][1] - ny * side / 2
-    return np.array([[x0 + i * side, y0 + j * side] for j in range(ny - 1, 0, -1) for i in range(1, nx)])
+    corners = []
+    for j in range(ny - 1, 0, -1):  # far row (largest y) first
+        for i in range(1, nx):  # each row toward +x
+            corners.append([x0 + i * side, y0 + j * side])
+    return np.array(corners)
 
 
 def find_board_corners(image, board):
@@ -180,15 +226,19 @@ def find_board_corners(image, board):
     (findChessboardCorners already refines its corners a little; cornerSubPix
     is the standard extra step, and it matters more on real, blurred images.)
     """
-    # Project: about seven lines.
+    # Project: about eleven lines.
     # BEGIN SOLUTION
-    (nx, ny) = board["squares"]
+    nx = board["squares"][0]
+    ny = board["squares"][1]
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     found, corners = cv2.findChessboardCorners(gray, (nx - 1, ny - 1))
     if not found:
         return None
-    corners = cv2.cornerSubPix(gray, corners, (5, 5), (-1, -1), SUBPIX_CRITERIA).reshape(-1, 2) + 0.5
-    return corners[::-1] if corners[0, 0] > corners[-1, 0] else corners
+    corners = cv2.cornerSubPix(gray, corners, (5, 5), (-1, -1), SUBPIX_CRITERIA)
+    corners = corners.reshape(-1, 2) + 0.5
+    if corners[0, 0] > corners[-1, 0]:
+        corners = corners[::-1]  # OpenCV started from the right end
+    return corners
     # END SOLUTION
     raise NotImplementedError("Project: implement find_board_corners")
 
@@ -196,7 +246,9 @@ def find_board_corners(image, board):
 def calibrate(image, board):
     """Provided: belt-plane homography from the calibration image, or None if the board is not found."""
     pixels = find_board_corners(image, board)
-    return None if pixels is None else fit_plane_map(pixels, board_corners(board))
+    if pixels is None:
+        return None
+    return fit_plane_map(pixels, board_corners(board))
 
 
 # ----- HW08 problem 3: velocity from timestamps ------------------------------
@@ -211,11 +263,12 @@ def fit_velocity(times, points, min_points=6):
     when N < min_points. Hint: np.polyfit(t, points, 1) fits both columns;
     subtract times[-1] from t first to keep the numbers well scaled.
     """
-    # HW08: about four lines (problem 3(b)).
+    # HW08: about five lines (problem 3(b)).
     # BEGIN SOLUTION
     if len(times) < min_points:
         return None
     t = np.asarray(times, float) - times[-1]
-    return np.polyfit(t, np.asarray(points, float), 1)[0]
+    coefficients = np.polyfit(t, np.asarray(points, float), 1)  # rows: slope, intercept
+    return coefficients[0]
     # END SOLUTION
     raise NotImplementedError("HW08: implement fit_velocity")

@@ -11,21 +11,29 @@ import xml.etree.ElementTree as ET
 
 import numpy as np
 
-from intro_robotics.transforms import rotx, roty, rotz, se3
+from intro_robotics.transforms import axis_rotation, rotx, roty, rotz, se3
 
 URDF = Path(__file__).with_name("arm.urdf")
 
 
-def _numbers(element, name, default):
-    text = element.get(name) if element is not None else None
-    return np.array([float(v) for v in text.split()]) if text else np.array(default, float)
+def read_numbers(element, name, default):
+    """The numbers in an XML attribute such as xyz="0 0 0.2", or default if it is missing."""
+    if element is None or element.get(name) is None:
+        return np.array(default, dtype=float)
+    numbers = []
+    for word in element.get(name).split():
+        numbers.append(float(word))
+    return np.array(numbers)
 
 
 def origin_transform(joint):
     """URDF origin: translate by xyz, rotate by Rz(yaw) @ Ry(pitch) @ Rx(roll)."""
     origin = joint.find("origin")
-    xyz = _numbers(origin, "xyz", [0, 0, 0])
-    roll, pitch, yaw = _numbers(origin, "rpy", [0, 0, 0])
+    xyz = read_numbers(origin, "xyz", [0, 0, 0])
+    rpy = read_numbers(origin, "rpy", [0, 0, 0])
+    roll = rpy[0]
+    pitch = rpy[1]
+    yaw = rpy[2]
     return se3(rotz(yaw) @ roty(pitch) @ rotx(roll), xyz)
 
 
@@ -34,15 +42,13 @@ def motion_transform(joint, value):
     kind = joint.get("type")
     if kind == "fixed":
         return np.eye(4)
-    axis = _numbers(joint.find("axis"), "xyz", [1, 0, 0])
+    axis = read_numbers(joint.find("axis"), "xyz", [1, 0, 0])
     axis = axis / np.linalg.norm(axis)
     if kind == "prismatic":
         return se3(translation=value * axis)
-    if kind not in ("revolute", "continuous"):
-        raise ValueError(f"Unsupported joint type {kind!r} in {joint.get('name')}")
-    skew = np.array([[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]], [-axis[1], axis[0], 0]])
-    rotation = np.eye(3) + np.sin(value) * skew + (1 - np.cos(value)) * skew @ skew
-    return se3(rotation)
+    if kind not in ["revolute", "continuous"]:
+        raise ValueError(f"Unsupported joint type {kind} in {joint.get('name')}")
+    return se3(axis_rotation(axis, value))
 
 
 def link_pose(link, positions, root="world", path=URDF):
@@ -51,7 +57,10 @@ def link_pose(link, positions, root="world", path=URDF):
     Raises KeyError naming the link where the chain back to root breaks.
     """
     robot = ET.parse(path).getroot()
-    parent_joint = {j.find("child").get("link"): j for j in robot.findall("joint")}
+    parent_joint = {}  # for each link, the joint that moves it
+    for joint in robot.findall("joint"):
+        child = joint.find("child").get("link")
+        parent_joint[child] = joint
     transform = np.eye(4)
     while link != root:
         joint = parent_joint[link]  # KeyError: no joint leads to this link

@@ -11,7 +11,9 @@ your image-based servoing step (HW09). Run:
 
     python -m homework.project.run --scenario s1
 
-See README.md in this folder for the scenarios and the live ROS mode.
+See README.md in this folder for the scenarios and the live ROS mode. The
+optional RL extension (README.md) needs two more methods, skill_features and
+skill_command; ignore them until your controller sorts reliably.
 """
 
 import numpy as np

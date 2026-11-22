@@ -20,9 +20,12 @@ SUCCESS_BONUS = 10.0
 
 def sparse_reward(info):
     """1 on success, otherwise 0. Nothing tells the policy it is getting closer."""
-    # HW11: one line.
+    # HW11: about four lines.
     # BEGIN SOLUTION
-    return 1.0 if info["success"] else 0.0
+    if info["success"]:
+        return 1.0
+    else:
+        return 0.0
     # END SOLUTION
     raise NotImplementedError("HW11: implement sparse_reward")
 
@@ -31,7 +34,10 @@ def distance_reward(info):
     """Minus the distance every step, plus SUCCESS_BONUS on success."""
     # HW11: closer is better, so the per-step reward rises toward zero.
     # BEGIN SOLUTION
-    return -info["distance"] + (SUCCESS_BONUS if info["success"] else 0.0)
+    reward = -info["distance"]
+    if info["success"]:
+        reward = reward + SUCCESS_BONUS
+    return reward
     # END SOLUTION
     raise NotImplementedError("HW11: implement distance_reward")
 
@@ -41,9 +47,12 @@ def shaped_reward(info, speed_weight=0.5, action_weight=0.01):
     action_weight * |action|^2 (a small price for large commands)."""
     # HW11: add the velocity-matching and action terms to distance_reward.
     # BEGIN SOLUTION
-    action = np.asarray(info["action"], float)
-    return (distance_reward(info) - speed_weight * info["relative_speed"]
-            - action_weight * float(action @ action))
+    action = info["action"]
+    action_squared = action @ action  # |action|^2
+    reward = distance_reward(info)
+    reward = reward - speed_weight * info["relative_speed"]
+    reward = reward - action_weight * action_squared
+    return reward
     # END SOLUTION
     raise NotImplementedError("HW11: implement shaped_reward")
 

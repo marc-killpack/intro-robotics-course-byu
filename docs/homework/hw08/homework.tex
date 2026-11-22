@@ -27,8 +27,8 @@ Why must you divide by the third entry? Show that $4H$ gives the same
 point. Since scale does not matter, $H$ has 8 unknowns; how many marks are
 needed at least, and why?
 \item Implement \texttt{fit\_plane\_map(pixels, world)} with
-\texttt{cv2.findHomography} and \texttt{to\_plane(h, pixel)}. Then run
-\texttt{python -m homework.hw08.hw08\_checkerboard}: two views of one
+\texttt{cv2.findHomography}, and then \texttt{to\_plane(h, pixel)}. Run
+\texttt{python -m homework.hw08.hw08\_checkerboard}: it shows two views of one
 checkerboard (4 cm squares; the red dot marks one end), where each view's
 map is fitted to 4 corners and checked on the other 31. Report the RMS and
 largest check errors in millimeters, and the error on the fit corners. Why
@@ -51,9 +51,10 @@ color and shape to a bin.
 \item Implement \texttt{color\_mask(image, rgb, tolerance)} with
 \texttt{cv2.inRange}. The belt is gray $(150,150,150)$. What is the smallest
 tolerance at which belt pixels would count as red $(200,40,40)$?
-\item Implement \texttt{classify\_shape(contour)}: simplify the contour
-with \texttt{cv2.approxPolyDP} and count its corners. Why is the tolerance a
-fraction of the perimeter rather than a fixed number of pixels?
+\item Implement \texttt{classify\_shape(contour)}. Use
+\texttt{cv2.approxPolyDP} to simplify the contour, and count its corners. Why
+is the tolerance a fraction of the perimeter rather than a fixed number of
+pixels?
 \item Implement \texttt{find\_objects(image, colors)} (the docstring lists
 the steps). It skips objects cut off by the image border. Give two reasons a
 cut-off object's measurement would be wrong.
@@ -69,9 +70,9 @@ $0.06$ s was missed). Compute the three two-point velocities. Then compute
 the least-squares slope
 $v=\sum_i (t_i-\bar t)\,X_i \big/ \sum_i (t_i-\bar t)^2$. The belt moves at
 $0.06$ m/s; which estimate would you trust, and why?
-\item Implement \texttt{fit\_velocity(times, points)}: return \texttt{None}
-for fewer than \texttt{min\_points} detections; otherwise fit a straight line
-through all of them.
+\item Implement \texttt{fit\_velocity(times, points)}. If there are fewer
+than \texttt{min\_points} detections, return \texttt{None}; otherwise fit a
+straight line through all of them.
 \end{enumerate}
 
 \item \textbf{Run the pipeline on the moving belt.}
@@ -92,8 +93,8 @@ errors to explain why the two-point difference is so poor, even with clean
 images.
 \item Your fit uses each track's last 25 detections (0.5 s). What would a
 longer window improve, and what would it make worse if the belt changed
-speed? Why does \texttt{fit\_velocity} take timestamps instead of assuming
-0.02 s between detections?
+speed? Why does your \texttt{fit\_velocity} take timestamps instead of
+assuming 0.02 s between detections?
 \item For three objects in your plot, give the bin that the rule table
 assigns. Why must a project controller read \texttt{task.rules} rather than
 hard-code the table?

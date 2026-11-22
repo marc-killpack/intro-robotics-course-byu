@@ -135,7 +135,7 @@ work, not implied current capabilities. Required current work is checked in
 ## Learning
 
 - [ ] Pilot small PyTorch supervised learning on a CPU and set a training budget.
-- [ ] Supply a checked Gymnasium interface and baseline policy for optional RL.
+- [x] Supply a checked Gymnasium interface and baseline policy for optional RL (done Nov 21 for the project: `src/intro_robotics/project/skill_env.py`; see TASKS.md).
 - [ ] Compare learned object choice/interception timing against conventional scheduling.
 - [ ] Separate shaped training reward from the published sorting evaluation score.
 - [ ] Evaluate across seeds and report improvements, failures, and variability.

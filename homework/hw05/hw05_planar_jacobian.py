@@ -17,10 +17,10 @@ def build_scene():
     scene = VizScene()
     scene.add_arm(arm, q)
     position = arm.fk(q)[:3, 3]
-    # Arrow displacement corresponds to 0.5 seconds at the instantaneous velocity.
-    scene.axes.quiver(
-        *position, *(0.5 * np.r_[velocity[:2], 0]), color="purple", linewidth=2
-    )
+    # The arrow is the distance the tool would move in 0.5 s at this velocity.
+    dx = 0.5 * velocity[0]
+    dy = 0.5 * velocity[1]
+    scene.axes.quiver(position[0], position[1], position[2], dx, dy, 0, color="purple", linewidth=2)
     scene.axes.view_init(elev=90, azim=-90)
     scene.axes.set(xlim=(-0.25, 0.75), ylim=(-0.1, 0.9), zlim=(-0.1, 0.1), zlabel="")
     scene.axes.set_zticks([])

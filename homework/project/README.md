@@ -26,6 +26,14 @@ a small random change in belt speed between episodes. Develop with it off,
 turn it on when your pipeline works (`--realism on`), and expect it on in
 graded runs.
 
+**What the cameras show.** Both images contain only the belt, the bins, and
+the objects still on the belt. The arm is not drawn, so it never hides an
+object from the fixed camera. An object disappears from both images as soon
+as it is picked up, and objects in the bins are not drawn. Use
+`obs.actuator` (not the images) to know whether you are holding something.
+(Real cameras would see the arm and the held object; a later version of
+the simulator may draw them.)
+
 ## Calibrate the fixed camera first
 
 The fixed camera's pose is not given, and **the graded evaluation moves it
@@ -98,6 +106,87 @@ This is the plain-Python lockstep runner used for grading. The simulator,
 the cameras, and your `step()` take turns in simulated time, so your
 computer's speed cannot change the score. `--video` saves both camera images
 side by side; `--plot` saves the final object states and the tool path.
+
+## Optional: reinforcement learning (after RL2)
+
+Once your conventional controller sorts reliably, you may try to improve one
+part of it with RL. No checkoff requires this, and a learned policy
+that does not beat your own controller is still a fine result to report.
+The supplied wrapper, `intro_robotics.project.skill_env.SkillEnv`, is a
+Gymnasium environment on the graded simulator itself: the same 50 Hz timing
+and one-period delay, joint limits, pickup rules, and score.
+
+The policy learns one **sub-skill** and your controller does everything
+else. The suggested sub-skill is the tool-camera IBVS final approach: the
+policy adds a small, bounded correction to your IBVS velocity and can make
+your "aligned enough to pick" test stricter or looser. Your controller still
+calibrates, detects, tracks, chooses the object, carries it, and releases
+it. The policy sees only features your controller computes from the
+observation (for example the pixel error, its change, the tool velocity
+relative to your belt-velocity estimate, `q`, `dq`, and the previous
+action), never object truth. The reward is the change in score: +10 for each
+sorted object, -5 for each dropped or wrong-bin object. An episode's total
+reward is exactly its score.
+
+To use it, split your `step()` into two methods and give their sizes:
+
+```python
+class MyController(Controller):
+    skill_size = 24   # length of your feature vector
+    action_size = 3   # what skill_command accepts, each in [-1, 1]
+
+    def step(self, obs):                     # unchanged behavior for grading
+        self.skill_features(obs)
+        return self.skill_command(obs, None)
+
+    def skill_features(self, obs):
+        ...  # perception and state machine for this period (once per period)
+        return features if in_ibvs_approach else None
+
+    def skill_command(self, obs, action=None):
+        ...  # your usual command; if action is not None, add the residual
+        return Command(dq, request)
+```
+
+`action=None` must give exactly your conventional controller. Then train,
+and compare on seeds the training never used (training uses seeds 1000 and up):
+
+```text
+python -m homework.project.train_rl --verbose --out tmp/project_rl/policy.zip
+python -m homework.project.evaluate_rl --policy tmp/project_rl/policy.zip --scenario s3
+python -m homework.project.evaluate_rl --policy tmp/project_rl/policy.zip --scenario s2 --seeds 21 22 23 24 25
+```
+
+`evaluate_rl` runs your controller with and without the policy in the
+graded runner on the same seeds and prints the score, sorted, missed,
+failed-pick, and wrong-bin counts, and simulated time. Report them together. Budget
+about 25 minutes of laptop CPU per 100,000 policy steps (8 processes; a
+whole run is unattended; the default is 150,000), plus a few minutes to
+evaluate. Compare honestly: also try retuning one or two of your own gains
+or tolerances, because a well-chosen constant can capture much of what the
+policy learns.
+
+What the faculty version showed (S3-style held-out seeds, 15 episodes):
+
+- The conventional controller averaged 137 points, and a one-line retune 139.
+- The same controller plus a learned residual averaged 144 (150,000 steps, 35 minutes).
+- A policy with the same features but **no IBVS law**, whose action is the
+  whole approach velocity, averaged 6 after the same 150,000 steps (5 seeds). It almost
+  never completed a pick until about 250,000 steps. After 900,000 steps
+  (2.2 hours) it reached 139, the same as the one-line retune.
+
+Your IBVS law and belt feed-forward are knowledge the policy would
+otherwise have to find by trial and error, and it gets no reward until it
+has found them. To see this with your own controller, add a switch that
+makes `skill_command` use the action in place of your IBVS velocity, train
+both, and compare.
+
+To use a trained policy in the graded run, load it in `MyController.__init__` with
+`skill_env.load_policy(path, MyController)` and, in `step()`, pass
+`self.policy(features)` to `skill_command` whenever `features` is not
+`None`. Do not train on images or on the whole task: the episode is
+thousands of steps long and the score reward is too rare to learn from in a
+laptop budget.
 
 ## Run live in ROS (watching and the demonstration)
 

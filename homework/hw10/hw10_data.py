@@ -8,7 +8,6 @@ conditions below, with each crop's label.
 """
 
 import argparse
-from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -23,10 +22,11 @@ def main():
     args = parser.parse_args()
     for split in SPLITS:
         images, labels, hard, scene = load(split)
-        counts = Counter(labels.tolist())
-        print(f"{split:>5}: {len(labels)} crops from {len(set(scene.tolist()))} scenes "
+        counts = np.bincount(labels)  # crops of each class
+        scenes = len(np.unique(scene))
+        print(f"{split:>5}: {len(labels)} crops from {scenes} scenes "
               f"({FRAMES} frames each), {hard.mean():.0%} hard; crops per class "
-              f"{min(counts.values())}--{max(counts.values())}")
+              f"{counts.min()}--{counts.max()}")
     images, labels, hard, scene = load("train")
     tensor = to_tensor(images[:64])
     print(f"images: {images.shape} {images.dtype}, values {images.min()}--{images.max()}")
@@ -39,12 +39,25 @@ def main():
             matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
-        first = np.flatnonzero(np.r_[True, scene[1:] != scene[:-1]])  # first crop of each scene
-        picks = [i for i in first if not hard[i]][:8] + [i for i in first if hard[i]][:16]
+        # The first crop of the first 8 clean scenes and the first 16 hard scenes.
+        clean_picks = []
+        hard_picks = []
+        for i in range(0, len(labels), FRAMES):  # each scene is FRAMES crops in a row
+            if hard[i] and len(hard_picks) < 16:
+                hard_picks.append(i)
+            if not hard[i] and len(clean_picks) < 8:
+                clean_picks.append(i)
+        picks = clean_picks + hard_picks
         fig, axes = plt.subplots(3, 8, figsize=(13, 5.6))
-        for ax, i in zip(axes.flat, picks):
+        for k in range(len(picks)):
+            i = picks[k]
+            ax = axes.flat[k]
             ax.imshow(images[i])
-            ax.set_title(("hard: " if hard[i] else "clean: ") + CLASSES[labels[i]], fontsize=7)
+            if hard[i]:
+                title = "hard: " + CLASSES[labels[i]]
+            else:
+                title = "clean: " + CLASSES[labels[i]]
+            ax.set_title(title, fontsize=7)
             ax.axis("off")
         fig.tight_layout()
         if args.save:

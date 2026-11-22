@@ -5,7 +5,16 @@ import numpy as np
 from homework.hw06.scenes import arm_scene, base_scene
 from intro_robotics.planning import PlanarArmScene
 from intro_robotics.rrt import rrt_connect
-from intro_robotics.waypoint_optimization import resample_path
+from intro_robotics.waypoint_optimization import (
+    refine_feasible_path,
+    resample_path,
+    sampled_path_is_free,
+)
+
+# Problem 5: facts about planar_arm.urdf that the ROS files use.
+JOINT_NAMES = ["joint1", "joint2"]
+ARM_PLANE_Z = 0.2  # height of the moving joints in planar_arm.urdf, meters
+TOOL_Z = 0.3  # arm_tool sits 0.1 m above the flange (tool_joint), meters
 
 
 def base_problem():
@@ -49,3 +58,21 @@ def arm_problem():
         "rrt_seed": resample_path(route, 15),
         "direct_seed": np.linspace(start, goal, 15),
     }
+
+
+def optimized_path(seed="rrt"):
+    """Return (arm, path, valid): the problem 4 arm path and whether it passed.
+
+    seed: "rrt" or "direct", the initial guess from arm_problem().
+    path: refined N-by-2 joint waypoints, rad.
+    valid: True if the path passed the planning check and the finer check
+        against the nominal scene.
+    """
+    problem = arm_problem()
+    initial_path = problem[seed + "_seed"]
+    path, costs, valid = refine_feasible_path(
+        initial_path, problem["bounds"], problem["clearance"].is_free, resolution=0.04
+    )
+    if valid:
+        valid = sampled_path_is_free(path, problem["nominal"].is_free, 0.005)
+    return problem["arm"], path, valid

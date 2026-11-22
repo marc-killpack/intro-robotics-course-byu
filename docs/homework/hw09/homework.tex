@@ -54,10 +54,10 @@ controller never computed either position.
 \item \textbf{Implement the IBVS step.}
 In \path{homework/hw09/ibvs_controller.py}, complete:
 \begin{enumerate}
-\item \texttt{ibvs\_velocity(pixel, target\_pixel, depth, focal, yaw, gain)},
-your problem 2 as code. Check it against 2(d).
-\item \texttt{IBVSController.joint\_rates(pixel, jacobian, yaw)}: if the
-target is lost (\texttt{pixel is None}) return zero joint rates; otherwise
+\item \texttt{ibvs\_velocity(pixel, target\_pixel, depth, focal, yaw, gain)}.
+It is your problem 2 written as code; check it against 2(d).
+\item \texttt{IBVSController.joint\_rates(pixel, jacobian, yaw)}: return
+zero joint rates if the target is lost (\texttt{pixel is None}); otherwise
 limit the speed of \texttt{ibvs\_velocity}'s result to \texttt{MAX\_SPEED} and
 solve for joint rates with your HW06 \texttt{damped\_least\_squares}, using
 all three rows of \texttt{jacob\_planar} and a desired heading rate of zero.

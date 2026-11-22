@@ -27,21 +27,25 @@ class Joint:
     def __init__(self, axis="z", origin=None, tip=None, joint_type="r", limits=None):
         if joint_type not in {"r", "p"}:
             raise ValueError("Joint type must be 'r' (revolute) or 'p' (prismatic)")
+        if origin is None:
+            origin = np.eye(4)
+        if tip is None:
+            tip = np.eye(4)
         self.axis = check_axis(axis)
-        self.origin = check_transform(
-            np.eye(4) if origin is None else origin, "Joint origin"
-        )
-        self.tip = check_transform(np.eye(4) if tip is None else tip, "Joint tip")
+        self.origin = check_transform(origin, "Joint origin")
+        self.tip = check_transform(tip, "Joint tip")
         self.joint_type = joint_type
         self.limits = check_limits(limits)
 
     def motion(self, q):
+        """Transform for the joint's own motion: turn about, or slide along, its axis."""
         q = check_scalar(q, "Joint displacement")
         if self.joint_type == "r":
             return se3(axis_rotation(self.axis, q))
         return se3(translation=self.axis * q)
 
     def transform(self, q):
+        """A(q): the following link frame expressed in the preceding link frame."""
         return self.origin @ self.motion(q) @ self.tip
 
 
@@ -56,19 +60,25 @@ class SerialArm:
 
     def __init__(self, joints, base=None, tip=None):
         self.joints = list(joints)
-        if not self.joints or not all(
-            isinstance(joint, Joint) for joint in self.joints
-        ):
+        if len(self.joints) == 0:
             raise ValueError("Supply a nonempty list of Joint objects")
+        for joint in self.joints:
+            if not isinstance(joint, Joint):
+                raise ValueError("Supply a nonempty list of Joint objects")
+        if base is None:
+            base = np.eye(4)
+        if tip is None:
+            tip = np.eye(4)
         self.n = len(self.joints)
-        self.jt = [joint.joint_type for joint in self.joints]
-        self.base = check_transform(np.eye(4) if base is None else base, "Arm base")
-        self.tip = check_transform(np.eye(4) if tip is None else tip, "Arm tool")
-        self.reach = sum(
-            np.linalg.norm(joint.origin[:3, 3]) + np.linalg.norm(joint.tip[:3, 3])
-            for joint in self.joints
-        )
-        self.reach += np.linalg.norm(self.tip[:3, 3])
+        self.jt = []  # joint types, "r" or "p"
+        for joint in self.joints:
+            self.jt.append(joint.joint_type)
+        self.base = check_transform(base, "Arm base")
+        self.tip = check_transform(tip, "Arm tool")
+        # Largest possible distance from the first joint to the tool (meters).
+        self.reach = np.linalg.norm(self.tip[:3, 3])
+        for joint in self.joints:
+            self.reach += np.linalg.norm(joint.origin[:3, 3]) + np.linalg.norm(joint.tip[:3, 3])
 
     def fk(self, q, index=None, base=False, tip=False):
         """Return a general spatial 4x4 transform, with the old index convention.
@@ -82,7 +92,9 @@ class SerialArm:
         # HW04: compose the selected joint transforms, including the optional
         # base/tool transforms only when their corresponding chain end is used.
         # BEGIN SOLUTION
-        transform = self.base.copy() if base and start == 0 else np.eye(4)
+        transform = np.eye(4)
+        if base and start == 0:
+            transform = self.base @ transform
         for i in range(start, end):
             transform = transform @ self.joints[i].transform(q[i])
         if tip and end == self.n:
@@ -94,10 +106,11 @@ class SerialArm:
     def joint_frames(self, q, base=False):
         """Return physical joint frames before motion, for drawing and axes."""
         q = check_vector(q, self.n, "q")
-        return [
-            self.fk(q, i, base=base) @ joint.origin
-            for i, joint in enumerate(self.joints)
-        ]
+        frames = []
+        for i in range(self.n):
+            # Frame i (link i-1's end) moved to joint i's zero-position frame.
+            frames.append(self.fk(q, i, base=base) @ self.joints[i].origin)
+        return frames
 
     def jacob_planar(self, q, base=False, tip=False):
         """Map qdot to [vx, vy, omega_z] in frame 0, or world if base=True.
@@ -109,25 +122,29 @@ class SerialArm:
         """
         q = check_vector(q, self.n, "q")
         zero_frames = self.joint_frames(np.zeros(self.n), base=base)
-        axes = [
-            frame[:3, :3] @ joint.axis for frame, joint in zip(zero_frames, self.joints)
-        ]
+        axes = []
+        for i in range(self.n):
+            axes.append(zero_frames[i][:3, :3] @ self.joints[i].axis)
         check_planar_axes(axes, self.jt)
 
         # HW05: one column per joint, with rows [vx, vy, omega_z].
         # BEGIN SOLUTION
         end_position = self.fk(q, base=base, tip=tip)[:3, 3]
+        frames = self.joint_frames(q, base=base)
         jacobian = np.zeros((3, self.n))
-        for i, (joint, frame) in enumerate(
-            zip(self.joints, self.joint_frames(q, base=base))
-        ):
-            axis = frame[:3, :3] @ joint.axis
-            if joint.joint_type == "r":
-                velocity = np.cross(axis, end_position - frame[:3, 3])
-                jacobian[:2, i] = velocity[:2]
+        for i in range(self.n):
+            axis = frames[i][:3, :3] @ self.joints[i].axis  # joint axis in frame 0
+            joint_position = frames[i][:3, 3]
+            if self.jt[i] == "r":
+                # Revolute: v = z x (p_end - p_joint), and the joint turns the tool about z.
+                velocity = np.cross(axis, end_position - joint_position)
+                jacobian[0, i] = velocity[0]
+                jacobian[1, i] = velocity[1]
                 jacobian[2, i] = axis[2]
             else:
-                jacobian[:2, i] = axis[:2]
+                # Prismatic: the tool moves along the axis and does not turn.
+                jacobian[0, i] = axis[0]
+                jacobian[1, i] = axis[1]
         return jacobian
         # END SOLUTION
         raise NotImplementedError("HW05: implement SerialArm.jacob_planar")
@@ -136,9 +153,18 @@ class SerialArm:
                     base=False, tip=False):
         """Return (q, converged): joint values that put the tool XY at target.
 
+        target: desired tool position [x, y] (2,), meters, in frame 0 (in the
+            world frame if base=True).
+        q0: starting guess for the joint values (n,), rad or m.
+        damping: lambda for damped_least_squares (0 means no damping).
+        tolerance: largest accepted XY error, meters.
+        iterations: most steps to try, a positive integer.
+        base, tip: include the arm's base and tool transforms, as in fk.
+
         Iterates the damped least-squares step from damped_least_squares with
         the two position rows of jacob_planar, clipping to any joint limits.
         Orientation is free. Different q0 can reach different solutions.
+        converged is True when the final XY error is below tolerance.
         """
         target = check_vector(target, 2, "Target XY")
         q = check_vector(q0, self.n, "q0").copy()
@@ -147,23 +173,35 @@ class SerialArm:
         # HW06: repeat until the XY error is within tolerance: compute the
         # error, take one damped least-squares step, and respect joint limits.
         # BEGIN SOLUTION
-        for _ in range(iterations):
-            error = target - self.fk(q, base=base, tip=tip)[:2, 3]
+        for iteration in range(iterations):
+            position = self.fk(q, base=base, tip=tip)[:2, 3]
+            error = target - position
             if np.linalg.norm(error) < tolerance:
                 return q, True
-            jacobian = self.jacob_planar(q, base=base, tip=tip)[:2]
+            # Treat the error like a desired tool velocity for one step (problem 2(a)).
+            jacobian = self.jacob_planar(q, base=base, tip=tip)[:2, :]  # rows vx, vy
             q = q + damped_least_squares(jacobian, error, damping)
-            for i, joint in enumerate(self.joints):
-                if joint.limits is not None:
-                    q[i] = np.clip(q[i], *joint.limits)
-        error = target - self.fk(q, base=base, tip=tip)[:2, 3]
-        return q, bool(np.linalg.norm(error) < tolerance)
+            for i in range(self.n):
+                limits = self.joints[i].limits
+                if limits is not None:
+                    q[i] = np.clip(q[i], limits[0], limits[1])
+        position = self.fk(q, base=base, tip=tip)[:2, 3]
+        error = target - position
+        converged = np.linalg.norm(error) < tolerance
+        return q, bool(converged)
         # END SOLUTION
         raise NotImplementedError("HW06: implement SerialArm.ik_position")
 
 
 def damped_least_squares(jacobian, velocity, damping=0.0):
     """HW06: joint rates that best produce a task velocity, J^T (J J^T + d^2 I)^-1 v.
+
+    jacobian: J, an m-by-n array (m task rows, n joints), for example the
+        two position rows of jacob_planar.
+    velocity: v, the desired task velocity (m,), in the units and frame of
+        J's rows (m/s in frame 0 for jacob_planar's position rows).
+    damping: d (lambda in the handout), zero or positive.
+    Returns the joint rates qdot (n,), rad/s or m/s.
 
     With damping 0 and a square, invertible J this equals J^-1 v. With more
     joints than rows it is the smallest joint-rate vector that achieves v.
@@ -180,6 +218,9 @@ def damped_least_squares(jacobian, velocity, damping=0.0):
     # HW06: one linear solve; do not form an explicit inverse (problem 1(b)).
     # BEGIN SOLUTION
     rows = jacobian.shape[0]
-    return jacobian.T @ np.linalg.solve(jacobian @ jacobian.T + damping**2 * np.eye(rows), velocity)
+    damped_jjt = jacobian @ jacobian.T + damping**2 * np.eye(rows)  # J J^T + d^2 I
+    # Solve (J J^T + d^2 I) y = v for y, then qdot = J^T y.
+    y = np.linalg.solve(damped_jjt, velocity)
+    return jacobian.T @ y
     # END SOLUTION
     raise NotImplementedError("HW06: implement damped_least_squares")

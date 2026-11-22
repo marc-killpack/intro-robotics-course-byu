@@ -9,7 +9,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 
 from homework.hw03.frame_broadcaster import frame_transforms
-from homework.hw04.compare_tf import placed_arm
+from homework.models import placed_arm
 from homework.hw04.urdf_chain import URDF, link_pose
 from homework.ros_frames import quaternion_to_rotation, rotation_to_quaternion
 from intro_robotics.transforms import inv, rotx, roty, rotz

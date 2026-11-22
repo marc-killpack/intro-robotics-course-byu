@@ -19,7 +19,21 @@ from intro_robotics.rl_interception import InterceptionEnv, run_episode
 FIRST_CASE = 10_000
 
 
+class PPOPolicy:
+    """A trained PPO policy, used like the baseline: policy(observation) -> action."""
+
+    def __init__(self, model):
+        self.model = model
+
+    def __call__(self, observation):
+        # predict returns (action, internal state); deterministic=True takes the
+        # network's mean action, without the random exploration used in training.
+        action, _ = self.model.predict(observation, deterministic=True)
+        return action
+
+
 def load_policy(name, env):
+    """The baseline controller if name is "baseline", otherwise the PPO policy saved at name."""
     if name == "baseline":
         from homework.hw11.baseline import InterceptController
 
@@ -31,7 +45,7 @@ def load_policy(name, env):
     replace = {"observation_space": env.observation_space, "action_space": env.action_space,
                "_last_obs": None, "_last_episode_starts": None}
     model = PPO.load(name, device="cpu", custom_objects=replace)
-    return lambda observation: model.predict(observation, deterministic=True)[0]
+    return PPOPolicy(model)
 
 
 def evaluate(policy, env, cases=100):
@@ -44,14 +58,23 @@ def evaluate(policy, env, cases=100):
 
 
 def summary(results):
-    successes = [r for r in results if r[1]]
-    failures = [r for r in results if not r[1]]
+    """Text summary: success count, time to intercept, and the first few failures."""
+    successes = []
+    failures = []
+    for result in results:
+        if result[1]:
+            successes.append(result)
+        else:
+            failures.append(result)
     lines = [f"success {len(successes)}/{len(results)}"]
-    if successes:
-        times = [r[2] for r in successes]
+    if len(successes) > 0:
+        times = [result[2] for result in successes]
         lines.append(f"time to intercept (successes): mean {np.mean(times):.2f} s, "
                      f"median {np.median(times):.2f} s, max {np.max(times):.2f} s")
-    for seed, _, _, distance, speed in failures[:5]:
+    for k in range(min(5, len(failures))):
+        seed = failures[k][0]
+        distance = failures[k][3]  # m
+        speed = failures[k][4]  # m/s
         lines.append(f"  failed case {seed}: final distance {100 * distance:.1f} cm, "
                      f"relative speed {100 * speed:.1f} cm/s")
     if len(failures) > 5:
@@ -65,8 +88,13 @@ def main():
     parser.add_argument("--reach", action="store_true", help="still object: planar reaching")
     parser.add_argument("--cases", type=int, default=100)
     args = parser.parse_args()
-    env = InterceptionEnv(object_speed=(0.0, 0.0) if args.reach else (0.05, 0.12))
-    print(summary(evaluate(load_policy(args.policy, env), env, args.cases)))
+    if args.reach:
+        env = InterceptionEnv(object_speed=(0.0, 0.0))
+    else:
+        env = InterceptionEnv(object_speed=(0.05, 0.12))
+    policy = load_policy(args.policy, env)
+    results = evaluate(policy, env, args.cases)
+    print(summary(results))
 
 
 if __name__ == "__main__":

@@ -79,7 +79,7 @@ imports them, so these answers are also the project's perception.
    example, red circle to A, red square to B, yellow triangle to B. The graded
    evaluation uses a rule table students have not seen.
 
-Workload target: one week (six short functions, about 25 lines in all, plus
+Workload target: one week (six short functions, about 35 lines in all, plus
 the hand calculations). Pilot it. The two-view checkerboard activity
 (`examples/checkerboard_homography.py`) is now the lecture demonstration of
 homographies, not part of the homework.

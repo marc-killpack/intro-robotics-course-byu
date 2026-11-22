@@ -1,8 +1,109 @@
 # Foundation validation record
 
-Updated November 20, 2026. This record covers the uncommitted faculty change
+Updated November 21, 2026. This record covers the uncommitted faculty change
 set, not a published semester release. [TASKS.md](../../TASKS.md) distinguishes
 implemented work from faculty approval and further platform validation.
+
+## November 21: readability pass, HW06--HW11 and the project
+
+Each part was checked by saving outputs before editing and comparing after.
+HW06--HW07: the planning and optimization activities printed the same text,
+saved pixel-identical figures, and planned identical RRT and optimized paths
+for five seeds; optimizer cost histories differ by at most 7e-15 relative
+(the smoothness sum runs in a new order). The HW07 publisher and arm node,
+run against stand-in ROS modules, produced byte-identical messages to the
+previous versions. HW08--HW09: the checkerboard, perception (seeds 1 and 2,
+realism on, 30% drop), and IBVS activities printed the same text and saved
+byte-identical figures; the vision functions and the camera model gave
+exactly equal results on all six scenarios and random inputs. HW10--HW11:
+the data and evaluation scripts (supplied checkpoint) printed the same text
+and saved byte-identical figures; regenerated crops, predictions, the
+confusion matrix, one training epoch, a 4096-step PPO run, environment
+trajectories, and the baseline (100/100) and supplied PPO policy (95/100)
+evaluations were identical. Project: the reference controller gave identical
+scores and joint-trajectory hashes on S1 seeds 1--2, S2 (realism) 21--22,
+S3 31--33, and held-out 101--102 (60 60 / 140 150 / 130 150 140 / 130 150);
+the residual and from-scratch policies scored 140 as before; a 512-step
+`train_rl` run saved a byte-identical policy.
+
+All handouts rebuilt with their earlier page counts and no overfull lines.
+Host: 148 instructor tests (1 skipped, ROS-only) and 46 public checks
+passed; the release dry run copied 68 files and removed 14 blocks. Course
+image: 148 instructor tests (none skipped; the HW07 ROS message test ran
+against the new publisher node) and 46 public checks passed.
+
+## November 21: full-draft check and HW01--HW05 readability pilot
+
+All 11 handouts and the position-only reading build (2--3 pages each; the
+reading is 4). HW07, HW08, and HW09 had 1--39 pt overfull lines from long
+code names; after rewording all three build with none, with page counts
+unchanged. Every written key exists. The feature demonstration's belt pair now
+uses the S2 frame at 16 s: SIFT and ORB homography errors 0.2 and 0.4 px
+with OpenCV 4.14 (host) and 0.5 and 0.7 px with 4.10 (course image), where
+the first frame had given 1.9 and 31.3 px on the host and 36.1 and 11.8 px
+in the image.
+
+A throwaway student copy with the project added (temporary manifest; the live
+manifest is unchanged) held 104 files with 25 answer regions removed, and
+its Markdown links resolved. The oracle, the reference controller, and the
+held-out file were absent. In that copy, `run --scenario s1` scored 0 with
+the starter controller, while `check_calibration` and the public calibration
+check stopped at "Project: implement find_board_corners". `train_rl` named
+the missing RL hooks.
+
+After the HW01--HW05 readability changes, a live check in the course image
+passed. `robot_state_publisher` ran with the HW04 URDF, joint states were
+published from the command line, and the rewritten TF comparison printed
+TF and `fk` tool positions that agree to 1e-16 m. The HW03 broadcaster
+published and printed its frames. Host: 148 instructor tests (1 skipped,
+ROS-only) and 46 public checks passed; the release dry run copied 68 files
+and removed 14 blocks. Course image: the same 148 (1 skipped) and 46 passed.
+
+## November 21: project RL wrapper (residual and from-scratch)
+
+`SkillEnv` with a zero action reproduced `run_episode` exactly: score,
+counts, time, `q`, and `dq` on S2 with realism on, seed 21, 12 s. Reference
+scores with the hooks in place were unchanged (S2 with realism on, seeds
+21--25: 140, 150, 130, 150, 150). Faculty laptop, 8 cores, S3 training
+seeds of 1000 and up. One process ran 42 policy steps/s; 4 and 8 processes
+ran 66 and 71. A step cost about 3.6 ms conventional and 3.8 ms with the
+policy alone, and 5.4 ms with 6 processes. The supplied residual example
+(150k steps, 8 processes) trained in 34.8 min, with training score 133 at
+27k steps and 144 at 129k. A first version whose third action scaled only
+the pixel threshold had no effect (fixed 7.5 and 10 px scored the same as
+5 px), so that action now scales both pick tolerances.
+
+Per-seed scores (realism on; S3 practice 31--35 / held-out 101--105,
+106--110, 111--115 / S2 21--25):
+
+| Version | S3 | Held-out | S2 |
+| --- | --- | --- | --- |
+| Conventional | 130 150 140 150 130 | 130 150 140 130 150 / 130 140 120 140 130 / 150 150 150 120 120 | 140 150 130 150 150 |
+| Tuned (`MATCH_SPEED` 0.05) | 140 150 150 150 140 | 130 150 150 130 150 / 140 140 130 140 130 / 150 150 150 120 130 | 150 150 140 150 150 |
+| Residual, 150k | 140 150 150 150 150 | 140 150 150 140 150 / 140 150 130 150 140 / 150 150 150 140 130 | 150 150 150 150 150 |
+| From scratch, 150k | 10 30 20 10 0 | 0 20 10 0 0 | -- |
+| From scratch, 900k | 140 150 150 150 140 | 140 150 150 130 150 / 130 140 130 140 130 / 150 150 150 120 130 | 150 150 140 150 150 |
+
+Other one-parameter changes on S3 practice / held-out 101--105: IBVS gain 8
+scored 132 / 122, gain 12 scored 116 / 110, and tolerance 0.07 m/s scored
+144 / 142. No run of the conventional, tuned, residual, or 900k from-scratch
+version had a failed pick, wrong bin, or drop. The 150k from-scratch policy
+sorted 7 and missed 68 on S3 practice. The from-scratch runs trained at
+about 440 steps/s while they could not pick; the 150k run took 5.7 min. The
+900k run took 133.0 min, with training score 2 at 154k steps, 15 at 256k,
+106 at 358k, 133 at 436k (35 min), 138 at 512k, and 141--146 after that.
+Against the residual on held-out seeds it was worse on 7 seeds and better
+on none. Its evaluation took 4.6--4.7 ms per step.
+
+Host: 148 instructor tests (1 skipped, ROS-only), including 11 new tests,
+and 46 public checks passed. The release dry run copied 68 files and
+removed 14 blocks (project files are not in the manifest yet). Course image
+(`docker compose run`, PYTHONPATH=/workspace/src, `safe.directory` set,
+Gymnasium 1.4.0, SB3 2.9.2): 46 public checks passed; 147 of 148
+instructor tests passed, including all 11 new ones (1 skipped). The failure
+was the Nov 20 `test_feature_demo` belt match: the image's OpenCV 4.10
+gives a 36.1 px homography error against 1.9 px with OpenCV 4.14 on the host
+(fixed the same day; see the full-draft check above).
 
 ## November 20: HW05 problem 6 moved to HW06; strict calibration check; features demo
 
