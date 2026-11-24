@@ -1,9 +1,10 @@
 """HW07 problem 5: publish the optimized arm path as a JointTrajectory.
 
-Complete trajectory_message(). The supplied main() refines the HW06 RRT
+Provided: read trajectory_message() to see how a JointTrajectory is built;
+your arm node unpacks the same fields. main() refines the HW06 RRT
 path with the supplied optimizer (which calls your smoothness_cost), gives
 each waypoint a time with waypoint_times, and starts a small node that
-publishes your message once. Run it in the course container from /workspace:
+publishes the message once. Run it in the course container from /workspace:
 
     python3 -m homework.hw07.path_publisher
     python3 -m homework.hw07.path_publisher --seed direct
@@ -42,7 +43,7 @@ def duration_message(seconds):
 
 
 def trajectory_message(joint_names, path, times):
-    """Return a trajectory_msgs/JointTrajectory with one point per waypoint.
+    """Provided: a trajectory_msgs/JointTrajectory with one point per waypoint.
 
     joint_names: list of joint-name strings, one per path column.
     path: N-by-joints waypoint array, rad.
@@ -56,8 +57,6 @@ def trajectory_message(joint_names, path, times):
     path = np.asarray(path, dtype=float)
     if path.ndim != 2 or path.shape[1] != len(joint_names) or len(times) != len(path):
         raise ValueError("Use one time per waypoint and one name per joint")
-    # HW07: create the message, set joint_names, and append the points.
-    # BEGIN SOLUTION
     message = JointTrajectory()
     message.joint_names = list(joint_names)
     for i in range(len(path)):
@@ -66,8 +65,6 @@ def trajectory_message(joint_names, path, times):
         point.time_from_start = duration_message(float(times[i]))
         message.points.append(point)
     return message
-    # END SOLUTION
-    raise NotImplementedError("HW07: implement trajectory_message")
 
 
 def marker_messages(arm, path):

@@ -1,4 +1,4 @@
-# HW08 draft: calibration, detection, and tracking
+# HW08: calibration, detection, and tracking
 
 Complete the six functions marked HW08 in `src/intro_robotics/vision.py`:
 `fit_plane_map` and `to_plane` (problem 1), `color_mask`, `classify_shape`,
@@ -25,5 +25,3 @@ seconds. It links detections into tracks, then compares your positions,
 classes, and velocities with the simulator's truth. A project controller
 never sees that truth. `--realism on` adds pixel noise and a small belt-speed
 change; `--drop` blanks a fraction of the frames.
-
-This is a faculty draft; the current student release covers HW01--HW05 only.

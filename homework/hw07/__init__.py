@@ -1,1 +1,1 @@
-"""HW07 waypoint-optimization draft."""
+"""HW07: waypoint optimization and a ROS arm node."""

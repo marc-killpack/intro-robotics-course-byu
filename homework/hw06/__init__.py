@@ -1,1 +1,1 @@
-"""HW06 planning activity and instructor master."""
+"""HW06: inverse kinematics and RRT-Connect planning."""

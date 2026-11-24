@@ -1,6 +1,6 @@
 """HW07 problem 5: an arm node that follows a received JointTrajectory.
 
-Complete receive_trajectory() and publish_joint_state(). The node subscribes
+Complete receive_trajectory(); publish_joint_state() is provided. The node subscribes
 to /hw07/trajectory and, 50 times per second, publishes where the joints
 should be now on /hw07/joint_states, which robot_state_publisher turns into
 TF for RViz. Run it in the course container from /workspace:
@@ -59,14 +59,12 @@ class ArmNode(Node):
         raise NotImplementedError("HW07: implement receive_trajectory(message)")
 
     def publish_joint_state(self):
-        """A timer calls this every 0.02 s. Publish nothing before a trajectory."""
+        """Provided: a timer calls this every 0.02 s. Publish nothing before a trajectory."""
         if self.start_time is None:
             return
         now = self.get_clock().now()
         elapsed = (now - self.start_time).nanoseconds / 1e9
-        # HW07: interpolate at the elapsed time and publish a JointState with
-        # stamp, names, positions, and velocities (lists of floats).
-        # BEGIN SOLUTION
+        # Your interpolate gives where the joints should be now.
         q, dq = interpolate(self.times, self.path, elapsed)
         message = JointState()
         message.header.stamp = now.to_msg()
@@ -74,9 +72,6 @@ class ArmNode(Node):
         message.position = [float(v) for v in q]
         message.velocity = [float(v) for v in dq]
         self.publisher.publish(message)
-        return
-        # END SOLUTION
-        raise NotImplementedError("HW07: implement publish_joint_state()")
 
 
 def main():

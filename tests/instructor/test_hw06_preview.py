@@ -1,6 +1,5 @@
-"""Verify a temporary draft HW06 scaffold without expanding the release."""
+"""Verify the released HW06 scaffold: two RRT stubs and provided geometry."""
 
-import ast
 import os
 from pathlib import Path
 import subprocess
@@ -10,7 +9,6 @@ import unittest
 
 from release_tools.student_release import (
     ROOT,
-    check_local_links,
     prepare_release,
     strip_solutions,
 )
@@ -19,8 +17,7 @@ from release_tools.student_release import (
 class Homework06PreviewTests(unittest.TestCase):
     def test_temporary_student_tree_has_two_hw06_stubs_and_provided_geometry(self):
         files, report = prepare_release(ROOT)
-        self.assertEqual(report["removed_solution_blocks"], 14)
-        extra = [
+        released = [
             "src/intro_robotics/planning.py",
             "src/intro_robotics/rrt.py",
             "homework/hw06/__init__.py",
@@ -30,16 +27,13 @@ class Homework06PreviewTests(unittest.TestCase):
             "homework/hw06/hw06_planning.py",
             "tests/public/test_hw06_planning.py",
         ]
-        self.assertTrue(all(name not in files for name in extra))
-        for name in extra:
-            data = (ROOT / name).read_bytes()
+        for name in released:
+            self.assertIn(name, files)
             if name.endswith(".py"):
-                text, count = strip_solutions(data.decode("utf-8"), name)
+                source = (ROOT / name).read_bytes().decode("utf-8")
+                text, count = strip_solutions(source, name)
                 self.assertEqual(count, 2 if name.endswith("/rrt.py") else 0)
-                ast.parse(text, filename=name)
-                data = text.encode("utf-8")
-            files[name] = data
-        check_local_links(files)
+                self.assertEqual(files[name], text.encode("utf-8"))
 
         with tempfile.TemporaryDirectory() as temporary:
             student = Path(temporary)

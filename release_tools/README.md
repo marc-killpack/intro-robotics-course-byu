@@ -1,11 +1,14 @@
 # Reviewed student copies
 
 This repository contains completed faculty masters. The current draft
-manifest covers **HW01--HW05**: 53 explicitly selected files and 11 marked
-answer regions (two ROS methods and nine mathematical methods). It includes
-the supplied arm/drawing code and limited `tests/public` checks. It excludes
-the DH adapter, camera/conveyor prototypes, instructor files/tests, LaTeX,
-and generated PDFs. Faculty approval is still pending.
+manifest covers **HW01--HW11 and the conveyor project** (Nov 24): 160
+explicitly selected files and 36 marked answer regions, listed in
+[the faculty boundary map](../HOMEWORK_MAP.md). It includes the supplied
+code, data, checkpoints, the project simulator and ROS nodes, the
+`conveyor_interfaces` message package, and limited `tests/public` checks. It
+excludes faculty answers (`homework/hw07/planar_arm.urdf`, the project's
+`reference.py` and `oracle.py`), camera/conveyor prototypes, instructor
+files/tests, LaTeX, and generated PDFs. Faculty approval is still pending.
 
 From the repository root, preview the current work without publishing:
 
@@ -15,7 +18,8 @@ python -m release_tools --dry-run
 
 The tool prepares every allowlisted file in memory, validates exact paired
 `# BEGIN SOLUTION` / `# END SOLUTION` markers, removes answer regions from
-copied Python only, parses that Python, checks local Markdown links and their `#section` anchors, and
+copied Python, removes `<!-- BEGIN FACULTY ONLY -->` / `<!-- END FACULTY ONLY -->`
+blocks from copied Markdown (the planning paragraph in `AGENTS.md`), parses that Python, checks local Markdown links and their `#section` anchors, and
 creates/discards a temporary student tree. It prints source revision, dirty
 state, input hashes, file count, and removed-block count. A dirty preview is
 allowed for review; it is not a publishable release record.
@@ -37,7 +41,7 @@ Before publication:
 1. Confirm clean source and the intended revision in the report.
 2. Inspect the methods in [the faculty boundary map](../HOMEWORK_MAP.md):
    each must retain guidance and a homework-labeled `NotImplementedError`,
-   with no completed answer body. Check that all 11 regions were removed.
+   with no completed answer body. Check that all 36 regions were removed.
 3. Check the promoted student README, setup links, and launch-mode directions.
 4. Test the completed masters separately. Confirm generated imports resolve
    to the student tree and assigned methods fail with their expected labels.

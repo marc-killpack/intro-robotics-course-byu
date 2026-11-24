@@ -48,6 +48,17 @@ def waypoint_times(path, max_speed=0.5):
     return np.array(times)
 
 
+def find_segment(times, t):
+    """Provided: index i of the segment with times[i] <= t < times[i + 1].
+
+    Use it only for times[0] <= t < times[-1].
+    """
+    i = 0
+    while times[i + 1] <= t:
+        i = i + 1
+    return i
+
+
 def interpolate(times, path, t):
     """Return joint positions and velocities (q, dq) at time t.
 
@@ -59,20 +70,21 @@ def interpolate(times, path, t):
     Use a cubic Hermite polynomial on the segment containing t. Waypoint
     velocities: zero at the first and last waypoint; at each interior
     waypoint, the average of the slopes (q[i+1]-q[i])/(t[i+1]-t[i]) of its two
-    neighboring segments. Before times[0] or after times[-1], return that
-    endpoint with zero velocity.
+    neighboring segments. Before times[0] or after times[-1], the provided
+    lines return that endpoint with zero velocity.
     """
     times, path = check_times_and_path(times, path)
-    # HW07: compute waypoint velocities, find the segment, and evaluate the
-    # Hermite basis and its derivative (see the handout).
-    # BEGIN SOLUTION
     joints = path.shape[1]
-    # Outside the time range, hold the nearest endpoint at rest.
+    # Provided: outside the time range, hold the nearest endpoint at rest.
     if t <= times[0]:
         return path[0].copy(), np.zeros(joints)
     if t >= times[-1]:
         return path[-1].copy(), np.zeros(joints)
+    i = find_segment(times, t)  # provided: times[i] <= t < times[i + 1]
 
+    # HW07: compute the waypoint velocities, then evaluate the Hermite basis
+    # and its derivative on segment i (see the handout).
+    # BEGIN SOLUTION
     # Waypoint velocities: zero at the ends, the average of the two
     # neighboring segment slopes at each interior waypoint.
     velocities = np.zeros((len(times), joints))
@@ -81,10 +93,6 @@ def interpolate(times, path, t):
         slope_after = (path[k + 1] - path[k]) / (times[k + 1] - times[k])
         velocities[k] = (slope_before + slope_after) / 2
 
-    # Find segment i, the one with times[i] <= t < times[i + 1].
-    i = 0
-    while times[i + 1] <= t:
-        i = i + 1
     h = times[i + 1] - times[i]
     s = (t - times[i]) / h
 

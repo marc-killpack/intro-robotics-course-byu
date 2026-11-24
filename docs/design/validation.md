@@ -4,6 +4,32 @@ Updated November 23, 2026. This record covers the uncommitted faculty change
 set, not a published semester release. [TASKS.md](../../TASKS.md) distinguishes
 implemented work from faculty approval and further platform validation.
 
+## November 24: full-course student release for instructor review
+
+The manifest now selects HW01--HW11 and the project: `--dry-run` prepared
+160 files and removed 36 answer regions, with links and anchors checked.
+HW07 was trimmed from six regions to four (`trajectory_message` and
+`publish_joint_state` supplied; `interpolate` supplies its endpoint hold and
+segment search). A student copy written to a scratch folder (Windows host,
+Python 3.12) was checked two ways. With its stubs, each of the 15 public
+test modules except `test_hw03_frames` and `test_hw04_urdf` (which skip
+their ROS checks) failed only with assignment-labeled `NotImplementedError`,
+never a missing module or data file. With the faculty answers copied back into
+that copy, all 15 passed. The same answered copy ran the HW06 and HW07
+activities, `hw08_checkerboard`, `hw08_perception`, `hw09_ibvs` (pickup
+succeeded), `hw10_evaluate` with the supplied checkpoint, `hw11.evaluate` for
+the baseline and the supplied PPO policy (100/100 each),
+`project.check_calibration --scenario s1` (OK, median 0.14 mm), and
+`project.run --scenario s1` with the starter `MyController` (score 0, as
+expected). The ROS parts (HW07 problem 5 nodes, the project launch file)
+were not run in the container this pass. Faculty suite: 150 tests OK
+(1 skipped); public checks against the answers: 46 OK. The HW07 handout PDF
+was rebuilt and its problem 5 page checked. A follow-up the same day made
+the release tool remove `<!-- BEGIN FACULTY ONLY -->` blocks from Markdown:
+the dry run reports one such block removed (the `AGENTS.md` planning
+paragraph), and `test_release` confirms the student `AGENTS.md` keeps its
+tutoring rules without that paragraph (9 release and preview tests OK).
+
 ## November 24: course poster (R13)
 
 `python docs/figures/robot_stack.py` wrote `robot_stack.svg` (static, 1240

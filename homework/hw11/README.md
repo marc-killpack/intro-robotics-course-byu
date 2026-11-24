@@ -1,4 +1,4 @@
-# HW11 draft: reward shaping for interception
+# HW11: reward shaping for interception
 
 Complete the three reward functions in `rewards.py` and the `__call__`
 method of `InterceptController` in `baseline.py` (it uses your HW04/HW05
@@ -30,5 +30,3 @@ the time to intercept, and the failures together.
 `--reach` trains and evaluates the same arm on a still object (planar
 reaching). `checkpoints/` holds trained policies used in lecture; evaluate
 them like your own.
-
-This is a faculty draft; the current student release covers HW01--HW05 only.

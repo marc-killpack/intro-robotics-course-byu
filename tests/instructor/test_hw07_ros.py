@@ -69,13 +69,14 @@ class TrajectoryKeyTests(unittest.TestCase):
 
 
 class ArmNodeSourceTests(unittest.TestCase):
-    def test_nodes_parse_and_mark_four_answer_blocks(self):
+    def test_nodes_parse_and_mark_two_answer_blocks(self):
         counts = {}
         for name in ("trajectory.py", "path_publisher.py", "arm_node.py"):
             text = (HW07 / name).read_text(encoding="utf-8")
             ast.parse(text)
             counts[name] = text.count("# BEGIN SOLUTION")
-        self.assertEqual(counts, {"trajectory.py": 1, "path_publisher.py": 1, "arm_node.py": 2})
+        # trajectory_message and publish_joint_state are supplied (Nov 24 trim).
+        self.assertEqual(counts, {"trajectory.py": 1, "path_publisher.py": 0, "arm_node.py": 1})
 
 
 if __name__ == "__main__":

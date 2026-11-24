@@ -1,4 +1,4 @@
-"""Small faculty waypoint-optimization pilots for planar bases and arms.
+"""Supplied waypoint optimizers for planar bases and arms (HW07).
 
 The circular-base example uses a soft obstacle penalty; the arm example
 accepts only sampled collision-free updates. Neither is CHOMP or an exact
@@ -71,7 +71,7 @@ def optimize_waypoints(
     A small backtracking step avoids accepting a higher objective. An obstacle
     penalty is soft, so a lower objective does not prove path validity. A
     center point has no unique distance gradient and can leave a bad seed
-    stuck. This is a simple local optimizer for the faculty 2D example.
+    stuck. This is a simple local optimizer for the course's 2D example.
     """
     path = np.asarray(initial_path, dtype=float).copy()
     bounds = np.asarray(bounds, dtype=float)

@@ -1,6 +1,5 @@
-"""Check a temporary cumulative HW06--HW07 student tree without publishing."""
+"""Check the released cumulative HW06--HW07 student tree without publishing."""
 
-import ast
 import os
 from pathlib import Path
 import subprocess
@@ -10,7 +9,6 @@ import unittest
 
 from release_tools.student_release import (
     ROOT,
-    check_local_links,
     prepare_release,
     strip_solutions,
 )
@@ -19,8 +17,7 @@ from release_tools.student_release import (
 class Homework07PreviewTests(unittest.TestCase):
     def test_cumulative_preview_strips_planner_and_metric_answers(self):
         files, report = prepare_release(ROOT)
-        self.assertEqual(report["removed_solution_blocks"], 14)
-        extra = [
+        released = [
             "src/intro_robotics/planning.py",
             "src/intro_robotics/rrt.py",
             "src/intro_robotics/waypoint_optimization.py",
@@ -46,19 +43,16 @@ class Homework07PreviewTests(unittest.TestCase):
             "tests/public/test_hw07_trajectory.py",
         ]
         # planar_arm.urdf is the faculty answer; students build their own.
-        self.assertNotIn("homework/hw07/planar_arm.urdf", extra)
-        self.assertTrue(all(name not in files for name in extra))
-        for name in extra:
-            data = (ROOT / name).read_bytes()
+        self.assertNotIn("homework/hw07/planar_arm.urdf", files)
+        for name in released:
+            self.assertIn(name, files)
             if name.endswith(".py"):
-                text, count = strip_solutions(data.decode("utf-8"), name)
+                source = (ROOT / name).read_bytes().decode("utf-8")
+                text, count = strip_solutions(source, name)
                 expected = {"rrt.py": 2, "waypoint_metrics.py": 2, "trajectory.py": 1,
-                            "path_publisher.py": 1, "arm_node.py": 2}.get(Path(name).name, 0)
+                            "arm_node.py": 1}.get(Path(name).name, 0)
                 self.assertEqual(count, expected)
-                ast.parse(text, filename=name)
-                data = text.encode("utf-8")
-            files[name] = data
-        check_local_links(files)
+                self.assertEqual(files[name], text.encode("utf-8"))
 
         with tempfile.TemporaryDirectory() as temporary:
             student = Path(temporary)
@@ -93,6 +87,7 @@ empty(lambda: path_length([[0, 0], [1, 0]]), 'HW07: implement path_length')
 empty(lambda: smoothness_cost([[0, 0], [1, 0], [2, 0]]), 'HW07: implement smoothness_cost')
 from homework.hw07.trajectory import interpolate, waypoint_times
 empty(lambda: interpolate([0, 1], [[0, 0], [1, 1]], 0.5), 'HW07: implement interpolate')
+assert interpolate([0, 1], [[0, 0], [1, 1]], 2.0)[0].tolist() == [1.0, 1.0]  # provided endpoint hold
 assert waypoint_times([[0, 0], [1, 0]])[-1] == 2.0
 from homework.hw07.scenes import JOINT_NAMES, TOOL_Z, optimized_path  # ROS-free parts of problem 5
 """

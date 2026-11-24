@@ -1,11 +1,12 @@
-# HW07 draft: waypoint optimization and a ROS arm node
+# HW07: waypoint optimization and a ROS arm node
 
 Complete `path_length` and `smoothness_cost` in
 `src/intro_robotics/waypoint_metrics.py` (problems 1--4). Problem 5 adds
-`interpolate` in `homework/hw07/trajectory.py`, `trajectory_message` in
-`homework/hw07/path_publisher.py`, the two marked methods in
-`homework/hw07/arm_node.py`, and your own `homework/hw07/planar_arm.urdf`
-(a copy of your HW04 `arm.urdf` with the problem 5(a) edits). The input
+`interpolate` in `homework/hw07/trajectory.py`, the subscriber callback
+`receive_trajectory` in `homework/hw07/arm_node.py`, and your own
+`homework/hw07/planar_arm.urdf` (a copy of your HW04 `arm.urdf` with the
+problem 5(a) edits). The trajectory message builder and the node's
+`JointState` publisher are supplied for you to read. The input
 checks, optimizers, scenes, and plotting are provided. HW06's planner and
 prior arm kinematics are prerequisites. The handout gives the mathematical formulation and comparisons.
 The supplied optimizer calls your `smoothness_cost`, so complete the two HW07
@@ -76,6 +77,3 @@ arm appears once the publisher runs. `python3 -m homework.hw07.path_publisher
 `optimized_path()` in `homework/hw07/scenes.py` returns `(arm, path, valid)`
 for the path the publisher sends and runs without ROS, so you can compute
 `arm.fk(path[-1])` for problem 5(d).
-
-This is a faculty draft; the current student release covers HW01--HW05 only.
-Review and generate a separately stripped copy before distribution.

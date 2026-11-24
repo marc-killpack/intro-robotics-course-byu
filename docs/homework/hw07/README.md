@@ -10,22 +10,24 @@ continuous-collision proof.
 P5 (added Nov 19, TASKS D1(c)/(e)) is the course's publish/subscribe
 assignment: a supplied node publishes the problem-4 path as a
 `JointTrajectory` (transient-local QoS) with obstacle and tool-path markers;
-students fill the message, write a cubic Hermite `interpolate`, and write
-the arm node that publishes `JointState` at 50 Hz for `robot_state_publisher`
-and RViz, using their own HW04 URDF edited to the planar arm
+students write the cubic Hermite evaluation in `interpolate` and the arm
+node's subscriber callback; the node's 50 Hz `JointState` timer for
+`robot_state_publisher` and RViz is supplied, using their own HW04 URDF edited to the planar arm
 (`planar_arm.urdf`; the faculty copy is the answer). Old P5's view and
 interpretation became P4(d). Estimated added load: about 3 hours.
 
 Assigned: `path_length` and `smoothness_cost` in
-`src/intro_robotics/waypoint_metrics.py`; `interpolate`
-(`homework/hw07/trajectory.py`); `trajectory_message`
-(`path_publisher.py`); `receive_trajectory` and `publish_joint_state`
-(`arm_node.py`); the URDF edits. Input checks, scenes, optimizers, plotting,
-`waypoint_times`, the published path (`optimized_path` in `scenes.py`, which
-runs without ROS), the publisher node and markers, the launch file, and the
-RViz configuration are supplied. The faculty master has six marked answer regions; the current
-HW01--HW05 release excludes all HW06--HW07 files and planning/optimization
-modules. A separate temporary preview verifies stripping.
+`src/intro_robotics/waypoint_metrics.py`; the waypoint velocities and Hermite
+evaluation in `interpolate` (`homework/hw07/trajectory.py`);
+`receive_trajectory` (`arm_node.py`); the URDF edits. Input checks, scenes,
+optimizers, plotting, `waypoint_times`, `find_segment` and the endpoint hold,
+the published path (`optimized_path` in `scenes.py`, which runs without ROS),
+`trajectory_message`, the publisher node and markers, the arm node's
+`publish_joint_state` timer, the launch file, and the RViz configuration are
+supplied. *Trimmed Nov 24* from six marked answer regions to four: building
+the message mirrors unpacking it, and the `JointState` publisher repeats
+HW01. P5 still covers a subscriber callback, `time_from_start`, latched QoS,
+and the graph checks. The release includes HW07.
 
 See [the private reference](../../../instructor/HW07_REFERENCE.md). Build and
 check from the repository root:

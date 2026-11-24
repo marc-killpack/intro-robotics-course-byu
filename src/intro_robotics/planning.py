@@ -1,4 +1,4 @@
-"""Supplied planar collision geometry for the HW06 planning draft.
+"""Supplied planar collision geometry for HW06 planning.
 
 The arm uses the same explicit Joint geometry as the kinematics exercises.
 Obstacles are circles in world XY, links have a fixed radius, and edges are

@@ -1,4 +1,4 @@
-# HW06 draft: inverse kinematics and RRT-Connect
+# HW06: inverse kinematics and RRT-Connect
 
 Complete `damped_least_squares` (problem 1) and `SerialArm.ik_position`
 (problem 2, built on it) in `src/intro_robotics/kinematics.py`, then `extend_tree` and
@@ -20,6 +20,3 @@ base, an arm path in joint configuration space, and several physical arm
 poses. In the base view, the dashed line expands the obstacle by the robot
 radius. In the arm view, the checker includes whole link segments. Neither
 sampled edges nor a finite planning budget prove global or continuous safety.
-
-This is a faculty draft; the current student release covers HW01--HW05 only.
-Review and generate a separate stripped copy before distribution.

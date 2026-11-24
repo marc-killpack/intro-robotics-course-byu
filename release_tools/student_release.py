@@ -15,21 +15,25 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = Path("release_tools/release_manifest.json")
 BEGIN = "# BEGIN SOLUTION"
 END = "# END SOLUTION"
+# Faculty-only Markdown (for example AGENTS.md's planning rules). HTML
+# comments, so the faculty copy renders without them.
+FACULTY_BEGIN = "<!-- BEGIN FACULTY ONLY -->"
+FACULTY_END = "<!-- END FACULTY ONLY -->"
 
 
-def strip_solutions(text, name="<text>"):
+def strip_solutions(text, name="<text>", begin=BEGIN, end=END):
     """Reject malformed marker pairs before returning a stripped copy."""
     output = []
     inside = False
     count = 0
     for number, line in enumerate(text.splitlines(keepends=True), 1):
         marker = line.strip()
-        if marker == BEGIN:
+        if marker == begin:
             if inside:
-                raise ValueError(f"{name}:{number}: nested solution marker")
+                raise ValueError(f"{name}:{number}: nested marker")
             inside = True
             count += 1
-        elif marker == END:
+        elif marker == end:
             if not inside:
                 raise ValueError(f"{name}:{number}: unmatched end marker")
             inside = False
@@ -122,6 +126,7 @@ def prepare_release(root):
     prepared = {}
     hashes = {}
     blocks = 0
+    faculty_blocks = 0
     for source, target in manifest["files"].items():
         source_path = safe_path(root, source)
         safe_path(root, target)
@@ -152,6 +157,12 @@ def prepare_release(root):
                 raise ValueError(f"Solution marker remains in {target}")
             data = text.encode("utf-8")
             blocks += removed
+        elif source_path.suffix == ".md":
+            text, removed = strip_solutions(data.decode("utf-8"), source, FACULTY_BEGIN, FACULTY_END)
+            if "FACULTY ONLY" in text or "FACULTY-ONLY" in text:
+                raise ValueError(f"Faculty-only marker remains in {target}")
+            data = text.encode("utf-8")
+            faculty_blocks += removed
         prepared[target] = data
     check_local_links(prepared)
     report = {
@@ -161,6 +172,7 @@ def prepare_release(root):
         "scope": manifest["scope"],
         "files": len(prepared),
         "removed_solution_blocks": blocks,
+        "removed_faculty_markdown_blocks": faculty_blocks,
         "input_sha256": hashes,
     }
     return prepared, report

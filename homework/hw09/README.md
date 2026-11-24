@@ -1,4 +1,4 @@
-# HW09 draft: tool-camera visual servoing
+# HW09: tool-camera visual servoing
 
 Complete `ibvs_velocity` and `IBVSController.joint_rates` in
 `homework/hw09/ibvs_controller.py` (problem 3). Your HW04 `fk`, HW05
@@ -19,5 +19,3 @@ python -m unittest tests.public.test_hw09_ibvs
 same simulator, lockstep runner, cameras, limits, and one-period delay as the
 project. The activity blanks the tool camera from 0.30 to 0.70 s to test your
 lost-target response.
-
-This is a faculty draft; the current student release covers HW01--HW05 only.

@@ -14,8 +14,8 @@ Never strip or empty the faculty tree in place; generate a separate student
 copy using the explicit release manifest. Later assignments and prototype
 implementations require a reviewed release boundary before distribution.
 
-<!-- FACULTY-ONLY: remove the next paragraph (and this comment) before a
-student release; AGENTS.md is copied into the student manifest. -->
+<!-- BEGIN FACULTY ONLY -->
+<!-- The release tool removes everything to the END marker from student copies. -->
 For faculty planning documents, do not create standalone notes, reviews, or
 worksheets. Put open decisions, review requests, and new work items in the
 faculty task list (TASKS.md), and add other content to an existing document
@@ -23,3 +23,4 @@ listed in the design index (docs/design/README.md). If a new document is truly
 necessary, register it in that index and say why in your report. Prefer
 updating or condensing existing text over appending status narratives, and
 record dated test evidence only in the validation record.
+<!-- END FACULTY ONLY -->

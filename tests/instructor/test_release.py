@@ -26,12 +26,25 @@ class ReleaseTests(unittest.TestCase):
         ):
             with self.subTest(text=text), self.assertRaises(ValueError):
                 strip_solutions(text)
+        with self.assertRaises(ValueError):
+            strip_solutions("<!-- BEGIN FACULTY ONLY -->\nplan\n", "AGENTS.md",
+                            "<!-- BEGIN FACULTY ONLY -->", "<!-- END FACULTY ONLY -->")
 
-    def test_foundation_preview_has_labeled_stubs_and_no_project_modules(self):
+    def test_release_has_labeled_stubs_and_no_faculty_keys(self):
         source = ROOT / "homework/hw01/joint_publisher.py"
         before = source.read_bytes()
         files, report = prepare_release(ROOT)
-        self.assertEqual(report["removed_solution_blocks"], 14)
+        # HW01-HW05: 14 (two HW06 stubs live in kinematics.py); HW06 rrt 2;
+        # HW07 4; vision.py 7 (six HW08 and the project's find_board_corners);
+        # HW09 2; HW10 3; HW11 4.
+        self.assertEqual(report["removed_solution_blocks"], 36)
+        # AGENTS.md keeps its tutoring rules but loses the faculty planning paragraph.
+        self.assertEqual(report["removed_faculty_markdown_blocks"], 1)
+        agents = files["AGENTS.md"].decode()
+        self.assertIn("Never complete an assigned", agents)
+        self.assertNotIn("faculty task list", agents)
+        self.assertNotIn("FACULTY", agents)
+        self.assertIn(b"faculty task list", (ROOT / "AGENTS.md").read_bytes())
         self.assertEqual(
             files["homework/hw04/arm.urdf"],
             (ROOT / "homework/hw04/arm_starter.urdf").read_bytes(),
@@ -58,7 +71,6 @@ class ReleaseTests(unittest.TestCase):
                         "docs/homework/",
                         "tests/instructor/",
                         "examples/",
-                        "homework/hw08/",
                     )
                 )
                 for name in files
@@ -66,23 +78,29 @@ class ReleaseTests(unittest.TestCase):
         )
         self.assertEqual(before, source.read_bytes())
         self.assertIn(b"HW01", files["README.md"])
+        # Faculty answers and truth-based controllers are never released.
         for name in (
-            "camera",
-            "vision",
-            "planning",
-            "rrt",
-            "planar_scene",
-            "waypoint_optimization",
-            "waypoint_checks",
-            "waypoint_metrics",
+            "homework/hw07/planar_arm.urdf",
+            "src/intro_robotics/project/reference.py",
+            "src/intro_robotics/project/oracle.py",
+            "src/intro_robotics/planar_scene.py",
         ):
-            self.assertNotIn(f"src/intro_robotics/{name}.py", files)
-        self.assertIn("tests/public/test_hw05_planar_jacobian.py", files)
-        # The project package (and its faculty oracle) waits for its own release.
-        self.assertFalse(any(name.startswith(("src/intro_robotics/project/", "homework/project/"))
-                             for name in files))
+            self.assertNotIn(name, files)
+        for name in (
+            "tests/public/test_hw05_planar_jacobian.py",
+            "tests/public/test_hw11_rewards.py",
+            "homework/project/my_controller.py",
+            "student_ws/ros2_ws/src/conveyor_interfaces/msg/PickupRequest.msg",
+        ):
+            self.assertIn(name, files)
+        for name in ("src/intro_robotics/vision.py", "homework/hw09/ibvs_controller.py",
+                     "homework/hw10/learning.py", "homework/hw11/rewards.py"):
+            self.assertIn(b"NotImplementedError", files[name])
+        self.assertNotIn(b"findHomography(np", files["src/intro_robotics/vision.py"])
+        self.assertNotIn(b"camera_velocity =", files["homework/hw09/ibvs_controller.py"])
+        self.assertNotIn(b"loss.backward()", files["homework/hw10/learning.py"])
 
-    def test_generated_package_imports_and_all_nine_future_methods_stay_empty(self):
+    def test_generated_package_imports_and_assigned_methods_stay_empty(self):
         with tempfile.TemporaryDirectory() as temporary:
             student = Path(temporary) / "student"
             write_release(ROOT, student, allow_dirty=True)
@@ -102,7 +120,7 @@ from intro_robotics.visualization_3d import ArmMeshObject
 assert Path(intro_robotics.__file__).resolve().is_relative_to(Path.cwd() / 'src')
 for module in pkgutil.walk_packages(intro_robotics.__path__, 'intro_robotics.'):
     importlib.import_module(module.name)
-for name in ('camera', 'vision', 'planning', 'rrt', 'planar_scene', 'waypoint_optimization', 'waypoint_checks', 'waypoint_metrics'):
+for name in ('planar_scene', 'project.reference', 'project.oracle'):
     assert importlib.util.find_spec('intro_robotics.' + name) is None
 def empty(function, arguments, label):
     try:
@@ -127,6 +145,14 @@ empty(damped_least_squares, [np.eye(2), [0.0, 0.0]], 'HW06')
 empty(arm.ik_position, [[0.0, 0.0], [0.0]], 'HW06')
 from homework.hw03.frame_broadcaster import frame_transforms
 empty(frame_transforms, [], 'HW03')
+from intro_robotics import vision
+empty(vision.to_plane, [np.eye(3), (0, 0)], 'HW08')
+empty(vision.fit_velocity, [[0, 1], [[0, 0], [1, 0]]], 'HW08')
+empty(vision.find_board_corners, [np.zeros((4, 4, 3), np.uint8), {'squares': (3, 3)}], 'Project')
+from homework.hw09.ibvs_controller import ibvs_velocity
+empty(ibvs_velocity, [(0, 0), (1, 1), 0.3, 300.0, 0.0, 2.0], 'HW09')
+from homework.hw11.rewards import sparse_reward
+empty(sparse_reward, [{'success': False}], 'HW11')
 scene = VizScene()
 scene.add_frame(np.eye(4), 'W')
 scene.update(As=[np.eye(4)])

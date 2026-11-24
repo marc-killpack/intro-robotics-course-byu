@@ -100,9 +100,10 @@ origin with no rotation; make \texttt{joint1} a fixed joint named
 \texttt{joint1} and \texttt{joint2}, with axis \mbox{\texttt{0 0 1}} and
 limits $\pm2.8$ rad. Why must both axes be $Z$ for this arm, and at what height do
 the links move? Give the position of \texttt{arm\_tool} for $q=[0,0]$.
-\item \textbf{Message.} Complete \texttt{trajectory\_\allowbreak message} in
+\item \textbf{Message.} Read the supplied \texttt{trajectory\_\allowbreak message} in
 \texttt{path\_publisher.py}: one trajectory point per waypoint, with its
-positions and \texttt{time\_\allowbreak from\_\allowbreak start}. The given
+positions and \texttt{time\_\allowbreak from\_\allowbreak start}. Your arm node
+unpacks these same fields. The given
 \texttt{waypoint\_\allowbreak times} in \texttt{trajectory.py} gives each
 segment the time its largest joint change needs at $0.5$ rad/s. Relate this
 to problem~1(c): what does the waypoint index not tell you? How long is the
@@ -118,16 +119,18 @@ q(t)=h_{00}(s)\,q_i+h\,h_{10}(s)\,v_i+h_{01}(s)\,q_{i+1}+h\,h_{11}(s)\,v_{i+1},
 \[
 h_{00}=2s^3-3s^2+1,\quad h_{10}=s^3-2s^2+s,\quad h_{01}=-2s^3+3s^2,\quad h_{11}=s^3-s^2,
 \]
-and $\dot q(t)$ is its time derivative ($ds/dt=1/h$). Outside
-$[t_0,t_N]$, return the nearest endpoint with zero velocity. Check that $q$
+and $\dot q(t)$ is its time derivative ($ds/dt=1/h$). The supplied lines
+handle $t$ outside $[t_0,t_N]$ (nearest endpoint, zero velocity) and find
+segment $i$; you write the waypoint velocities and the evaluation. Check that $q$
 passes through every waypoint and that $\dot q$ is the same on both sides of
 an interior waypoint. Why is this smoother than straight lines between
 waypoints?
-\item \textbf{Node and graph.} In \texttt{arm\_node.py}, complete
-\texttt{receive\_\allowbreak trajectory} (store names, times in seconds,
-positions, and the arrival time) and \texttt{publish\_\allowbreak joint\_state}
-(interpolate at the elapsed time; publish stamp, names, positions, and
-velocities). In three
+\item \textbf{Node and graph.} In \texttt{arm\_node.py}, complete the
+subscriber callback \texttt{receive\_\allowbreak trajectory} (store names,
+times in seconds from \texttt{sec} and \texttt{nanosec}, positions, and the
+arrival time). The supplied timer callback \texttt{publish\_\allowbreak
+joint\_state} calls your \texttt{interpolate} at the elapsed time and
+publishes the \texttt{JointState}, as your HW01 node did. In three
 course-container shells at \path{/workspace}, run
 \begin{lstlisting}
 ros2 launch homework/hw07/view_planar_arm.launch.py

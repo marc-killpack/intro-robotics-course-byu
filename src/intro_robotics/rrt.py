@@ -1,8 +1,7 @@
-"""HW06 instructor master: a small, reversible two-tree planner.
+"""HW06: a small, reversible two-tree planner (RRT-Connect).
 
-The class and input checks are supplied. Students complete extend_tree and
-the central rrt_connect loop; answer regions are removed in a student copy.
-This draft is not in the current HW01--HW05 release manifest.
+The Tree class and input checks are supplied. Complete extend_tree and the
+central rrt_connect loop.
 """
 
 import numpy as np
