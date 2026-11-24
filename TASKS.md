@@ -194,6 +194,18 @@ drafting round; review the project output (R7) before setting grade levels.
   ME 537 (flags in the migration inventory and backlog).
 - [ ] **R11. Implementation diff** — review the uncommitted faculty change
   set; commit approved changes.
+- [ ] **R13. Course poster, "Teach a robot to see, decide, and pick" (Nov 24)**
+  — the student figure in [docs/figures/](docs/figures/robot_stack.py),
+  redrawn as a poster after the first review: ideas (outcomes 2--9) on top,
+  the tools that build them (ROS 2 + RViz as one tool; no arm viewer), and
+  an illustrated conveyor cell whose numbered parts each tool works with,
+  labeled ROS 2 topic arrows, and a grid of where each tool returns. Solid
+  lines mean "built with", dotted "used with" (ROS 2, Matplotlib,
+  PlotJuggler; Docker's lines were dropped as too crowded). Check the
+  idea-to-tool and tool-to-part links and each panel's "where you learn
+  it", project role, real-robot counterpart, "reach for it when", and
+  "beyond this course" text. Edit the content in `robot_stack.py` and run
+  it to regenerate `robot_stack.svg` and `robot_stack.html`.
 
 ## 3. Open work
 
@@ -219,12 +231,15 @@ drafting round; review the project output (R7) before setting grade levels.
 - [ ] Project session 11.2: use PlotJuggler on `/project/joint_states`, `joint_velocity_command`, and `actuator/state` to see saturation and delay; decide whether the supplied controller node should publish a debug topic (for example the IBVS feature error) for live plotting.
 - [ ] Add a short roll-pitch-yaw segment to the week-4 lecture plan, built from `rotx`/`roty`/`rotz`, for reading URDF origins. Teach it in the current frame (instructor, Nov 23): yaw about Z, then pitch about the new Y, then roll about the new X, giving the same `Rz @ Ry @ Rx` that URDF describes with fixed axes.
 
+- [ ] Course poster (R13): show it in lecture 1.1, return to it at the first lecture for each new tool (OpenCV in V1, PyTorch in L1, SB3 in RL1), and at project launch PL1, so every tool lands on the same picture.
+
 ### Homework pilots and release manifest
 
 - [ ] Pilot student time budgets for HW01--HW07 with students; adjust problem counts. If HW05 runs long, apply the ordered trims in [its faculty README](docs/homework/hw05/README.md) (Nov 19); HW07 P5 adds about 3 hours.
 - [ ] Pilot HW08 for the one-week workload target.
 - [ ] Pilot HW10 on student laptops and in the container with HW11 (training minutes; the 3--4 hour workload).
 - [ ] Pilot HW11 on student laptops (training minutes per 600k-step run; the faculty laptop took 3.5 min alone, 6.9 min in the container; also the 5.28 GB image download and disk space) and confirm the about-4-hour workload plus 15--30 min of unattended training.
+- [ ] Course poster: link it from the student guide too (release manifest and `PUBLIC_README.md` done Nov 24; titled "Line upon Line", 2 Nephi 28:30). Regenerate them whenever a tool, topic, or assignment they show changes.
 - [ ] Expand the release manifest one assignment at a time, only after its review item above is approved.
 
 ### Conveyor project

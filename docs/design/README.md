@@ -36,6 +36,7 @@ request in TASKS.md.
 | **Technical reference** | | |
 | [Arm prototype](arm-prototype.md) | `Joint`/`SerialArm` frames, units, API; the pyqtgraph and Matplotlib viewers and their open checks | Reviewing the arm API or deciding the student viewer (D6) |
 | [Validation record](validation.md) | Dated test counts, commands, and platform observations | Checking evidence behind a completed task |
+| [Course poster](../figures/robot_stack.py) | Student figure (Nov 24): ideas (outcomes 2--9), the tools that build them, and the parts of an illustrated conveyor cell each tool works with, simulated or real, with a grid of where each tool returns. The script holds the content and writes `robot_stack.svg` (slides, handouts) and `robot_stack.html` (interactive) | Reviewing R13; changing a tool, topic, or assignment it shows; preparing lectures 1.1 and PL1 |
 | [Release workflow](../../release_tools/README.md) | Allowlisted student-copy generation and pre-publication checklist | Preparing a student copy |
 | **Source material and history** | | |
 | [Instructor briefs](../../instructor/briefs/README.md) | Your three original unit briefs (planning, vision, PyTorch/RL), unedited | Checking original intent |

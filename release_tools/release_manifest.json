@@ -15,6 +15,8 @@
     "docs/windows.md": "docs/windows.md",
     "docs/macos.md": "docs/macos.md",
     "docs/gui.md": "docs/gui.md",
+    "docs/figures/robot_stack.svg": "docs/figures/robot_stack.svg",
+    "docs/figures/robot_stack.html": "docs/figures/robot_stack.html",
     "homework/hw01/README.md": "homework/hw01/README.md",
     "homework/hw01/joint_publisher.py": "homework/hw01/joint_publisher.py",
     "homework/hw01/support.py": "homework/hw01/support.py",

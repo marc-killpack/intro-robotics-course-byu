@@ -12,6 +12,16 @@ intentionally remain labeled stubs until you implement them. HW02--HW05 run
 Python on your own computer; their ROS problems and later work run in the
 container. See [two places to run commands](docs/setup.md#two-places-to-run-commands).
 
+## Where the course is headed
+
+[![Course ideas, the tools that build them, and the robot they work with](docs/figures/robot_stack.svg)](docs/figures/robot_stack.svg)
+
+Each idea you learn is built with a tool, and each tool works with a part of
+the robot in the final conveyor project. For the clickable version, open
+`docs/figures/robot_stack.html` in your browser from your copy of this
+repository (double-click it in your file browser), then click any idea,
+tool, or part to see where you learn it and how real robots use it.
+
 This repository uses ROS 2 Jazzy on Ubuntu 24.04 inside Docker. Start Docker
 Desktop on Windows/macOS, or your Docker engine on Linux. From this folder
 in your computer's terminal:

@@ -4,6 +4,22 @@ Updated November 23, 2026. This record covers the uncommitted faculty change
 set, not a published semester release. [TASKS.md](../../TASKS.md) distinguishes
 implemented work from faculty approval and further platform validation.
 
+## November 24: course poster (R13)
+
+`python docs/figures/robot_stack.py` wrote `robot_stack.svg` (static, 1240
+by 1010) and `robot_stack.html`, after the poster redraw (ideas on top,
+ROS 2 + RViz as one tool, illustrated conveyor cell). Headless Edge renders
+of the SVG and of the page in light and dark themes showed no overlapping
+labels; in the page, the default selection, computer vision, lit OpenCV and
+both cameras and dimmed the rest. A second pass the same day removed the
+course/real switch, added dotted "used with" lines and topic-named ROS 2
+arrows, and made the page a complete HTML document; the headless render
+opened it straight from disk (file://), as a student's copy would. Tool usage in the grid was checked against the files that import each
+library (SciPy only in `examples/position_only_branching.py`; OpenCV in
+HW08, HW09, and the project; PyTorch, Gymnasium, and SB3 in HW10, HW11, and
+the project RL wrapper) and against the project launch file and node
+message types.
+
 ## November 23: native viewer setup (D12) and PlotJuggler
 
 **Install matrix.** The old `visualization` pin, PySide6 6.8.3, requires
