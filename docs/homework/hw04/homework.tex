@@ -118,6 +118,8 @@ hand result. Save a screenshot of RViz and the printed comparison, then try
 one pose of your own.
 \item A URDF \texttt{rpy="r p y"} means
 $R=\operatorname{Rot}_z(y)\operatorname{Rot}_y(p)\operatorname{Rot}_x(r)$.
+Read it in the current frame, as in HW02 problem 2(a): yaw about Z, then
+pitch about the new Y, then roll about the new X.
 Write \texttt{world\_joint}'s rotation as a matrix and compare it with
 problem 4(a). The link visuals use \texttt{rpy="0 1.5708 0"} to lay a
 cylinder (whose length runs along its local Z) along X; show why with

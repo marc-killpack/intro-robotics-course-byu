@@ -36,10 +36,11 @@ class TransformTests(unittest.TestCase):
         assert_allclose((transform @ [0, 0, 1, 0])[:3], transform[:3, 2])
 
     def test_rotation_order_and_camera_hand_values(self):
-        fixed = rotz(np.pi / 2) @ rotx(np.pi / 2)
-        current = rotx(np.pi / 2) @ rotz(np.pi / 2)
-        assert_allclose(fixed, [[0, 0, 1], [1, 0, 0], [0, 1, 0]], atol=1e-12)
-        assert_allclose(current, [[0, -1, 0], [0, 0, -1], [1, 0, 0]], atol=1e-12)
+        # HW02 P2(b): current-frame quarter turns in both orders.
+        z_then_x = rotz(np.pi / 2) @ rotx(np.pi / 2)
+        x_then_z = rotx(np.pi / 2) @ rotz(np.pi / 2)
+        assert_allclose(z_then_x, [[0, 0, 1], [1, 0, 0], [0, 1, 0]], atol=1e-12)
+        assert_allclose(x_then_z, [[0, -1, 0], [0, 0, -1], [1, 0, 0]], atol=1e-12)
         camera = np.column_stack(([1, 0, 0], [0, 0, -1], [0, 1, 0]))
         assert_allclose(camera @ [1, 2, 3], [1, 3, -2])
         assert_allclose(

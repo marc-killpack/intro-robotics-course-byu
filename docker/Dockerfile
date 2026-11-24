@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ros-jazzy-rviz2 \
         ros-jazzy-robot-state-publisher \
         ros-jazzy-joint-state-publisher-gui \
+        ros-jazzy-plotjuggler-ros \
         ros-jazzy-ros2launch \
         ros-jazzy-ament-cmake \
         python3-pip \

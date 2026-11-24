@@ -88,8 +88,11 @@ The release generator removes the mathematical answer bodies while retaining
 their guidance and homework-labeled errors. The DH adapter and project
 prototypes stay faculty-only. These boundaries await faculty review.
 
-The same Docker desktop now includes NumPy, Matplotlib, and Tk. Rebuild it
-after pulling these environment changes. In a container shell at `/workspace`:
+Students run HW02--HW05 natively in a `.venv` (`pip install -e
+".[visualization]"`; see [setup](docs/setup.md#python-on-your-own-computer-hw02--hw05)),
+so the viewers open as ordinary windows. The ROS problems and everything from
+HW06 on run in the container, which also runs these commands from
+`/workspace` as a fallback. From the repository root with `.venv` activated:
 
 ```text
 python -m homework.hw02.hw02_rotations --show
@@ -106,7 +109,7 @@ complete each stage before its scene can run. See the
 For faculty Python development, create a virtual environment and run:
 
 ```text
-python -m pip install -e .
+python -m pip install -e ".[visualization]"
 python -m unittest discover -s tests/instructor -v
 python examples/arm_viewer.py --model planar
 ```

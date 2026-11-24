@@ -83,6 +83,24 @@ rendering and host load can affect what you observe. Check that your node is
 the **only publisher** on `/joint_states`. RViz and robot-state-publisher are
 subscribers. If the robot jumps between poses, check for a second publisher.
 
+Then plot the motion over time with PlotJuggler, in the same second shell:
+
+```bash
+ros2 run plotjuggler plotjuggler
+```
+
+In its window on the browser desktop:
+
+1. Set **Buffer** to 30 seconds, so the plot keeps at least two periods.
+2. Under **Streaming**, choose **ROS2 Topic Subscriber** and click **Start**.
+3. Select `/joint_states` and click **OK**.
+4. Drag `/joint_states/head_yaw/position` from the list on the left into the
+   plot area.
+
+Read the period and amplitude from the plot and compare them with your
+`joint_positions` function. A "Telemetry reply error" line in the terminal
+is expected: the course container blocks PlotJuggler's usage report.
+
 Explain how names correspond to positions, what the timestamp means, and why
 a timer is used. The provided scaffold handles setup and shutdown so the
 student work stays focused on message contents and motion over time.

@@ -8,6 +8,8 @@ import unittest
 
 from release_tools.student_release import (
     ROOT,
+    check_local_links,
+    heading_anchors,
     prepare_release,
     safe_path,
     strip_solutions,
@@ -138,6 +140,38 @@ scene.fig.canvas.draw()
                 text=True,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_heading_anchors_follow_github_rules(self):
+        text = (
+            "# Python on your own computer (HW02--HW05)\n"
+            "## Two places to run commands\n"
+            "## Notes\n"
+            "## Notes\n"
+            "```text\n# not a heading\n```\n"
+            '<a id="custom-spot"></a>\n'
+        )
+        self.assertEqual(
+            heading_anchors(text),
+            {
+                "python-on-your-own-computer-hw02--hw05",
+                "two-places-to-run-commands",
+                "notes",
+                "notes-1",
+                "custom-spot",
+            },
+        )
+
+    def test_section_links_are_checked(self):
+        setup = b"# Setup\n## Two places to run commands\n"
+        good = {
+            "docs/setup.md": setup,
+            "GUIDE.md": b"[ok](docs/setup.md#two-places-to-run-commands) [top](#guide)\n# Guide\n",
+        }
+        check_local_links(good)
+        for link in ("docs/setup.md#three-places", "#missing"):
+            files = {"docs/setup.md": setup, "GUIDE.md": f"# Guide\n[bad]({link})\n".encode()}
+            with self.subTest(link=link), self.assertRaises(ValueError):
+                check_local_links(files)
 
     def test_traversal_is_rejected(self):
         with self.assertRaises(ValueError):

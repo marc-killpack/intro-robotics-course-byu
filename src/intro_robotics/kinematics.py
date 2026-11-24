@@ -200,7 +200,8 @@ def damped_least_squares(jacobian, velocity, damping=0.0):
         two position rows of jacob_planar.
     velocity: v, the desired task velocity (m,), in the units and frame of
         J's rows (m/s in frame 0 for jacob_planar's position rows).
-    damping: d (lambda in the handout), zero or positive.
+    damping: d (lambda in the handout), zero or positive. This is a numerical
+        term that keeps the solve well behaved, not physical damping or friction.
     Returns the joint rates qdot (n,), rad/s or m/s.
 
     With damping 0 and a square, invertible J this equals J^-1 v. With more

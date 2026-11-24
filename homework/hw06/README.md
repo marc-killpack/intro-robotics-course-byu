@@ -1,4 +1,4 @@
-# HW06 draft: RRT-Connect
+# HW06 draft: inverse kinematics and RRT-Connect
 
 Complete `damped_least_squares` (problem 1) and `SerialArm.ik_position`
 (problem 2, built on it) in `src/intro_robotics/kinematics.py`, then `extend_tree` and

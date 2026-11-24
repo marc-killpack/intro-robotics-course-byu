@@ -12,7 +12,7 @@ class timings.
 
 | Session | 50-minute sequence | Active check / preparation |
 | --- | --- | --- |
-| IK1 (6.1): From tool goals to joint motion | 10 min square case: solve $J_{xy}\dot q=v$, and the direction lost where $\det J_{xy}=0$ (HW06 problem 1(a)); 15 min redundant arm: the minimum-norm solve $J^T(JJ^T)^{-1}v$, the null space, and damping as a tradeoff near a straight arm (HW06 1(c--d)); 15 min IK by iteration: treat the XY error as a velocity, step with `damped_least_squares`, clip to joint limits, stop at a tolerance (HW06 `ik_position`); 10 min worked example: HW06's target from two starting guesses gives the two elbow solutions | Why can the error be treated like a velocity, and why does the step size matter? Students predict which elbow solution each start reaches. This is the damped pseudo-inverse IK the planning, servoing, and project units reuse (D5(f)). |
+| IK1 (6.1): From tool goals to joint motion | 10 min square case: solve $J_{xy}\dot q=v$, and the direction lost where $\det J_{xy}=0$ (HW06 problem 1(a)); 15 min redundant arm: the minimum-norm solve $J^T(JJ^T)^{-1}v$, the null space, and damping (a numerical term, not physical damping) as a tradeoff near a straight arm (HW06 1(c--d)); 15 min IK by iteration: treat the XY error as a velocity, step with `damped_least_squares`, clip to joint limits, stop at a tolerance (HW06 `ik_position`); 10 min worked example: HW06's target from two starting guesses gives the two elbow solutions | Why can the error be treated like a velocity, and why does the step size matter? Students predict which elbow solution each start reaches. This is the damped pseudo-inverse IK the planning, servoing, and project units reuse (D5(f)). |
 
 ## Planning: six proposed lectures
 

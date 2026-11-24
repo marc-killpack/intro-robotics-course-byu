@@ -5,11 +5,15 @@ interfaces, and evidence. HW06--HW07 have draft handouts and marked scaffolds;
 HW08--HW09 have draft handouts but no student-ready scaffold. HW10 remains a
 design sketch. None is in the student manifest, and all homework is unreviewed.
 Schedule and project choices remain subject to instructor input.
-The [unit briefs](briefs/README.md) retain the full proposed outcomes.
+The [unit briefs](briefs/README.md) retain the full proposed outcomes. Each
+**Outcomes** line cites the finalized course outcomes
+([roadmap](../COURSE_ROADMAP.md#course-learning-outcomes), Nov 23) first,
+then the unit-brief IDs.
 
-## HW06: configuration spaces and RRT-Connect
+## HW06: inverse kinematics, configuration spaces, and RRT-Connect
 
-**Outcomes:** planning LO1--LO3 and parts of LO6--LO7. Start with a point or
+**Outcomes:** course 3 (IK), 4 (damped least squares), and 5 (planning);
+planning LO1--LO3 and parts of LO6--LO7. Start with a point or
 circular base, then use the same planner interface for a provided two-joint
 arm. Aim to implement the central two-tree algorithm with a scaffold small
 enough for students who are still learning classes.
@@ -41,7 +45,8 @@ excludes them until faculty review. Verify actual student time in a pilot.
 
 ## HW07: waypoint optimization and validation
 
-**Outcomes:** planning LO4--LO7. A two-part homework can start with the same
+**Outcomes:** course 5, and 1 (the problem-5 trajectory node); planning
+LO4--LO7. A two-part homework can start with the same
 HW06 obstacle and a valid seed path.
 
 1. Given several joint waypoints, write the decision variables, fixed
@@ -80,7 +85,7 @@ hand projection (problem 1) to HW09; cut area/bounding-box/orientation
 measurements and the written truth comparison (an automatic check prints the
 error).
 
-**Outcomes:** CV1--CV5. Handwork and an image-based exercise share an oblique
+**Outcomes:** course 6; CV1--CV5. Handwork and an image-based exercise share an oblique
 fixed-camera planar scene.
 
 1. Project one camera-frame 3D point by hand and explain depth ambiguity.
@@ -103,7 +108,7 @@ now demonstrates OpenCV homographies with two synthetic views and held-out
 corners. The object sequence still needs OpenCV, variation, lost-target cases,
 and independent data review before becoming a student exercise.
 
-## HW09: planar visual feedback
+## HW09: tool-camera visual servoing
 
 *Rewritten Nov 19* as tool-camera IBVS (TASKS.md D5, D3); see
 [the handout source](../docs/homework/hw09/README.md) and
@@ -115,7 +120,7 @@ project S2; the gain/delay study and the measure-then-move comparison are
 lecture demonstrations (`examples/ibvs_lecture_demos.py`). The fixed-camera
 design below is kept only as background for that comparison.
 
-**Outcomes:** VS1--VS3. Begin with a fixed camera and stationary target.
+**Outcomes:** course 7 (with 4's damped solve); VS1--VS3. Begin with a fixed camera and stationary target.
 
 1. Form target and tool positions in a common frame, sketch an error vector,
    and predict the sign of a corrective velocity. Identify the dimensions of
@@ -148,7 +153,7 @@ on CPU in minutes, and compare a held-out confusion matrix with their HW08 rule
 classifier. The grouped-split explanation becomes a lecture question;
 save/reload and the conveyor-frame trial are cut.
 
-**Outcomes:** ML1--ML5. Use object crops from varied scenes, with geometry and
+**Outcomes:** course 8; ML1--ML5. Use object crops from varied scenes, with geometry and
 appearance designed so color alone does not reveal the shape label.
 
 1. Identify segmentation, classification, localization, and control inputs
@@ -168,6 +173,8 @@ and dependency versions, independent data, and CPU runtime are not tested
 yet. A project team may use either a learned or rule-based classifier.
 
 ## RL introduction and reward-shaping homework
+
+**Outcomes:** course 9.
 
 *Revised Nov 19 (TASKS.md D3):* two lectures after the project launch (rollouts
 in simulation, reward, the policy as a network, PPO intuition, SB3). The short

@@ -59,7 +59,9 @@ drawn before FK is implemented; updates preserve the camera, and
 `fit_view()` fits all arms and standalone frames. Its slider player remains
 available with `--backend matplotlib`.
 
-From `/workspace` in the course container (see [the student guide](../../STUDENT_GUIDE.md)):
+Students run these natively from the repository root with `.venv` activated
+(decision D12; see [the student guide](../../STUDENT_GUIDE.md)); the same
+commands work from `/workspace` in the course container as a fallback:
 
 ```text
 python -m homework.hw02.hw02_rotations --show
@@ -70,28 +72,32 @@ python -m homework.hw05.hw05_planar_jacobian --show
 python -m homework.hw05.play_velocity                  # joint contributions
 ```
 
-Windows runs these windows on the same noVNC desktop as RViz. Optional
-faculty demonstrations after `python -m pip install -e .[visualization]`:
+In the container fallback, the windows open on the noVNC desktop beside RViz.
+Optional faculty demonstrations after `python -m pip install -e ".[visualization]"`:
 `python examples/arm_viewer.py --model planar|spatial|dh`.
 
 **Evidence.** The Matplotlib viewer passed real Tk event-loop, frame-update,
 and arm-slider checks in the Windows-hosted AMD64 image on November 13.
-Mesh-geometry tests check pyqtgraph mesh placement against FK on the host;
-`tests/instructor/pyqtgraph_gui_probe.py` is the manual GUI probe. See the
-[validation record](validation.md) for dated results.
+Mesh-geometry tests check pyqtgraph mesh placement against FK on the host.
+`tests/instructor/pyqtgraph_gui_probe.py` opens each viewer, sets sliders,
+checks the rendered pixels, and closes by itself (run it as a module:
+`python -m tests.instructor.pyqtgraph_gui_probe tmp/probe --mode spatial|planar|scene`).
+It passed natively on Windows on November 23 with PySide6-Essentials 6.12.
+See the [validation record](validation.md) for dated results.
 
 **Decision D6 (Nov 19)** (work items in [TASKS.md](../../TASKS.md)): pyqtgraph
 for every interactive view; remove the Matplotlib slider player and
-`--backend` once the pyqtgraph probe passes in the Docker browser desktop
-(software OpenGL) and on Apple Silicon; keep the Matplotlib scene for
-`--save` images and static sketches. In `visualization_3d.py`, delete only the
-unused `TransformMPL`/`PlanarMPL` classes; keep ellipses, `wander`, the
-velocity panel, and STL support, because students use but never edit it.
+`--backend` once the pyqtgraph probe passes natively on Windows and Apple
+Silicon (D12; the container is the fallback); keep the Matplotlib scene for
+`--save` images and static sketches. In `visualization_3d.py`, only the
+unused `TransformMPL`/`PlanarMPL` classes were deleted (Nov 23); ellipses,
+`wander`, the velocity panel, and STL support stay, because students use but
+never edit it.
 
 **Still open:**
 
-- Responsiveness and CPU cost on the Windows browser desktop and Apple
-  Silicon have not been measured.
+- Native runs on Apple Silicon, Intel Mac, and Linux have not been checked;
+  nor has the container fallback's responsiveness on the noVNC desktop.
 - Check sliders, labels, multiple arms, orbit/zoom, and cleanup hands-on.
 - RViz remains the ROS/URDF display; showing the Python arm there would need
   a bridge (see decision D1).

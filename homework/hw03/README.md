@@ -10,8 +10,8 @@ python -m homework.hw03.hw03_transforms --show
 python -m homework.hw03.hw03_transforms --save tmp/hw03.png
 ```
 
-Run these inside the course container from `/workspace`. Figures open in the
-browser desktop from HW01. The supplied scene defines the world, base, and
+Run these in a host terminal with `.venv` activated, as in HW02; figures open
+on your own desktop. The supplied scene defines the world, base, and
 camera poses from the handout. It does not solve the point-conversion questions.
 
 Write the block inverse and hand calculations before checking them in code.
@@ -26,8 +26,10 @@ before passing it to `add_frame`. No DH modeling is required.
 
 ## Problem 4: the same frames in ROS TF
 
-Complete `frame_transforms()` in `frame_broadcaster.py`. Then, in a
-container shell (`docker compose exec course bash`, then `cd /workspace`):
+This problem uses ROS, so it runs in the container; your `se3` and `inv`
+from `transforms.py` are the same files there. Complete `frame_transforms()`
+in `frame_broadcaster.py`. Start the container (`docker compose up -d`), then
+in a container shell (`docker compose exec course bash`, then `cd /workspace`):
 
 ```bash
 python3 -m homework.hw03.frame_broadcaster

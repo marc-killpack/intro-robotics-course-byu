@@ -1,4 +1,4 @@
-# HW05 faculty draft: planar Jacobians
+# HW05 faculty draft: velocity kinematics with planar Jacobians
 
 Two-page handout for late week 4 through week 5. Students
 derive a two-link Jacobian, implement `jacob_planar`, interpret a three-link

@@ -1,6 +1,6 @@
 # Planning and design index
 
-Updated November 18, 2026. This is the **single landing page for faculty
+Updated November 23, 2026. This is the **single landing page for faculty
 planning material**. Open decisions, the review queue, and open work are in
 [TASKS.md](../../TASKS.md); this page says what each other document is for and
 records the decisions already made, with their rationale. It is also meant to
@@ -108,9 +108,10 @@ syntax should not get ahead of the students:
 ### General geometry; deliberately planar velocities
 
 Student orientation work uses rotation matrices. Roll-pitch-yaw is introduced
-briefly in the week-4 lecture, as products of the HW02 named-axis matrices, so
-students can read URDF joint origins; quaternions, axis/angle conversions, and
-Euler-angle extraction are not taught (instructor decision, Nov 18). A joint has an axis in
+briefly in the week-4 lecture, as products of the HW02 named-axis matrices read
+in the current frame, so students can read URDF joint origins; fixed-frame
+composition, quaternions, axis/angle conversions, and Euler-angle extraction
+are not taught (instructor decisions, Nov 18 and 23). A joint has an axis in
 its local frame, fixed `origin` and `tip` transforms, and a motion type.
 Its link transform is `origin @ motion(q) @ tip`. All poses are homogeneous
 matrices. A physical joint axis is mechanism geometry, not an assigned
@@ -155,14 +156,30 @@ pyqtgraph viewer was adapted to explicit joints and is now the default slider
 viewer (`play_arm`, `play_velocity`). Matplotlib remains for frame sketches,
 activity `--save` images, and numerical plots. Decision D6 (Nov 19):
 pyqtgraph for everything students view interactively; the Matplotlib slider
-player is removed once the pyqtgraph probe passes in the course image; only
+player is removed once the pyqtgraph probe passes natively (see D12); only
 unused code is trimmed from the ported viewer. Details are in the
 [arm prototype notes](arm-prototype.md#viewers).
 
-Use the same Docker image for the foundation Python assignments. It now
-includes NumPy, Matplotlib, and Tk; the mounted package is installed at
-startup in a virtual environment. Do not bake faculty source or answers
-into the image. This avoids requiring a separate native Python GUI setup.
+*Native Python for HW02--HW05 (instructor, Nov 23; TASKS D12).* Students
+learn ROS, URDF, and RViz in HW01, then develop HW02--HW05 natively in a
+`.venv` (`pip install -e ".[visualization]"`, the ME 537 pattern), so the
+pyqtgraph viewer opens as a native window; it has run natively on all
+platforms in ME 537. Their code runs in the container when it is *used* in
+ROS (HW03 problem 4, HW04 problem 5) and for all work from HW06 on. The
+container mounts the same source, installs it in editable mode at startup,
+and remains the fallback for the viewer. Students are taught one rule: ROS,
+TF, URDF, or RViz means the container shell; otherwise HW02--HW05 use the
+host terminal ([setup](../setup.md#two-places-to-run-commands)). The
+`visualization` extra uses version ranges (PySide6-Essentials 6.8.3 to
+6.12, pyqtgraph 0.14) rather than exact pins, because PySide6 6.8 stops at
+Python 3.13; students are told to use Python 3.12 or 3.13. The image keeps
+its own exact pins. Do not bake faculty source or answers into the image.
+
+PlotJuggler (`ros-jazzy-plotjuggler-ros`) is in the image for plotting ROS
+topics over time (instructor, Nov 23); HW01 problem 4(e) is its first use,
+and its other assignment and lecture uses are work items in TASKS.md. Its
+startup usage report, which has no off switch, is blocked in `compose.yaml`
+with `extra_hosts`.
 
 The baseline is CPU-only student laptops. Do not make graphics-heavy physics
 or a GPU a prerequisite. The instructor chose GUI-enabled OpenCV so students

@@ -20,30 +20,42 @@ The [October roadmap](docs/design/archive/roadmap-october-2026.md) and the
 - Use outside teaching resources only after instructor review, confirmation
   of license or other reuse permission, and appropriate attribution.
 
-## Course learning outcomes (draft for TASKS.md D2)
+## Course learning outcomes
 
-Drafted November 19 from the planned homework, the unit briefs, and the
-lecture outlines; for instructor review (mark each keep, edit, or cut).
-Outcomes 1--3 and 6 adapt the ME 537 outcomes (SO(3) and SE(3); serial
-linkage kinematics; joint versus Cartesian space; applications and final
-project); ME 537's dynamics and joint-control outcomes are left out, with
-feedback control appearing here as visual servoing (outcome 5). "Code" says
-whether students implement, modify, or use the code. Students should be able
-to:
+Finalized November 23 from the instructor's review of the November 19 draft
+(TASKS.md D2). Outcomes are listed in teaching order, and each gives its
+tier: **core** (required, assessed repeatedly, and needed by the project),
+**supporting** (required and assessed; supports the project), or
+**introductory** (exposure, assessed lightly). Outcomes 2--4 and 10 adapt
+the ME 537 outcomes (SO(3) and SE(3); serial linkage kinematics; joint
+versus Cartesian space; applications and final project); ME 537's dynamics
+and joint-control outcomes are left out, with feedback control appearing
+here as visual servoing (outcome 7). Evaluating methods with evidence
+(repeated or held-out cases, a simple baseline, and reporting failures with
+successes) is built into outcomes 5 and 8--10 rather than listed separately.
+"Code" says whether students implement, modify, or use the code. Students
+should be able to:
 
-**Top tier: required, assessed repeatedly, and needed by the project**
+1. **ROS 2 Experience: Build and inspect simple ROS 2 programs.**
+   - Explain nodes, topics, messages, timers, and simulated time.
+   - Write a publisher (HW01) and a node that subscribes and publishes a
+     smooth trajectory (HW07).
+   - Use TF, URDF models, and RViz to visualize and check robot state.
 
-1. **SO(3) and SE(3): describe a rigid body's orientation and pose.**
+   *Tier:* supporting. *Assessed:* HW01, HW03, HW04, HW07, project
+   demonstration. *Code:* implement small nodes; use the supplied project
+   graph.
+2. **SO(3) and SE(3): Describe a rigid body's orientation and pose.**
    - Define orientation with rotation matrices (SO(3)), and position plus
      orientation with homogeneous transforms (SE(3)).
-   - Build, compose, and invert them; explain current-frame versus
-     fixed-frame composition.
+   - Build, compose, and invert them, applying successive rotations and
+     transforms about the current (moving) frame.
    - Express points and vectors among world, base, tool, and camera frames.
-   - Read roll-pitch-yaw origins as products of named-axis rotations, and
-     check a hand-computed chain against ROS TF.
+   - Read roll-pitch-yaw origins as products of named-axis rotations in the
+     current frame, and check a hand-computed chain against ROS TF.
 
-   *Assessed:* HW02, HW03, exam. *Code:* implement.
-2. **Serial linkage kinematics: compute forward and inverse kinematics for
+   *Tier:* core. *Assessed:* HW02, HW03, exam. *Code:* implement.
+3. **Serial Linkage Kinematics: Compute forward and inverse kinematics for
    serial arms.**
    - Describe revolute and prismatic joints by physical axis, origin, and
      tip geometry.
@@ -52,98 +64,94 @@ to:
    - Solve basic IK by iterating a damped pseudo-inverse; recognize multiple
      solutions and unreachable goals.
 
-   *Assessed:* HW04, HW06, exam. *Code:* implement.
-3. **Joint space versus Cartesian space: move between them at the velocity
-   level.**
+   *Tier:* core. *Assessed:* HW04, HW06, exam. *Code:* implement.
+4. **Velocity Kinematics: Convert between joint velocities and the tool's
+   Cartesian velocity (twist).**
    - Derive and implement the planar Jacobian and interpret its columns.
    - Solve for joint velocities with a square Jacobian, then with damped
      least squares for a redundant arm.
-   - Recognize poor conditioning and explain what the damping trades away.
+   - Recognize poor conditioning, and explain what damped least squares
+     trades away. Its "damping" is a numerical term that keeps the solved
+     joint velocities bounded near poorly conditioned poses, at the cost of
+     tracking error; it is not physical damping or friction.
 
-   *Assessed:* HW05, HW09, project, exam. *Code:* implement.
-4. **Measure objects with a camera.**
+   *Tier:* core. *Assessed:* HW05, HW06, HW09, project, exam. *Code:*
+   implement.
+5. **Path Planning: Plan collision-free motion for a robot arm or mobile
+   base.**
+   - Represent a base or arm problem in configuration space, and check
+     states and edges for collisions and limits.
+   - Implement RRT-Connect.
+   - Formulate a waypoint optimization (variables, cost, constraints) and
+     validate its result independently.
+   - Compare methods over repeated, seeded runs, reporting failures with
+     successes, and choose one for a task.
+
+   *Tier:* supporting. *Assessed:* HW06, HW07; project second round.
+   *Code:* implement RRT and path metrics; use the supplied optimizer and
+   collision checks.
+6. **Computer Vision: Measure objects with a camera.**
    - Project a camera-frame point with a pinhole model and explain depth
      ambiguity.
    - Map an image to a planar workspace with a calibrated homography and
      validate it with a held-out point.
-   - Segment and classify objects by color and shape.
-   - Estimate position and filtered velocity from timestamped images.
+   - Segment and classify objects by color and shape using classical
+     computer vision methods.
+   - Estimate the position and filtered velocity of objects from
+     timestamped images.
 
-   *Assessed:* HW08, project. *Code:* implement with OpenCV.
-5. **Control a robot from images with image-based visual servoing.**
+   *Tier:* core. *Assessed:* HW08, project. *Code:* implement with OpenCV.
+7. **Visual Servoing: Control a robot arm directly from image features.**
    - Formulate a feature error and derive the planar image Jacobian for a
-     tool camera at known depth.
+     tool camera at known depth (image-based visual servoing, IBVS).
    - Combine it with the robot Jacobian and a damped solve to command a
      bounded joint velocity.
    - Handle lost features safely; explain how gain, delay, and saturation
      affect the response, and how this differs from measuring a target and
      moving to it.
 
-   *Assessed:* HW09, project. *Code:* implement.
-6. **Applications and integration: build a working robot system for a final
-   project.**
-   - Build a controller for the conveyor task that combines perception,
-     estimation, a sorting rule, and bounded motion under simulated limits
-     and delay.
-   - Evaluate it on seeded and held-out scenarios: report score, failures,
-     and violations; diagnose at least one failure.
-   - Explain the design choices and their tradeoffs, using common robotics
-     terminology and applications from the course and extension lectures.
+   *Tier:* core. *Assessed:* HW09, project. *Code:* implement.
+8. **Classification for Manipulation: Train and evaluate a learned
+   classifier.**
+   - Distinguish segmentation, classification, and control in the pipeline.
+   - Explain why train/validation/test splits are grouped by scene and how
+     data leakage inflates test accuracy; judge the network on held-out
+     scenes.
+   - Complete a PyTorch training loop (prediction, loss, gradient, update).
+   - Compare its confusion matrix with a rule-based classifier as the
+     baseline.
 
-   *Assessed:* project scenarios S1--S3, report, demonstration. *Code:*
-   implement, within a supplied simulator and node graph.
+   *Tier:* introductory. *Assessed:* HW10 lab. *Code:* modify a supplied
+   scaffold.
+9. **Reinforcement Learning for Manipulation: Explain and apply basic
+   reinforcement learning tools in a manipulation context.**
+   - Specify observations, actions, reward, and episodes.
+   - Explain rollouts in simulation, the policy as a network, and the
+     intuition behind PPO.
+   - Shape a reward for object interception, and compare the learned policy
+     with their own conventional controller across more than one training
+     seed.
+   - Judge when RL is a plausible and valuable choice, including the limits
+     of training in simulation.
 
-**Mid tier: required and assessed, supporting the project**
+   *Tier:* introductory. *Assessed:* RL homework (HW11); optional project
+   improvement. *Code:* modify the reward; use Stable-Baselines3.
+10. **Integration: Build and integrate a software stack with common robotics
+    tools to complete a useful task.**
+    - Build a controller for the conveyor-sorting task that combines
+      perception, estimation, a sorting rule, and bounded motion under
+      simulated limits and delay.
+    - Evaluate it on seeded and held-out scenarios: report score, failures,
+      and violations together, and diagnose at least one failure.
+    - Explain the design choices and their tradeoffs, using common robotics
+      terminology and applications from the course and extension lectures.
 
-7. **Build and inspect simple ROS 2 programs.**
-   - Explain nodes, topics, messages, timers, and simulated time.
-   - Write a publisher (HW01) and a node that subscribes and publishes a
-     smooth trajectory (HW07).
-   - Use TF, URDF models, and RViz to visualize and check robot state.
-
-   *Assessed:* HW01, HW03, HW04, HW07, project demonstration. *Code:*
-   implement small nodes; use the supplied project graph.
-8. **Plan collision-free motion.**
-   - Represent a base or arm problem in configuration space, and check
-     states and edges for collisions and limits.
-   - Implement RRT-Connect.
-   - Formulate a waypoint optimization (variables, cost, constraints) and
-     validate its result independently.
-   - Compare methods with evidence and choose one for a task.
-
-   *Assessed:* HW06, HW07; project second round. *Code:* implement RRT and
-   path metrics; use the supplied optimizer and collision checks.
-9. **Evaluate robot methods with evidence.**
-   - Use repeated, seeded, or held-out cases; report successes and failures
-     together.
-   - Compare against a simple baseline; explain randomness, data leakage,
-     and the limits of simulation.
-
-   *Assessed:* throughout (HW06--HW10, RL homework, project). *Code:* use
-   supplied evaluation tools.
-
-**Lower tier: introductory exposure; assessed lightly**
-
-10. **Train and evaluate a small learned classifier.**
-    - Distinguish segmentation, classification, and control in the pipeline.
-    - Explain grouped train/validation/test splits.
-    - Complete a PyTorch training loop (prediction, loss, gradient, update).
-    - Compare a confusion matrix with a rule-based classifier.
-
-    *Assessed:* HW10 lab. *Code:* modify a supplied scaffold.
-11. **Explain and apply basic reinforcement learning.**
-    - Specify observations, actions, reward, and episodes.
-    - Explain rollouts in simulation, the policy as a network, and the
-      intuition behind PPO.
-    - Shape a reward for object interception and compare the learned policy
-      with their own controller.
-    - Judge when RL is a plausible choice.
-
-    *Assessed:* RL homework; optional project improvement. *Code:* modify
-    the reward; use Stable-Baselines3.
+    *Tier:* core. *Assessed:* project scenarios S1--S3, report,
+    demonstration. *Code:* implement, within a supplied simulator and node
+    graph.
 
 The optional extension lectures (learned locomotion, imitation, VLAs) support
-outcome 6's applications and terminology; they add no separate outcome or
+outcome 10's applications and terminology; they add no separate outcome or
 homework.
 
 ## Audience and constraints
@@ -163,8 +171,11 @@ homework.
 
 Teach rotation matrices, homogeneous transforms, general spatial FK, and
 planar velocity kinematics. Introduce roll-pitch-yaw briefly in the week-4
-lecture, as fixed-axis products of the HW02 named-axis matrices, so students
-can read and write URDF joint origins (instructor decision, Nov 18). Do not
+lecture, as current-frame products of the HW02 named-axis matrices (yaw about
+Z, then pitch about the new Y, then roll about the new X: the same
+`Rz @ Ry @ Rx` that URDF describes with fixed axes), so students can read and
+write URDF joint origins (instructor decisions, Nov 18 and 23). Fixed-frame
+composition is not taught. Do not
 assign quaternion or general axis/angle conversions or Euler-angle
 extraction. DH and dynamics derivations remain in the graduate class.
 Physical joint axes and matrix-based fixed geometry define undergraduate
@@ -245,7 +256,10 @@ verified only for the October demo; Linux and Intel Mac are unverified.
 NumPy is the numerical foundation; Matplotlib, Tk, and GUI-enabled OpenCV are
 in the course image, and the mounted package is installed at startup. The
 arm viewer is pyqtgraph for interactive views and Matplotlib for saved
-figures (TASKS.md D6). PyTorch and
+figures (TASKS.md D6). Students develop HW02--HW05 natively in a `.venv` so
+the viewer opens as a native window; ROS problems and all work from HW06 on
+run in the container, which mounts the same source (TASKS.md D12).
+PlotJuggler is in the image for plotting ROS topics over time. PyTorch and
 Gymnasium/Stable-Baselines3 are the preferred learning candidates, to be
 tested and pinned later. MuJoCo is optional if contact/inertial effects
 justify it. Test versions, architecture, offline use, and CPU runtime before
@@ -332,7 +346,7 @@ maps them onto the calendar. Milestone status is tracked in TASKS.md.
 
 ## Open decisions and outside resources
 
-Open decisions are listed once, in [TASKS.md](TASKS.md#1-decisions-needed-from-the-instructor).
+Open decisions are listed once, in [TASKS.md](TASKS.md#1-decisions).
 
 For outside resources, prefer original course sites, authors, and project
 documentation. For each candidate record its source, author/institution,

@@ -1,4 +1,4 @@
-# HW05: planar Jacobians
+# HW05: velocity kinematics with planar Jacobians
 
 Late week 4 through week 5, at most 1.5 weeks; complete HW02--HW04 first.
 Implement `SerialArm.jacob_planar` in `src/intro_robotics/kinematics.py`.
@@ -15,8 +15,9 @@ python -m homework.hw05.play_velocity
 The last command is optional: a 3D slider view whose Velocity tab shows each
 joint's linear or angular contribution.
 
-Use a container shell in `/workspace`; see [the workflow](../../STUDENT_GUIDE.md).
-The three output rows are `[vx,vy,omega_z]`, with units m/s, m/s, and rad/s.
+Run these in a host terminal with `.venv` activated, as in HW02; see
+[the workflow](../../STUDENT_GUIDE.md). HW06 moves to the container.
+The three output rows are the tool's planar twist `[vx,vy,omega_z]`, with units m/s, m/s, and rad/s.
 Joint vectors use radians for revolute coordinates and meters for prismatic
 coordinates. Each column describes one joint's contribution. A fourth planar
 joint adds a column, not another task row.

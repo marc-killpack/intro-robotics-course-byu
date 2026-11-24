@@ -8,7 +8,9 @@ Continue with [the cumulative Python workflow](STUDENT_GUIDE.md) and the
 provided activity guides for [HW02](homework/hw02/README.md),
 [HW03](homework/hw03/README.md), [HW04](homework/hw04/README.md), and
 [HW05](homework/hw05/README.md). Complete assignments in order; later methods
-intentionally remain labeled stubs until you implement them.
+intentionally remain labeled stubs until you implement them. HW02--HW05 run
+Python on your own computer; their ROS problems and later work run in the
+container. See [two places to run commands](docs/setup.md#two-places-to-run-commands).
 
 This repository uses ROS 2 Jazzy on Ubuntu 24.04 inside Docker. Start Docker
 Desktop on Windows/macOS, or your Docker engine on Linux. From this folder

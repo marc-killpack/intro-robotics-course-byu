@@ -1,10 +1,12 @@
 % Adapt ME 537 HW05 P1--P3 to planar task velocities only.
 \input{../handout.tex}
 \begin{document}
-\courseheader{5}{Planar Jacobians and velocity interpretation}
+\courseheader{5}{Velocity kinematics with planar Jacobians}
 \textbf{Schedule:} after the Jacobian lectures (late week 4 through week 5).
 Build on HW02--HW04. The task is $[x,y,\psi]$, where $\psi$ is a single planar
-heading and $\dot\psi=\omega_z$. HW06 then runs the Jacobian backward, from
+heading and $\dot\psi=\omega_z$. The Jacobian converts joint velocities
+into the tool's Cartesian velocity, its planar \emph{twist}
+$[v_x,v_y,\omega_z]^T$. HW06 then runs the Jacobian backward, from
 a desired tool velocity to joint rates, and builds inverse kinematics on it.
 No spatial orientation parameterization or singularity theory is assigned.
 

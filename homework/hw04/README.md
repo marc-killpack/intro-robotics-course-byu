@@ -12,9 +12,9 @@ python -m homework.hw04.play_arm
 python -m homework.hw04.play_arm --backend matplotlib
 ```
 
-Run these in the course container from `/workspace` and view figures on its
-browser desktop, or use a native Python environment described in
-[setup](../../docs/setup.md). The first slider command uses the supplied
+Run these in a host terminal with `.venv` activated, as in HW02
+([setup](../../docs/setup.md#python-on-your-own-computer-hw02--hw05)); windows
+open on your own desktop. The first slider command uses the supplied
 pyqtgraph solid-arm viewer; the second uses the Matplotlib line viewer.
 `--save tmp/hw04.png` also works on the activity module.
 
@@ -33,8 +33,9 @@ when requested and when their chain ends are part of the calculation.
 
 ## Problem 5: URDF and TF
 
-Add the four marked joints to `arm.urdf`. In a container shell from
-`/workspace`:
+This problem uses ROS, so it runs in the container, where your `fk` is the
+same file. Add the four marked joints to `arm.urdf`. In a container shell
+from `/workspace`:
 
 ```bash
 ros2 launch homework/hw04/view_arm.launch.py

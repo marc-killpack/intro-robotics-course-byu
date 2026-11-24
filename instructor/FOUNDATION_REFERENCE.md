@@ -11,16 +11,18 @@ P1: standard right-handed named-axis matrices. For a valid rotation,
 `rot_inv(R)=R.T`. Review whether the student uses radians, NumPy arrays, and
 the special inverse property rather than a general inverse/helper call.
 
-P2(a): fixed axes give `Ry(c) @ Rz(b) @ Rx(a)`; current axes give
-`Rx(a) @ Rz(b) @ Ry(c)`. P2(b), X then Z quarter turns:
+P2 (current frame only since Nov 23; fixed-frame composition is not an
+outcome). P2(a): `Rz(a) @ Ry(b) @ Rx(c)`, the product week 4 uses to read
+URDF roll-pitch-yaw (yaw a, pitch b, roll c). P2(b), quarter turns:
 
 ```text
-fixed:   [[0, 0, 1],       current: [[0,-1, 0],
-          [1, 0, 0],                 [0, 0,-1],
-          [0, 1, 0]]                 [1, 0, 0]]
+X then new Z:  [[0,-1, 0],      Z then new X:  [[0, 0, 1],
+  Rx @ Rz       [0, 0,-1],        Rz @ Rx       [1, 0, 0],
+                [1, 0, 0]]                      [0, 1, 0]]
 ```
 
-Their local X axes in world are `[0,1,0]` and `[0,0,1]` respectively.
+Their local X axes in world are `[0,0,1]` and `[0,1,0]` respectively. The
+order matters because each turn is about an axis the previous turn moved.
 
 P3: `x_C_in_W = y_C_in_W cross z_C_in_W = [1,0,0]`. Columns give
 `R_W_C=[[1,0,0],[0,0,1],[0,-1,0]]`. The vector maps to `[1,3,-2]`;

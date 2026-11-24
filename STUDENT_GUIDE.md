@@ -1,42 +1,37 @@
 # Python homework after HW01
 
-The same Docker environment supports HW02--HW05. You can edit files with
-your host editor and run Python in a container shell. NumPy, Matplotlib,
-OpenCV, and the pyqtgraph viewer are installed there. An optional
-[native Python setup](docs/setup.md#optional-native-python-without-ros)
-can run the mathematics and vision code. The package is installed from the mounted source, so edits
-take effect when you rerun a script.
+HW02--HW05 run on your own computer, in the course's Python environment
+(`.venv`). Set it up once by following
+[Python on your own computer](docs/setup.md#python-on-your-own-computer-hw02--hw05).
+Their ROS problems (HW03 problem 4 and HW04 problem 5) run in the container,
+and from HW06 on everything runs in the container.
+[Two places to run commands](docs/setup.md#two-places-to-run-commands)
+explains the difference. Both places use the same files, so an edit you
+save is used the next time you run a script in either one.
 
-## Start the environment
+## Start a work session
 
-After receiving an update to the Dockerfile/startup script, run these in a
-**host terminal** in the repository folder:
-
-```text
-docker compose build
-docker compose up -d --force-recreate
-docker compose exec course bash
-```
-
-In the **container shell**, work from the repository root:
+In a **host terminal** in the repository folder, activate `.venv`
+(`.\.venv\Scripts\Activate.ps1` on Windows, `source .venv/bin/activate` on
+macOS/Linux), then:
 
 ```text
-cd /workspace
 python -m homework.hw02.hw02_rotations
 python -m homework.hw02.hw02_rotations --show
 ```
 
 `python -m` runs a module: the final name corresponds to the Python file
-under `homework/hw02/`. Run it from `/workspace` so shared homework support
-can be imported. The default command runs limited public checks. `--show`
-also opens a figure on the same [browser desktop](docs/setup.md) as RViz:
+under `homework/hw02/`. Run it from the repository folder (the one containing
+`pyproject.toml`) so shared homework support can be imported. The default
+command runs limited public checks. `--show` also opens a figure window;
+close it to return to the terminal. `--save tmp/hw02.png` saves a picture
+without opening a window. The plotting library is supplied; you are not
+expected to study its implementation.
 
-**<http://localhost:6080/vnc.html?autoconnect=1&resize=scale>**
-
-Move/minimize RViz if it hides the Matplotlib figure. Close the figure to
-return to the shell. `--save tmp/hw02.png` saves a picture without opening
-a window; `tmp/` is also visible in your host editor. The plotting library
-is supplied; you are not expected to study its implementation.
+For a ROS problem, start the container (`docker compose up -d`), open a
+container shell (`docker compose exec course bash`, then `cd /workspace`),
+and view its windows on the
+[browser desktop](docs/setup.md#open-the-web-page-yourself).
 
 ## Cumulative implementation
 
@@ -106,5 +101,6 @@ before a complicated case. The provided checks describe invalid inputs.
 Keep the checks and assignment-labeled errors while you work; implement the
 method rather than bypassing it. Follow [the tutoring policy](AI_TUTORING_GUIDE.md).
 
-When finished, leave the container shell with `exit`, run `docker compose down`
-in a host terminal, and close the browser. Your edited source remains on disk.
+When finished with the container, leave the container shell with `exit`, run
+`docker compose down` in a host terminal, and close the browser. Your edited
+source remains on disk.

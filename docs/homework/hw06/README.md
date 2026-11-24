@@ -1,4 +1,4 @@
-# HW06 faculty draft: RRT-Connect
+# HW06 faculty draft: inverse kinematics and RRT-Connect
 
 This draft introduces configuration spaces and a two-tree planner using a
 circular base and a two-joint arm. It is newly written for the introductory

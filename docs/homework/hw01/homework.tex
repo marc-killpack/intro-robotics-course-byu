@@ -136,10 +136,9 @@ ros2 topic echo /joint_states --once
 ros2 topic hz /joint_states
 ros2 topic info /joint_states --verbose
 \end{lstlisting}
-Stop the rate display with Ctrl+C. Save one message and the observed rate.
-Check that your node is the only publisher of \texttt{/joint\_states}.
-Approximate 10 Hz is expected; report the measured value rather than
-claiming an exact rate. Answer briefly:
+Stop the rate display with Ctrl+C. Save one message and the measured rate
+(about 10 Hz; report what you measure), and check that your node is the only
+publisher of \texttt{/joint\_states}. Answer briefly:
 \begin{enumerate}
 \item How do the joint names correspond to the values in \texttt{position}?
 What are the position units? What does the message timestamp represent?
@@ -153,6 +152,15 @@ Describe one use of \texttt{self} in the provided class.
 \texttt{robot\_state\_publisher} $\longrightarrow$
 \texttt{/tf} $\longrightarrow$ RViz.
 \end{center}
+\item Plot your motion over time. In the second shell, run:
+\begin{lstlisting}
+ros2 run plotjuggler plotjuggler
+\end{lstlisting}
+Set \textbf{Buffer} to 30~s, choose \textbf{ROS2 Topic Subscriber} under Streaming, click \textbf{Start},
+select \texttt{/joint\_states}, and click OK. Drag
+\texttt{/joint\_states/head\_yaw/position} into the plot. Save a screenshot
+of at least two periods; compare the period and amplitude you read with your
+\texttt{joint\_positions} function.
 \end{enumerate}
 
 \item \textbf{Stop and restart safely.}
@@ -161,28 +169,22 @@ container with:
 \begin{lstlisting}
 docker compose down
 \end{lstlisting}
-You can then close the browser tab and quit Docker Desktop. Closing only
-the browser tab does not stop the container. Your source files remain in the
-repository folder. To return to the original sliders later, start Docker
-Desktop and run \texttt{docker compose up -d --force-recreate}, then reopen
+Closing only the browser tab does not stop the container; your files remain
+in the repository folder. To return to the original sliders later, start Docker
+Desktop and run \texttt{docker compose up -d -{}-force-recreate}, then reopen
 the same web address.
 \end{enumerate}
 
 \textbf{Submit:} your completed Python file; setup screenshot and environment
 record; fixed-pose and timed-motion evidence; one joint-state message and
-measured rate; the short explanations above; and a statement of AI use
-(including ``none'' if applicable). Keep explanations concise. We will
-review correct behavior, readable code, and your understanding of the
-provided tools. Follow the instructor's submission destination and deadline.
+measured rate; the PlotJuggler plot of the head angle; the short explanations
+above; and a statement of AI use
+(including ``none'' if applicable). We will review correct behavior,
+readable code, and your understanding of the provided tools. Follow the instructor's submission destination and deadline.
 
-\textbf{References and troubleshooting}
-
-The repository's \path{docs/setup.md} and \path{homework/hw01/README.md}
-contain the terminal commands and troubleshooting notes in copyable form.
-The supplied code handles setup and shutdown; the homework focuses on
-message contents and motion over time.
-
-\url{https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Publisher-And-Subscriber.html}
-
-\url{https://docs.ros.org/en/jazzy/p/sensor_msgs/msg/JointState.html}
+\textbf{References and troubleshooting:} copyable commands and
+troubleshooting notes are in \path{docs/setup.md} and
+\path{homework/hw01/README.md}. ROS publisher tutorial:
+\url{https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Publisher-And-Subscriber.html}.
+Message fields: \url{https://docs.ros.org/en/jazzy/p/sensor_msgs/msg/JointState.html}.
 \end{document}

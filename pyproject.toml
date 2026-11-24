@@ -10,7 +10,13 @@ requires-python = ">=3.10"
 dependencies = ["numpy>=1.24", "matplotlib>=3.6.3"]
 
 [project.optional-dependencies]
-visualization = ["PySide6==6.8.3", "pyqtgraph==0.14.0", "PyOpenGL==3.1.10"]
+# Ranges, not exact pins: students install these natively for HW02--HW05 on
+# Python 3.10--3.15. PySide6 6.8 stops at Python 3.13 and 6.12 needs macOS 14,
+# so pip must be free to choose the version that fits each laptop. The Docker
+# image pins its own tested versions. Raise the upper bounds after testing.
+# PySide6-Essentials (QtCore/QtGui/QtWidgets/QtOpenGL) is all the viewer and
+# Matplotlib need; the full PySide6 package adds ~175 MB (WebEngine, Addons).
+visualization = ["PySide6-Essentials>=6.8.3,<6.13", "pyqtgraph>=0.14,<0.15", "PyOpenGL>=3.1.7"]
 vision = ["opencv-python>=4.10,<5"]
 optimization = ["scipy>=1.11"]  # QP solver for optimization-based planning (lecture P6)
 # HW10/HW11 (PyTorch, RL). Install CPU-only torch first:

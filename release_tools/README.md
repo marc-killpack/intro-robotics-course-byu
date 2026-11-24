@@ -15,7 +15,7 @@ python -m release_tools --dry-run
 
 The tool prepares every allowlisted file in memory, validates exact paired
 `# BEGIN SOLUTION` / `# END SOLUTION` markers, removes answer regions from
-copied Python only, parses that Python, checks local Markdown links, and
+copied Python only, parses that Python, checks local Markdown links and their `#section` anchors, and
 creates/discards a temporary student tree. It prints source revision, dirty
 state, input hashes, file count, and removed-block count. A dirty preview is
 allowed for review; it is not a publishable release record.

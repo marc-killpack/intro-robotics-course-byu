@@ -11,6 +11,10 @@ services:
     tty: true
     ports:
       - "127.0.0.1:6080:6080"
+    # PlotJuggler sends a usage report to this address at every launch and has
+    # no setting to turn it off; pointing it at the container itself blocks it.
+    extra_hosts:
+      - "app.plotjuggler.io:127.0.0.1"
     environment:
       DISPLAY: ":1"
       LIBGL_ALWAYS_SOFTWARE: "1"

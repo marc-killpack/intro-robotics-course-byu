@@ -76,7 +76,7 @@ outlines are written.
 
 | Homework | Problems, in lecture order (the session each needs) | Due no earlier than |
 | --- | --- | --- |
-| HW01 | 1 (1.1 ROS environment); 2--5 (1.2 ROS publisher) | 1.3 |
+| HW01 | 1 (1.1 ROS environment); 2--5 (1.2 ROS publisher; 4(e) needs its PlotJuggler demonstration) | 1.3 |
 | HW02 | 1 (1.3); 2, 4 (2.1); 3, 5 (2.2) | 2.3 |
 | HW03 | 1, 3 (2.2--2.3); 2 (3.1 camera/base points); 4 TF check (3.1, with ROS 1.1--1.2) | 3.2 |
 | HW04 | 1--3 (3.2--3.3); 4 base, tool, and translating joint (4.1); 5 URDF and TF (4.1, roll-pitch-yaw segment) | 4.2 |
@@ -121,7 +121,7 @@ overlaps.
 
 | Draft | Main evidence | Project component | State |
 | --- | --- | --- | --- |
-| HW06: RRT-Connect | Trace and implement the two-tree planner; test point and arm scenes, including edges | Collision-aware route around a specified obstacle | Draft handout, marked master, supplied geometry, viewer, and preview checks; faculty review pending |
+| HW06: IK and RRT-Connect | Damped least-squares IK; trace and implement the two-tree planner; test point and arm scenes, including edges | Collision-aware route around a specified obstacle | Draft handout, marked master, supplied geometry, viewer, and preview checks; faculty review pending |
 | HW07: waypoint optimization | Formulate objective/constraints, run supplied solver, independently validate, compare seeds | Improve or compare a candidate transfer path | Draft handout, two marked metrics, NumPy solvers, and preview checks; faculty review pending |
 | HW08: calibration, detection, and tracking | Fit and check a plane homography, segment, classify by rule, fit velocity from timestamps | The project's own perception (the reference controller uses the key) | Draft handout, six marked functions, activity on the project camera, public and faculty checks (Nov 20); faculty review pending |
 | HW09: tool-camera visual servoing | Project points, derive the planar image Jacobian, implement the IBVS step with the HW06 damped solve, hold on target loss | The project's final approach (same `Controller` and runner) | Draft handout, two marked methods, activity with camera blackout, checks (Nov 19); faculty review pending |

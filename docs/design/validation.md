@@ -1,8 +1,71 @@
 # Foundation validation record
 
-Updated November 21, 2026. This record covers the uncommitted faculty change
+Updated November 23, 2026. This record covers the uncommitted faculty change
 set, not a published semester release. [TASKS.md](../../TASKS.md) distinguishes
 implemented work from faculty approval and further platform validation.
+
+## November 23: native viewer setup (D12) and PlotJuggler
+
+**Install matrix.** The old `visualization` pin, PySide6 6.8.3, requires
+Python below 3.14 and has no Windows ARM64 wheel; PySide6 6.10--6.11 need
+macOS 13 and 6.12 needs macOS 14. With the new extra
+(`PySide6-Essentials>=6.8.3,<6.13`, `pyqtgraph>=0.14,<0.15`,
+`PyOpenGL>=3.1.7`, plus NumPy and Matplotlib), `pip install --dry-run` with
+binary wheels only resolved for Python 3.10--3.15 on Windows x64, Linux
+x86_64, and macOS 14 ARM64; 3.11--3.15 on Windows ARM64; 3.10--3.14 on macOS
+13 (x86_64 and ARM64); and 3.10--3.13 on macOS 12 x86_64. Download sizes
+(Windows x64): PySide6-Essentials 82 MB; the full PySide6 adds Addons
+41 MB, WebEngine 132 MB, and Pdf 3 MB.
+
+**Native Windows** (x64, build 26200, Python 3.12.10), fresh virtual
+environments with `pip install -e ".[visualization]"`: first the full
+PySide6 6.12.0, then PySide6-Essentials 6.12.0 alone (NumPy 2.5.5,
+Matplotlib 3.11.2, pyqtgraph 0.14.0, PyOpenGL 3.1.10). With each, 45 tests
+passed (public HW02--HW05 checks plus the instructor transform, kinematics,
+mesh-geometry, visualization, and TF/URDF tests). The pyqtgraph GUI probe
+passed in spatial, planar, and scene modes; the captured player window
+showed the solid arm, frames, and sliders correctly. The four HW02--HW05
+activities saved their figures, and Matplotlib selected QtAgg. With every
+assigned method replaced by a `NotImplementedError` stub, `VizScene` opened
+and drew a frame, so the setup guide's viewer check works on a fresh
+student copy.
+
+**PlotJuggler.** `ros-jazzy-plotjuggler` 3.17.2 and `ros-jazzy-plotjuggler-ros`
+2.3.1 are in the ROS noble AMD64 and ARM64 indexes (built Nov 5--6). A test
+build tagged `intro-robotics-course:plotjuggler-test` (AMD64, Docker 29.9.3)
+succeeded, and PlotJuggler opened its window on Xvfb. It added 198 packages
+and about 820 MB installed (largest: `libboost1.83-dev` 154 MB,
+`libllvm17t64` 118 MB, `binutils-dev` 72 MB, `libamd-comgr2` 59 MB), taking
+the image from 5.28 to 6.4 GB. At startup it contacted
+`https://app.plotjuggler.io/telemetry` (HTTP 400). Streaming and ARM64
+were not tested.
+
+**Documents.** The HW02 and HW03 handouts rebuilt at 2 pages each with no
+overfull lines. The release dry run passed; release tests 5/5 and public
+checks 46/46 passed in the faculty environment (PySide6 6.8.3). A
+GitHub-style anchor check over the edited Markdown found no broken links.
+
+**Outcome language (D2, later the same day).** After the HW02 problem 2
+rewrite (current frame only) and the HW04--HW06 wording changes, the HW02,
+HW04, HW05, and HW06 handouts rebuilt at 2, 3, 2, and 3 pages, unchanged,
+with no overfull lines; HW02 and HW06 page 1 were inspected. The renamed
+composition test and the kinematics, transforms, release, and planning
+instructor tests passed, as did all 46 public checks and the release dry run.
+
+**Telemetry block, HW01 plot step, D6 trim, and anchor check (later the
+same day).** With `extra_hosts` in `compose.yaml`, `docker compose config`
+(with and without the publisher override) carries the entry, `getent hosts
+app.plotjuggler.io` in the service returns 127.0.0.1, and PlotJuggler in the
+test image logged "Connection refused" for the report and kept running.
+HW01 builds at 3 pages with no overfull lines after problem 4(e) was added;
+`--force-recreate` now prints with two dashes. After deleting
+`TransformMPL`/`PlanarMPL` (177 lines) and three unused imports from
+`visualization_3d.py`, the visualization, mesh, and release tests passed,
+and the GUI probe passed in all three modes with PySide6 6.8.3 and in scene
+mode with PySide6-Essentials 6.12. The release tool's new anchor check:
+release tests 7/7 (two new), the dry run passed, and it reports the
+committed student guide's `#optional-native-python-without-ros` link as
+broken.
 
 ## November 21: readability pass, HW06--HW11 and the project
 

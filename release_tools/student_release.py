@@ -59,20 +59,60 @@ def git_text(root, *arguments):
     ).strip()
 
 
+def heading_anchors(text):
+    """Return the #section names GitHub creates for a Markdown file's headings.
+
+    GitHub lowercases the heading, drops punctuation other than hyphens and
+    underscores, turns spaces into hyphens, and adds -1, -2, ... to repeats.
+    Headings inside fenced code blocks do not count. Explicit HTML anchors
+    (<a id="..."> or <a name="...">) are included too.
+    """
+    anchors = set()
+    seen = {}
+    inside_code = False
+    for line in text.splitlines():
+        if line.lstrip().startswith("```"):
+            inside_code = not inside_code
+            continue
+        if inside_code:
+            continue
+        match = re.match(r"#{1,6}\s+(.*?)\s*#*\s*$", line)
+        if match is None:
+            continue
+        slug = re.sub(r"[^\w\- ]", "", match.group(1).lower()).replace(" ", "-")
+        if slug in seen:
+            seen[slug] += 1
+            anchors.add(f"{slug}-{seen[slug]}")
+        else:
+            seen[slug] = 0
+            anchors.add(slug)
+    anchors.update(re.findall(r'<a\s+(?:id|name)="([^"]+)"', text))
+    return anchors
+
+
 def check_local_links(files):
-    """Check student-facing Markdown against the actual selected copy."""
+    """Check student-facing Markdown links, and their #sections, in the copy."""
     for name, data in files.items():
         if not name.endswith(".md"):
             continue
         for target in re.findall(r"\[[^\]]*\]\(([^)\s]+)\)", data.decode("utf-8")):
             link = urlsplit(target)
-            if link.scheme or not link.path:
+            if link.scheme:
                 continue
-            path = posixpath.normpath(
-                posixpath.join(posixpath.dirname(name), unquote(link.path))
-            )
+            if link.path:
+                path = posixpath.normpath(
+                    posixpath.join(posixpath.dirname(name), unquote(link.path))
+                )
+            elif link.fragment:
+                path = name  # A "#section" link within the same file.
+            else:
+                continue
             if path not in files:
                 raise ValueError(f"Broken student link in {name}: {target}")
+            if link.fragment and path.endswith(".md"):
+                anchors = heading_anchors(files[path].decode("utf-8"))
+                if unquote(link.fragment) not in anchors:
+                    raise ValueError(f"Broken student section link in {name}: {target}")
 
 
 def prepare_release(root):
