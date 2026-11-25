@@ -23,3 +23,6 @@ student_ws/ros2_ws/log/
 !.vscode/extensions.json
 !.vscode/settings.json
 
+
+# Local Docker Compose settings (for example COURSE_SCREEN)
+.env

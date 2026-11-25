@@ -46,7 +46,13 @@ ros2 run tf2_ros tf2_echo base camera
 result; that is normal. Each result shows a translation and a 4x4 matrix to
 compare with your hand answers. Stop each command with Ctrl+C.
 
-In the RViz window, set **Global Options > Fixed Frame** to `world`, then
-**Add > TF**. A warning about the R2D2 frames is expected: they are a
-separate tree not connected to `world`. The public check
+To see the frames, start RViz in a third container shell:
+
+```bash
+rviz2
+```
+
+In RViz, set **Global Options > Fixed Frame** to `world`, then click **Add**,
+choose **TF**, and click **OK**. Close RViz or press Ctrl+C in its shell when
+you are done. The public check
 `test_hw03_frames.py` is skipped until you start `frame_transforms()`.

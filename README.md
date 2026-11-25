@@ -14,8 +14,9 @@ than distributing this working tree.
    planning document is for, plus decisions already made and their rationale.
 3. [Course roadmap](COURSE_ROADMAP.md): goals, scope, and the weekly sequence.
 
-Student-facing entry points: [setup and browser access](docs/setup.md) and the
-[student homework guide](STUDENT_GUIDE.md).
+Student-facing entry points: [setup](docs/setup.md), the
+[quick start](docs/quick_start.md), [troubleshooting](docs/troubleshooting.md),
+and the [student homework guide](STUDENT_GUIDE.md).
 
 ## Start RViz
 
@@ -31,14 +32,25 @@ docker compose up -d
 
 **<http://localhost:6080/vnc.html?autoconnect=1&resize=scale>**
 
-This local Linux desktop contains RViz and joint sliders. Docker Desktop's
-dashboard is a different window. Wait for the robot package to build. If
-sliders seem missing, move/minimize RViz to reveal their window behind it.
-Use Move Camera and drag to orbit; scroll to zoom.
+This local Linux desktop starts empty, with a taskbar; the container starts
+no ROS nodes (instructor decision, Nov 24). Docker Desktop's dashboard is a
+different window. Build the ROS packages and start the demo in a container
+shell (`docker compose exec course bash`):
+
+```bash
+cd /workspace/student_ws/ros2_ws
+colcon build
+source install/setup.bash
+ros2 launch r2d2_demo view_r2d2.launch.py
+```
+
+Use Move Camera and drag to orbit; scroll to zoom. Hidden windows are on the
+taskbar.
 
 Read [the setup guide](docs/setup.md), including its distinction between a
 host terminal and a ROS-enabled container shell. See platform details for
-[Windows](docs/windows.md) and [macOS](docs/macos.md).
+[Windows](docs/windows.md) and [macOS](docs/macos.md), and the
+[troubleshooting](docs/troubleshooting.md) page.
 
 To stop, run this in a **host terminal**:
 
@@ -53,14 +65,14 @@ After a Docker update/reboot, restart the engine and run `docker compose up -d`.
 ## HW01 publisher mode
 
 The student writes a short ROS 2 publisher that first holds a pose and then
-animates joints using a timer. Disable the automatic slider publisher with:
+animates joints using a timer. In one container shell, start RViz and
+`robot_state_publisher` without the slider publisher:
 
-```text
-docker compose -f compose.yaml -f compose.publisher.yaml up -d --force-recreate
-docker compose exec course bash
+```bash
+ros2 launch r2d2_demo view_r2d2.launch.py use_joint_gui:=false
 ```
 
-In that container shell:
+In a second container shell:
 
 ```bash
 cd /workspace
@@ -130,7 +142,8 @@ The original demo was observed on Apple Silicon (`linux/arm64`) in October
 2026. On November 12, 2026 it built and launched on Windows/WSL 2
 (`linux/amd64`), including all sliders and camera controls. RViz reported
 OpenGL 4.5 with software rendering, and ROS joint states matched TF.
-The [Windows record](docs/windows.md) identifies observed versions and limits.
+The [validation record](docs/design/validation.md#windows-host-observations)
+identifies observed versions and limits.
 On November 13 the rebuilt image also passed the foundation activities,
 frame updates, and a real Tk slider/event-loop check. This automated check
 does not establish hands-on usability on other platforms. See the

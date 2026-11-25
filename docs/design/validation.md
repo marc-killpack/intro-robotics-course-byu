@@ -4,6 +4,60 @@ Updated November 23, 2026. This record covers the uncommitted faculty change
 set, not a published semester release. [TASKS.md](../../TASKS.md) distinguishes
 implemented work from faculty approval and further platform validation.
 
+## November 24: desktop-only startup and the rewritten setup documents
+
+Windows/WSL 2 host, Docker 29.9.3, native AMD64 image rebuilt with `tint2`
+(image build about 2.5 minutes from cache). With
+`student_ws/ros2_ws/{build,install,log}` moved aside to imitate a fresh
+clone:
+
+- `docker compose up -d` logged `Course desktop ready (screen 1280x800).`,
+  the container stayed `Up`, `tint2` ran, no ROS process ran, and
+  `ros2 topic list` showed only `/parameter_events` and `/rosout`.
+- `colcon build` from `/workspace/student_ws/ros2_ws` built `r2d2_demo` and
+  `conveyor_interfaces` in 77 s; after `source install/setup.bash`,
+  `ros2 interface show conveyor_interfaces/msg/PickupRequest` worked, and a
+  new container shell found both packages through the `.bashrc` overlay line.
+- `ros2 launch r2d2_demo view_r2d2.launch.py` started the slider publisher,
+  `robot_state_publisher`, and RViz; `/joint_states` had one publisher. A
+  capture of the virtual display showed both windows listed on the taskbar,
+  with the slider window behind RViz. After the slider process was killed,
+  `ros2 topic echo /joint_states --once` waited silently (timed out); SIGINT to
+  the launch stopped every demo process.
+- HW01: `use_joint_gui:=false` plus the instructor `joint_publisher.py` gave
+  one publisher (`hw01_joint_publisher`) at 10.00 Hz.
+- `COURSE_SCREEN=1024x640` in a temporary `.env` produced a 1024x640 display
+  (`xdpyinfo`); removing it restored 1280x800.
+- HW03 problem 4 with a hand-started `rviz2`: `tf2_echo base camera` returned
+  the expected transform, with no second (R2D2) TF tree.
+- Instructor suite 150 tests (one updated: `test_project_ros` now checks that
+  setup and the project guide tell students to run `colcon build`, instead of
+  the startup script building it); public suite 46 tests; release dry run
+  165 files, 36 answer regions, links and anchors checked. HW01 handout
+  rebuilt: three pages, no overfull/underfull boxes.
+
+Not yet checked: minimizing and restoring a window by hand through noVNC,
+the Windows Python install manager route, ARM64, and Linux.
+
+## Intel Mac procedure (pending)
+
+Moved from the student macOS page on November 24. Before claiming Intel Mac
+support:
+
+1. Record the macOS and Docker Desktop versions, and confirm `uname -m`
+   reports `x86_64`.
+2. Run `docker info --format '{{.OSType}}/{{.Architecture}}'` and note the
+   engine architecture.
+3. From the repository root, run `docker compose build` and
+   `docker compose up -d`; record any package or image resolution errors.
+4. Open the browser desktop, then in a container shell run `colcon build`
+   and `ros2 launch r2d2_demo view_r2d2.launch.py`; confirm RViz shows the
+   robot and the sliders move it.
+5. Run `ros2 topic list` and record `docker compose logs course` if the GUI
+   does not render.
+6. Record the tested versions and results here, and update the student
+   macOS page.
+
 ## November 24: full-course student release for instructor review
 
 The manifest now selects HW01--HW11 and the project: `--dry-run` prepared
@@ -855,6 +909,30 @@ separate ROS domains and published no host ports.
 The repeatable integration probe is `tests/instructor/ros_hw01_probe.py`.
 It runs inside a ROS-enabled publisher-mode test container and is not a
 student artifact or part of host-only unittest discovery.
+
+### Windows host observations
+
+Moved here from the student Windows page on November 24. Windows x64, OS
+build 26200, WSL 2 backend. Initial Docker engine/client 29.2.1 and Compose
+5.1.0; Docker Desktop updated during validation, afterward 29.9.3 and Compose
+5.7.0, and the course container was recreated successfully. Native image
+architecture `linux/amd64`. Initial image build 195 s; initial robot package
+build about 39 s, a later cached build about 8 s including colcon overhead
+(machine-specific). RViz started with OpenGL 4.5 on Mesa llvmpipe. The
+instructor observed the robot, all three sliders, and camera orbit/zoom; the
+slider window first appeared behind RViz. A read-only ROS probe matched all
+three joint positions to their TF rotations and verified the fixed head-to-eye
+transform (head about 0.6365 rad). One running-container sample used about
+302 MiB, excluding Docker/WSL overhead; it is not a minimum-memory
+specification.
+
+Revised HW01 checks (Nov 12), in isolated temporary containers with no host
+port published: default mode started the slider publisher,
+robot-state-publisher, and RViz; publisher mode started RViz and
+robot-state-publisher without the slider publisher. The instructor node
+produced 25 bounded, named messages at 10.00 Hz with changing head positions
+and one publisher; both stripped student methods kept their homework-labeled
+errors. (Superseded Nov 24: the container no longer starts any ROS nodes.)
 
 ### Handout and graphics review
 

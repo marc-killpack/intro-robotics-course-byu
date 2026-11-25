@@ -1,19 +1,19 @@
-# macOS setup
+# Mac setup
 
-## Apple Silicon (M-series Macs)
+These steps install Docker on a Mac. Afterward, return to the
+[setup guide](setup.md#open-the-course-folder-and-a-terminal-in-vs-code),
+which covers everything else. No XQuartz or other display software is needed.
 
-These instructions target any Apple Silicon Mac running a supported version of
-macOS and Docker Desktop. The host CPU should report `arm64`. The course image
-uses the official multi-architecture ROS 2 Jazzy base, so Docker should choose
-a native `linux/arm64` image. RViz appears in a browser; XQuartz is not needed
-for this course startup path.
-
-The [ROS Jazzy Docker image announcement](https://discourse.ros.org/t/ros-jazzy-docker-images/37879)
-lists ARM64 support for the official base image used here.
-
-1. Install **Docker Desktop for Apple Silicon** and start it. Wait until its
-   engine reports that it is running.
-2. Open Terminal and confirm the host and Docker architectures:
+1. Find your Mac's processor: Apple menu > **About This Mac**. "Chip: Apple
+   M..." means **Apple Silicon**; "Processor: ... Intel" means **Intel**.
+2. Install the matching **Docker Desktop for Mac** (Apple Silicon or Intel)
+   from [Docker's instructions](https://docs.docker.com/desktop/setup/install/mac-install/),
+   start it, and wait until it says the engine is running. It may ask for
+   permission the first time.
+3. Open a terminal: in VS Code choose **Terminal > New Terminal** (or press
+   Ctrl+\`), or open the **Terminal** app (Cmd+Space, type Terminal, press
+   Return).
+4. Check the processor type and Docker:
 
    ```bash
    uname -m
@@ -21,62 +21,12 @@ lists ARM64 support for the official base image used here.
    docker compose version
    ```
 
-   Expected: `arm64`, then `linux/aarch64` (or `linux/arm64`), and a Compose
-   version. Docker Desktop may ask for permission to initialize on first run.
-3. Open Terminal in the cloned course folder containing `compose.yaml`, then
-   build and start the environment:
+   Apple Silicon should print `arm64`, then `linux/aarch64` (or
+   `linux/arm64`). Intel should print `x86_64`, then `linux/x86_64` (or
+   `linux/amd64`). The last line is a Compose version.
 
-   ```bash
-   docker compose build
-   docker compose up -d
-   ```
+Then continue with the [setup guide](setup.md#open-the-course-folder-and-a-terminal-in-vs-code).
+If something goes wrong, see [troubleshooting](troubleshooting.md).
 
-4. Open <http://localhost:6080/vnc.html?autoconnect=1&resize=scale> in a
-   browser. RViz should show an R2D2-like robot beside a joint-slider window.
-   Move `head_yaw` and a leg slider to confirm the picture updates. The first
-   launch builds the demo package and may take a moment while Mesa starts.
-   If sliders seem absent, move or minimize RViz to reveal their window.
-5. Open a shell for student work:
-
-   ```bash
-   docker compose exec course bash
-   ```
-
-   `ros2` commands should be available. The repository is mounted at
-   `/workspace`; standalone Python work lives under `student_ws/python`, and
-   ROS packages go under `student_ws/ros2_ws/src`.
-6. When finished, run `docker compose down` from a host terminal in the
-   repository root. You may then close the browser tab and quit Docker
-   Desktop. Closing only the tab does not stop the container.
-
-Follow the [common setup guide](setup.md) and [HW01](../homework/hw01/README.md)
-for host/container shell distinctions and the separate student-publisher mode.
-
-If the page is blank, run `docker compose logs course` and check whether RViz
-reported an OpenGL error. If port 6080 is already in use, edit the left side of
-the `ports` mapping in `compose.yaml` and use that port in the browser URL.
-If the resulting image reports `linux/amd64` on Apple Silicon, inspect the
-image choice; emulation is slower than the intended native ARM64 path.
-
-The browser desktop is only published on `127.0.0.1` of the host. Do not
-forward it to a public network without adding authentication.
-
-## Intel Mac (validation to do)
-
-The same Compose path should select the `linux/amd64` ROS image on an Intel
-Mac, but this configuration has not yet been exercised on one. Before calling
-it supported, complete these checks on an Intel Mac:
-
-1. Record the macOS and Docker Desktop versions, and confirm `uname -m`
-   reports `x86_64`.
-2. Run `docker info --format '{{.OSType}}/{{.Architecture}}'` and note the
-   Docker engine architecture.
-3. From the repository root, run `docker compose build` and
-   `docker compose up -d`. Record any package or image resolution errors.
-4. Open <http://localhost:6080/vnc.html?autoconnect=1&resize=scale> and
-   confirm RViz appears and the robot moves when a joint slider changes.
-5. Run `docker compose exec course bash`, try `ros2 topic list`, and record
-   `docker compose logs course` if the GUI does not render.
-6. Add the tested macOS/Docker versions, actual results, and any Intel-only
-   fixes here before distributing these instructions to Intel Mac students.
-
+Intel Macs are expected to work but have not yet been tested with this
+course; please tell the instructor how setup went on yours.

@@ -1,8 +1,10 @@
 # conveyor_interfaces
 
-Two small messages for the conveyor-sorting project. The course container
-builds this package when it starts, next to `r2d2_demo`, so you can use the
-messages without running colcon yourself.
+Two small messages for the conveyor-sorting project. You build this package
+together with `r2d2_demo` during setup (`colcon build` from
+`/workspace/student_ws/ros2_ws`). A message definition is compiled into Python
+and C++ code, so after changing a `.msg` file run `colcon build` and
+`source install/setup.bash` again.
 
 - `PickupRequest`: the controller's request to the pickup actuator
   (`hold`, `pick`, or `release`), stamped with the observation it answers.

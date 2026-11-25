@@ -15,6 +15,10 @@
 \setlist[enumerate]{itemsep=0.05in,topsep=0.04in}
 \lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,columns=fullflexible,
   keepspaces=true,showstringspaces=false,aboveskip=0.05in,belowskip=0.05in}
+% \todo{...}: unresolved author note, printed in red and listed in the build
+% log. Find all with: grep -rn '\\todo{' docs/homework  (resolve before release)
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}%
+\typeout{TODO (homework.tex line \the\inputlineno): \detokenize{#1}}}
 
 \begin{document}
 \setlength{\fboxrule}{2pt}\setlength{\fboxsep}{2mm}
@@ -23,37 +27,27 @@
 \textbf{ROS 2 setup, messages, and motion over time}
 
 This assignment checks your environment and introduces a small application:
-publishing robot joint positions. You do not need prior robotics experience
-or forward kinematics. The supplied robot is a visualization, not a physics
-simulation. Use the student repository supplied by the instructor.
+``publishing'' robot joint positions using ROS 2. You do not need prior robotics experience
+to achieve this. The supplied robot is a visualization, not a physics
+simulation. Use the student repository supplied by the instructor \todo{link to student repository}.
 
 \begin{enumerate}
-\item \textbf{Install, start, and see the robot.}
-Read \path{docs/setup.md} and the guide for your operating system.
+\item \textbf{Complete the setup guide.}
+Work through \emph{all} of \path{docs/setup.md}, starting with the page for
+your operating system that it links to. This includes the Python parts first
+used in HW02 and HW06: completing them now finds problems early. Remember that
+you can type \texttt{ctrl+shift+v} in a .md file to view the rendered version
+in VS Code. Submit:
 \begin{enumerate}
-\item Install and start Docker Desktop on Windows or macOS. Windows uses
-Linux containers with WSL 2. Linux users follow the Docker Engine directions
-in the setup guide. Open the course repository folder in your editor.
-\item In a terminal \emph{on your computer}, change to that repository
-folder (the one containing \path{compose.yaml}) and run:
-\begin{lstlisting}
-docker compose build
-docker compose up -d
-\end{lstlisting}
-\item Open your usual web browser and visit this exact address:
-
-\url{http://localhost:6080/vnc.html?autoconnect=1&resize=scale}
-
-The page shows the container's Linux desktop and RViz. Docker Desktop's
-dashboard is a different application. Wait for the first robot-package build
-to finish. If needed, inspect \texttt{docker compose logs -f course}; Ctrl+C
-stops following the logs without stopping the container.
-\item Find the Joint State Publisher window. It may be \emph{behind RViz};
-move or minimize RViz to reveal it. Move the head and both leg sliders.
-Select \textbf{Move Camera} in RViz and drag in the 3D view; scroll to zoom.
-Save a screenshot with the robot and sliders visible and the head turned.
-\item Record your host operating system, Docker version, and image
-architecture. Run these in the host terminal:
+\item A screenshot of RViz showing the robot with its head turned, with the
+Joint State Publisher slider window visible.
+\item The output of \texttt{ros2 topic list} before and after starting the
+robot demo. In one sentence, explain what changed and why.
+\item A screenshot of the viewer-check window (grid and axes) from Python on
+your own computer.
+\item A screenshot of the green ``OpenCV test'' window on the browser desktop.
+\item Your host operating system, Docker version, and image architecture,
+from these commands in a host terminal:
 \begin{lstlisting}
 docker version
 docker image inspect intro-robotics-course:jazzy --format '{{.Os}}/{{.Architecture}}'
@@ -66,16 +60,16 @@ should be \texttt{linux/amd64}. Report setup difficulties and resolutions.
 \newpage
 \begin{enumerate}[start=2]
 \item \textbf{Publish a fixed joint pose from Python.}
-Disable the automatic slider publisher before running your node. In a
-\emph{host} terminal in the repository folder, run:
+Your node replaces the slider window as the publisher of joint positions.
+With the container running, open a container shell
+(\texttt{docker compose exec course bash}) and start RViz and
+\texttt{robot\_state\_publisher} without the slider window:
 \begin{lstlisting}
-docker compose -f compose.yaml -f compose.publisher.yaml up -d --force-recreate
-docker compose exec course bash
+ros2 launch r2d2_demo view_r2d2.launch.py use_joint_gui:=false
 \end{lstlisting}
-Refresh the browser page after the container is recreated. The second
-command opens a Linux shell \emph{inside the container}; ROS 2 is available
-there. Robot links may not appear until your first valid joint-state message;
-missing-transform messages before that are expected. In that shell, run:
+Leave it running. Robot links may not appear until your first valid
+joint-state message; missing-transform messages before that are expected.
+In a \emph{second} container shell, run:
 \begin{lstlisting}
 cd /workspace
 python3 homework/hw01/joint_publisher.py
@@ -128,9 +122,9 @@ evidence, showing different poses while the same node continues running.
 \newpage
 \begin{enumerate}[start=4]
 \item \textbf{Inspect messages and explain what is happening.}
-While your node runs, open a second host terminal in the repository folder
-and enter a second container shell with \texttt{docker compose exec course bash}.
-Run the following \emph{inside} that second shell:
+While your node runs, open a third host terminal in the repository folder
+and enter a third container shell with \texttt{docker compose exec course bash}.
+Run the following \emph{inside} that third shell:
 \begin{lstlisting}
 ros2 topic echo /joint_states --once
 ros2 topic hz /joint_states
@@ -152,7 +146,7 @@ Describe one use of \texttt{self} in the provided class.
 \texttt{robot\_state\_publisher} $\longrightarrow$
 \texttt{/tf} $\longrightarrow$ RViz.
 \end{center}
-\item Plot your motion over time. In the second shell, run:
+\item Plot your motion over time. In the third shell, run:
 \begin{lstlisting}
 ros2 run plotjuggler plotjuggler
 \end{lstlisting}
@@ -164,27 +158,27 @@ of at least two periods; compare the period and amplitude you read with your
 \end{enumerate}
 
 \item \textbf{Stop and restart safely.}
-Stop your Python node with Ctrl+C. In a \emph{host} terminal, stop the course
-container with:
+Stop PlotJuggler, your node, and the launch with Ctrl+C, and leave each
+container shell with \texttt{exit}. In the resulting \emph{host} terminal,
+stop the course container with:
 \begin{lstlisting}
 docker compose down
 \end{lstlisting}
 Closing only the browser tab does not stop the container; your files remain
-in the repository folder. To return to the original sliders later, start Docker
-Desktop and run \texttt{docker compose up -d -{}-force-recreate}, then reopen
-the same web address.
+in the repository folder. To see the original sliders later, start the
+container and run \texttt{ros2 launch r2d2\_demo view\_r2d2.launch.py}
+without the launch argument.
 \end{enumerate}
 
-\textbf{Submit:} your completed Python file; setup screenshot and environment
-record; fixed-pose and timed-motion evidence; one joint-state message and
+\textbf{Submit:} your completed Python file; the problem 1 setup evidence; fixed-pose and timed-motion evidence; one joint-state message and
 measured rate; the PlotJuggler plot of the head angle; the short explanations
 above; and a statement of AI use
 (including ``none'' if applicable). We will review correct behavior,
 readable code, and your understanding of the provided tools. Follow the instructor's submission destination and deadline.
 
 \textbf{References and troubleshooting:} copyable commands and
-troubleshooting notes are in \path{docs/setup.md} and
-\path{homework/hw01/README.md}. ROS publisher tutorial:
+troubleshooting notes are in \path{docs/setup.md},
+\path{docs/troubleshooting.md}, and \path{homework/hw01/README.md}. ROS publisher tutorial:
 \url{https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Publisher-And-Subscriber.html}.
 Message fields: \url{https://docs.ros.org/en/jazzy/p/sensor_msgs/msg/JointState.html}.
 \end{document}

@@ -190,6 +190,19 @@ laptop budget.
 
 ## Run live in ROS (watching and the demonstration)
 
+The live graph uses the pickup messages in `conveyor_interfaces`. If you have
+not built the course ROS packages since setup, or the instructor updated the
+messages, build them first in a container shell:
+
+```text
+cd /workspace/student_ws/ros2_ws
+colcon build
+source install/setup.bash
+cd /workspace
+```
+
+Then, from `/workspace`:
+
 ```text
 ros2 launch homework/project/project.launch.py scenario:=s2
 ros2 launch homework/project/project.launch.py scenario:=s2 seed:=22 realism:=on
@@ -210,8 +223,8 @@ bins, and both camera images. The launch file starts four nodes under
 Try `ros2 node info /project/project_controller`,
 `ros2 topic hz /project/fixed_camera/image_raw`, and
 `ros2 interface show conveyor_interfaces/msg/PickupRequest`. The pickup
-messages come from `student_ws/ros2_ws/src/conveyor_interfaces`, which the
-container builds when it starts.
+messages come from `student_ws/ros2_ws/src/conveyor_interfaces`, which you
+build with `colcon build`.
 
 Live mode runs the same class with the same one-period delay, but it depends
 on your computer keeping up with 50 Hz. If `step()` falls behind, the

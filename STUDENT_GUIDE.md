@@ -31,7 +31,7 @@ expected to study its implementation.
 For a ROS problem, start the container (`docker compose up -d`), open a
 container shell (`docker compose exec course bash`, then `cd /workspace`),
 and view its windows on the
-[browser desktop](docs/setup.md#open-the-web-page-yourself).
+[browser desktop](docs/setup.md#open-the-browser-desktop).
 
 ## Cumulative implementation
 

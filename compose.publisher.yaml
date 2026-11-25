@@ -1,5 +1,0 @@
-# HW01 publishing mode: RViz stays open and the slider publisher is disabled.
-services:
-  course:
-    environment:
-      COURSE_JOINT_GUI: "false"

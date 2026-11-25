@@ -17,6 +17,10 @@
 keepspaces=true,showstringspaces=false,aboveskip=0.04in,belowskip=0.04in}
 \newcommand{\R}[2]{{}^{#1}\!R_{#2}}
 \newcommand{\T}[2]{{}^{#1}\!T_{#2}}
+% \todo{...}: unresolved author note, printed in red and listed in the build
+% log. Find all with: grep -rn '\\todo{' docs/homework  (resolve before release)
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}%
+\typeout{TODO (homework.tex line \the\inputlineno): \detokenize{#1}}}
 \newcommand{\courseheader}[2]{%
 \setlength{\fboxrule}{2pt}\setlength{\fboxsep}{2mm}%
 \fcolorbox{black}{white}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{\centering\textbf{Introduction to Robotics Homework \##1 -- Draft}}}\par

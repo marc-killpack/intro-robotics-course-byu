@@ -7,6 +7,6 @@ Start with [r2d2_demo](r2d2_demo/README.md): its robot model, joint sliders,
 and RViz view make a short installation check.
 
 [conveyor_interfaces](conveyor_interfaces/README.md) holds the project's
-pickup messages. The container builds it at startup, so you can read its
-`.msg` files and use them without running `colcon` yourself.
+pickup messages. The [setup guide](../../../docs/setup.md#build-the-ros-packages-and-run-the-robot-demo)
+builds it together with `r2d2_demo`; build again if you change a `.msg` file.
 

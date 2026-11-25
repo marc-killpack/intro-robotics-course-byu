@@ -41,8 +41,8 @@ from `/workspace`:
 ros2 launch homework/hw04/view_arm.launch.py
 ```
 
-A second RViz window and a slider window open for this arm; the R2D2 RViz
-stays behind them. In a second container shell:
+An RViz window and a slider window open for this arm (click a name on the
+taskbar if one is hidden). In a second container shell:
 
 ```bash
 python3 -m homework.hw04.compare_tf

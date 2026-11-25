@@ -31,6 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         novnc \
         websockify \
         openbox \
+        tint2 \
         x11-utils \
     && rm -rf /var/lib/apt/lists/*
 
@@ -40,7 +41,10 @@ RUN useradd --create-home --user-group --shell /bin/bash student \
     && chmod 1777 /tmp/.X11-unix \
     && chown -R student:student /workspace
 
-RUN echo 'source /opt/ros/jazzy/setup.bash' >> /home/student/.bashrc
+# Every container shell gets ROS, plus the course packages once the student
+# has built them with colcon (the install folder lives in the mounted repo).
+RUN echo 'source /opt/ros/jazzy/setup.bash' >> /home/student/.bashrc \
+    && echo 'if [ -f /workspace/student_ws/ros2_ws/install/setup.bash ]; then source /workspace/student_ws/ros2_ws/install/setup.bash; fi' >> /home/student/.bashrc
 
 COPY docker/start-gui.sh /usr/local/bin/start-course-gui
 RUN chmod +x /usr/local/bin/start-course-gui

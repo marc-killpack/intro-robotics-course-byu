@@ -7,27 +7,23 @@ in `urdf/r2d2.urdf`. The eye has a fixed joint, so it follows the moving head.
 
 ## Try it
 
-From the repository root on your computer:
+The [setup guide](../../../../docs/setup.md#build-the-ros-packages-and-run-the-robot-demo)
+walks through building this package and starting the demo. In short, in a
+container shell with the browser desktop open:
 
 ```bash
-docker compose build
-docker compose up -d
+ros2 launch r2d2_demo view_r2d2.launch.py
 ```
 
-Open <http://localhost:6080/vnc.html?autoconnect=1&resize=scale>. You should
-see RViz with the robot and a separate **Joint State Publisher** slider window.
-Drag `head_yaw`, `left_leg_tilt`, and `right_leg_tilt`; watch the model move.
-The first startup builds this ROS 2 package automatically.
-If the sliders are hidden, move or minimize the main RViz window to reveal
-the Joint State Publisher window behind it. Docker Desktop's dashboard is
-not the browser desktop. The complete [setup guide](../../../../docs/setup.md)
-includes startup, browser access, and shutdown.
-In RViz, select **Move Camera** and left-drag in the 3D view to orbit the robot.
+RViz shows the robot beside a separate **Joint State Publisher** slider
+window (click its name on the taskbar if it is hidden). Drag `head_yaw`,
+`left_leg_tilt`, and `right_leg_tilt`; watch the model move. In RViz, select
+**Move Camera** and left-drag in the 3D view to orbit the robot. Press Ctrl+C
+in the launch shell to stop all three programs.
 
-In a second terminal, inspect the messages:
+In a second container shell, inspect the messages:
 
 ```bash
-docker compose exec course bash
 ros2 topic echo /joint_states --once
 ros2 topic echo /tf --once
 ```
@@ -38,27 +34,30 @@ publish moving link transforms on `/tf`. RViz combines the transforms and
 robot description to draw the current pose. The fixed eye joint appears on
 `/tf_static`.
 
-For an early installation exercise, save a screenshot showing the robot with
-its head turned and all three sliders visible. Name the three movable joints
-and find their values in one `/joint_states` message.
+## Without the sliders
+
+The launch file has one option, `use_joint_gui` (default `true`):
+
+```bash
+ros2 launch r2d2_demo view_r2d2.launch.py use_joint_gui:=false
+```
+
+This starts RViz and `robot_state_publisher` but not the slider window, so a
+node you write can be the only publisher of `/joint_states`.
+[HW01](../../../../homework/hw01/README.md) uses this.
 
 ## Where to look
 
 - `urdf/r2d2.urdf`: links, shapes, joint axes, and limits.
-- `launch/view_r2d2.launch.py`: starts the two publishers and RViz.
+- `launch/view_r2d2.launch.py`: starts the slider publisher (optional),
+  `robot_state_publisher`, and RViz.
 - `rviz/r2d2.rviz`: opens RViz with the robot model display.
 
-If you change the URDF, restart with `docker compose restart course`. The
-startup script rebuilds this package and reloads the description.
+These files are installed by `colcon build`, so ROS uses the installed copy.
+If you change one, stop the launch (Ctrl+C), rebuild from
+`/workspace/student_ws/ros2_ws` with `colcon build`, run
+`source install/setup.bash`, and launch again.
 
 This example was inspired by the
 [ROS 2 URDF robot-state-publisher tutorial](https://docs.ros.org/en/foxy/Tutorials/Intermediate/URDF/Using-URDF-with-Robot-State-Publisher.html).
 The URDF and launch file here were written for this course's Jazzy setup.
-
-## Student publisher mode
-
-[HW01](../../../../homework/hw01/README.md) switches the Compose environment
-using `compose.publisher.yaml`. This passes `use_joint_gui:=false` to the
-launch file, keeping RViz and robot-state-publisher while disabling the
-slider publisher. It prevents competing `/joint_states` publishers. The
-default Compose mode passes `use_joint_gui:=true`.

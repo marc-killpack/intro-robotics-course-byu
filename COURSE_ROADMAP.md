@@ -236,8 +236,11 @@ not currently promise a separate mobile-navigation unit.
 Use ROS 2 Jazzy on Ubuntu 24.04 in Docker, native ARM64/AMD64 images, Compose,
 and the local noVNC browser desktop. Students explicitly open the URL in
 [setup](docs/setup.md); Docker Desktop's dashboard is not the display.
-HW01 provides slider and publisher modes so only one node publishes joint
-states. Startup, stopping, and source persistence are explained explicitly.
+The container starts only the desktop; students run `colcon build` and
+start every ROS program themselves (`ros2 launch r2d2_demo
+view_r2d2.launch.py`, with `use_joint_gui:=false` in HW01 so only their node
+publishes joint states). Startup, stopping, and source persistence are
+explained explicitly.
 Keep standalone Python work under `student_ws/python/` and ROS 2 packages
 under `student_ws/ros2_ws/src/`. Local Docker builds should select native
 ARM64 or AMD64 rather than force AMD64 emulation on Apple Silicon. If

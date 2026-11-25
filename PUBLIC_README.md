@@ -1,6 +1,6 @@
 # Introduction to Robotics
 
-Start with **[setup, browser access, and shutdown](docs/setup.md)**, then
+Start with **[the setup guide](docs/setup.md)**, then
 complete **[HW01: a ROS 2 joint-state publisher](homework/hw01/README.md)**
 using the assignment handout supplied by your instructor.
 
@@ -15,6 +15,8 @@ project](homework/project/README.md). Complete assignments in order; later metho
 intentionally remain labeled stubs until you implement them. HW02--HW05 run
 Python on your own computer; their ROS problems and later work run in the
 container. See [two places to run commands](docs/setup.md#two-places-to-run-commands).
+After setup, the [quick start](docs/quick_start.md) lists the commands for
+every session, and [troubleshooting](docs/troubleshooting.md) collects fixes.
 
 ## Where the course is headed
 
@@ -26,27 +28,9 @@ the robot in the final conveyor project. For the clickable version, open
 repository (double-click it in your file browser), then click any idea,
 tool, or part to see where you learn it and how real robots use it.
 
-This repository uses ROS 2 Jazzy on Ubuntu 24.04 inside Docker. Start Docker
-Desktop on Windows/macOS, or your Docker engine on Linux. From this folder
-in your computer's terminal:
-
-```text
-docker compose build
-docker compose up -d
-```
-
-Then open your usual browser and visit:
-
-**<http://localhost:6080/vnc.html?autoconnect=1&resize=scale>**
-
-The page displays RViz and joint sliders; Docker Desktop itself is not that
-display. Wait for the first package build. Sliders may open behind RViz:
-move or minimize its window to reveal them. For a ROS-enabled container
-shell, run `docker compose exec course bash` from a host terminal.
-
-To stop, run `docker compose down` in a host terminal. Then you may close
-the browser tab and quit Docker Desktop. Closing the tab alone does not stop
-the course container. Your source files remain in the repository folder.
+This repository uses ROS 2 Jazzy on Ubuntu 24.04 inside Docker, with a
+Linux desktop you view in your web browser. The [setup guide](docs/setup.md)
+explains every step.
 
 Use `student_ws/python/` for later standalone Python work and
 `student_ws/ros2_ws/src/` for ROS packages. HW01 starts with one standalone

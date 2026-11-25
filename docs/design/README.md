@@ -46,8 +46,10 @@ request in TASKS.md.
 
 Student-facing files shipped in the student copy: `PUBLIC_README.md` (becomes
 its README), `STUDENT_GUIDE.md`, `AI_TUTORING_GUIDE.md`, `AGENTS.md`,
-[setup](../setup.md), [Windows](../windows.md), [macOS](../macos.md),
-[GUI](../gui.md), and each `homework/hwNN/README.md`.
+[setup](../setup.md), [quick start](../quick_start.md),
+[troubleshooting](../troubleshooting.md), [Windows](../windows.md),
+[macOS](../macos.md), the `docs/images/` screenshots, and each
+`homework/hwNN/README.md`.
 
 ## Decisions already made
 

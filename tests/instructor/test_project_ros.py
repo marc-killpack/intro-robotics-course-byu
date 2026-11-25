@@ -131,7 +131,12 @@ class FilesTests(unittest.TestCase):
             self.assertIn(f'="{word}"', request)
         for word in PHASES:
             self.assertIn(f'="{word}"', state)
-        self.assertIn("conveyor_interfaces", (ROOT / "docker/start-gui.sh").read_text())
+        # Students build the message package themselves (instructor, Nov 24):
+        # setup and the project guide must tell them to run colcon.
+        setup = (ROOT / "docs/setup.md").read_text(encoding="utf-8")
+        self.assertIn("conveyor_interfaces", setup)
+        self.assertIn("colcon build", setup)
+        self.assertIn("colcon build", (ROOT / "homework/project/README.md").read_text(encoding="utf-8"))
         spec = importlib.util.spec_from_file_location("launch_file", ROOT / "homework/project/project.launch.py")
         self.assertIsNotNone(spec)
         self.assertTrue((ROOT / "homework/project/project.rviz").exists())
