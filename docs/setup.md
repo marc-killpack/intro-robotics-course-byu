@@ -38,9 +38,8 @@ in VS Code (**File > Open Folder...**). We strongly recommend VS Code, but any
 editor works.
 
 Most commands in this course are typed into a **terminal**, a window where you
-type commands instead of clicking. VS Code has one built in: choose
-**Terminal > New Terminal** from the menu, or press Ctrl+\` (Control and the
-backtick key, left of 1; this is Control on macOS too). It opens at the bottom of the window, already in the course folder (the one
+type commands instead of clicking. VS Code has one built in: type Ctrl+Shift+P and then start typing the following **Terminal > New Terminal** and select it from the menu when it shows up. Or, you press Ctrl+\` (Control and the
+backtick key, left of 1; this is Control on macOS too). The terminal opens at the bottom of the window, already in the course folder (the one
 containing `compose.yaml`). On Windows it is PowerShell; on macOS it is zsh;
 on Linux it is usually bash. The **+** button in the terminal panel opens
 another one, which you will need when two programs run at once.
@@ -60,7 +59,7 @@ docker compose version
 Docker has two halves: the **client** is the `docker` command you type, and
 the **server** (the *engine*) is the part that actually runs containers. When
 the engine is running, the output has both a `Client:` and a `Server:`
-section:
+section, looking something like this:
 
 ```text
 Client:
@@ -96,29 +95,29 @@ What these do:
 - `docker compose build` creates the course **image**: a saved snapshot of a
   Linux system with ROS 2 and the course libraries installed, built from the
   recipe in `docker/Dockerfile`. The first build downloads a few gigabytes
-  and can take 5--20 minutes. You only build again when the instructor
+  and can take 5--20 minutes (but usually much less). You only need to build again when the instructor
   announces a change to that recipe.
-- `docker compose up -d` starts a **container**: a running copy of that
-  image. `-d` runs it in the background, so your terminal is free again.
+- `docker compose up -d` starts a **container**, which is a running copy of that
+  Linux image or virtual computer. `-d` runs it in the background, so your terminal is free again for typing additional commands.
 
-The container **mounts** the course folder: your folder on your computer
-appears inside the container as `/workspace`. It is one set of files seen from
+The container **mounts** the course folder, which means that your folder on your computer
+appears inside the Linux container as `/workspace`. It is one set of the same files seen from
 two places, not a copy. A file you save in VS Code is immediately the file the
 container uses, and anything the container writes into `/workspace` appears in
-your folder. That is why your work is safe when the container stops: it was
+your folder. That is why your work is safe when the container stops, since it was
 always stored on your own computer.
 
 ### Open the browser desktop
 
-Programs with windows, such as RViz (the ROS 3D viewer), run inside the
+Programs with graphics or windows, such as RViz (the ROS 3D viewer), run inside the
 container on a Linux desktop that you view in your web browser. Open your
 usual browser on this same computer and visit:
 
 **<http://localhost:6080/vnc.html?autoconnect=1&resize=scale>**
 
 Bookmark this address. Docker Desktop's own dashboard does not show this
-desktop. You should see an empty desktop with a taskbar along the bottom.
-Nothing else runs yet; you will start programs yourself in the next steps.
+graphical desktop. After loading that page, you should see an empty desktop with a taskbar along the bottom.
+Nothing else runs yet, but you will start programs yourself in the next steps.
 Each window you open appears on the taskbar; click its name there to bring a
 hidden or minimized window back to the front.
 
@@ -173,7 +172,7 @@ You should see only two topics, which ROS itself always creates:
 /rosout
 ```
 
-ROS programs (*nodes*) talk to each other by publishing messages on named
+ROS programs (called *nodes*) talk to each other by publishing messages on named
 *topics*; nothing is publishing yet. Next, build the course's ROS packages:
 
 ```bash
@@ -185,18 +184,21 @@ source install/setup.bash
 A ROS **package** is a folder of related files: here, a small robot model and
 the launch file that starts it (`r2d2_demo`), and the project's message
 definitions (`conveyor_interfaces`). `colcon build` turns the packages in
-`src/` into an `install/` folder that ROS can find (the first build takes a
-minute or two and ends with `Summary: 2 packages finished`), and `source
+`src/` into an `install/` folder that ROS can find (this happens by compiling code and moving libraries
+or executables to the right folders - the first build takes a
+minute or two and ends with `Summary: 2 packages finished`). The command: `source
 install/setup.bash` tells *this* shell where that folder is. New container
-shells do the `source` step automatically. Two rules:
+shells do the `source` step automatically. 
 
-- Rebuild (`colcon build`, then `source install/setup.bash`) after changing
+There are two important rules about building code for ROS 2:
+
+- Rebuild (meaning running `colcon build`, then `source install/setup.bash`) after changing
   anything inside a package: a robot model, a launch file, a message
   definition, or C++ code. Plain Python scripts that you run directly, such
-  as the HW01 publisher, never need a rebuild.
-- Always run `colcon build` from `/workspace/student_ws/ros2_ws`. Run anywhere
-  else, it creates stray `build/`, `install/`, and `log/` folders
-  ([fix](troubleshooting.md#build-install-and-log-folders-appeared-in-the-wrong-place)).
+  as the HW01 publisher, *never* need a rebuild.
+- Always run `colcon build` from `/workspace/student_ws/ros2_ws`. Running it anywhere
+  else, it creates additional and unnecessary `build/`, `install/`, and `log/` folders
+  ([what to do if you build in the wrong place](troubleshooting.md#build-install-and-log-folders-appeared-in-the-wrong-place)).
 
 Now start the robot demo:
 
@@ -204,7 +206,7 @@ Now start the robot demo:
 ros2 launch r2d2_demo view_r2d2.launch.py
 ```
 
-`ros2 launch` starts several nodes at once; this launch file starts three:
+`ros2 launch` starts several nodes or programs (Python or C++ executables) at once. This specific launch file starts three:
 a slider window (the **Joint State Publisher**), `robot_state_publisher`, and
 RViz. In the browser desktop, an R2D2-like robot appears in RViz. Move all
 three sliders. In RViz, select **Move Camera** and drag in the dark 3D view to
@@ -213,9 +215,7 @@ name on the taskbar.
 
 ![RViz showing the robot with its head turned, beside the slider window](images/r2d2-demo.png)
 
-The launch keeps running in this shell. Open a **second** VS Code terminal,
-enter a second container shell (`docker compose exec course bash`), and look
-again:
+The launch keeps running in this shell. Open a **second** VS Code terminal by pushing the `plus` button on the top right in the existing terminal window. In the second terminal, connect to the Linux container again (`docker compose exec course bash`), and look at the ros topics that are being published now:
 
 ```bash
 ros2 topic list
@@ -227,9 +227,9 @@ slider window) and `/tf` (the positions of the robot's parts, computed by
 `robot_state_publisher`). Close the slider window and run the `echo` command
 again: it now waits silently, because the slider window *was* the only
 program publishing `/joint_states`. Press Ctrl+C to stop waiting. This is how
-ROS works: a topic only has data while some node publishes it.
+ROS works, a topic only has data while some node publishes it.
 
-To stop the demo, click the first shell and press Ctrl+C; every node it
+To stop the demo, click the first shell where we ran `ros2 launch` and press Ctrl+C (the open terminals are listed on the right-hand side of the bottom window); every node it
 started closes. Start it again with the same `ros2 launch` command. That is
 also the fix if you close a window by accident.
 
@@ -260,27 +260,36 @@ changed.
 HW02--HW05 mostly use plain Python (no ROS): rotation matrices, transforms,
 forward kinematics, and planar Jacobians, with a 3D arm viewer for checking
 them. You run them directly on your computer so the viewer opens as a normal
-window. Their ROS problems (HW03 problem 4, HW04 problem 5) still run in the
-container, using the same Python files. Set this up now, during the first week.
+window. The few ROS-related problems (HW03 problem 4, HW04 problem 5) still run in the
+container, using the same Python files that we develop on your computer. 
+Set this up now, during the first week.
 
 ### Install Python (once)
 
 Use **Python 3.12 or 3.13**. The 3D viewer's packages do not yet support
 newer versions on every computer, so 3.13 is the safe choice.
 
-- **Windows:** install the **Python install manager**, either from the
-  Microsoft Store (search for "Python install manager") or from
-  [python.org](https://www.python.org/downloads/windows/); the two are the
-  same program. Then, in a new terminal, install 3.13 and list your versions:
+- **Windows:** first check whether you already have it. `py` is the Python
+  launcher, which picks among the Python versions on your computer:
 
   ```powershell
-  py install 3.13
-  py list
+  py -V:3.13 --version
   ```
 
-  If `py install` is not recognized, you have an older Python launcher; use
-  the "Windows installer (64-bit)" for Python 3.13 from the same python.org
-  page instead.
+  If this prints `Python 3.13` followed by more numbers, skip to the next
+  section. Otherwise, install Python 3.13 according to the message you got:
+
+  - **`py` is not recognized:** you have no Python yet. Install the **Python
+    install manager**, either from the Microsoft Store (search for "Python
+    install manager") or from
+    [python.org](https://www.python.org/downloads/windows/); the two are the
+    same program. Open a new terminal and run `py install 3.13`.
+  - **`No suitable Python runtime found`:** you have an older Python launcher,
+    which cannot run `py install` (it answers `can't open file ...\install`).
+    Download the "Windows installer (64-bit)" for Python 3.13 from
+    [python.org](https://www.python.org/downloads/windows/) and run it.
+
+  Then open a new terminal and run the check again.
 - **macOS:** install Python 3.13 from
   [python.org](https://www.python.org/downloads/macos/); afterward
   `python3.13 --version` should work.
@@ -298,8 +307,6 @@ py -V:3.13 -m venv .venv
 python -m pip install --upgrade pip
 python -m pip install -e ".[visualization]"
 ```
-
-(With an older launcher, the first line is `py -3.13 -m venv .venv`.)
 
 **macOS** (on Linux, use `python3` in the first line):
 
@@ -367,12 +374,12 @@ Take a screenshot of the window for HW01 problem 1.
    names the HW02 function to write. That is expected: it means the setup
    works and the homework is waiting for you.
 
-Docker does not need to be running for these Python scripts. Docker Desktop
-and the container must be running for the ROS problems.
+Docker does not need to be running for these Python scripts. However, Docker Desktop
+and the Linux container must be running for the ROS-related problems.
 
-**If this setup does not work on your computer** (unlikely), the container
-has everything installed: run the same commands in a container shell from
-`/workspace`, and the windows open on the browser desktop instead. Tell the
+**If this setup does not work on your computer** (which is unlikely), the Linux container
+also already has everything installed. So you can run the same commands in a container shell from
+`/workspace`, and the windows open on the browser-based desktop instead. If this setup doesn't work, please tell the
 instructor or TA your operating system, Python version, and the error so it
 can be fixed.
 
@@ -380,16 +387,16 @@ can be fixed.
 
 From HW06 on, you run all Python in a container shell. The container adds
 libraries such as OpenCV (computer vision), SciPy, PyTorch, and the
-reinforcement-learning packages at tested versions. Check them now: start
-the container if needed (`docker compose up -d`), open the browser desktop,
-open a container shell (`docker compose exec course bash`), and in that
-shell run:
+reinforcement-learning packages at tested versions. Let's check them now by starting
+the container if needed (`docker compose up -d`), opening the browser desktop,
+opening a container shell (`docker compose exec course bash`), and in that
+shell running:
 
 ```bash
 python -c "import cv2; print(cv2.__version__)"
 ```
 
-It should print a version number such as `4.10.0`. Then check that an OpenCV
+It should print a version number such as `4.10.0`. Then after copying and running the following in the Linux container terminal, check that an OpenCV
 window appears on the browser desktop:
 
 ```bash
@@ -409,6 +416,24 @@ A green window titled "OpenCV test" opens on the browser desktop. Take a
 screenshot for HW01 problem 1, then click the green window and press any key
 to close it.
 
+Finally, we will check the learning packages used in HW10 and HW11: PyTorch (for neural
+networks), Gymnasium (for simulated tasks), and Stable-Baselines3
+(for reinforcement learning). This script trains a small neural network, by
+trial and error, to balance a pole on a moving cart:
+
+```bash
+python homework/hw01/learning_check.py
+```
+
+It prints how long the pole stayed up after each round of practice, the
+numbers should grow, though not always steadily, and they differ from computer to
+computer. Training takes under a minute. Then a window on the browser
+desktop replays the untrained network beside the trained one. Copy the
+printed line ending in `OK` (such as
+`torch 2.15.0+cpu, Gymnasium 1.4.0, SB3 2.9.2: OK`) and take a screenshot for HW01 problem 1, and
+close the window to finish. In HW11 you will train the same kind of network
+to steer a robot arm.
+
 Homework activities in the container take the same options as on your own
 computer: `--show` opens a figure on the browser desktop, and
 `--save tmp/name.png` saves it as a picture in your course folder without
@@ -418,7 +443,7 @@ covers the course code.
 
 ## When the instructor announces a Docker update
 
-Occasionally the instructor changes the Docker recipe (`docker/Dockerfile`)
+Occasionally the instructor may change the Docker recipe (`docker/Dockerfile`)
 or startup script. After you receive that update, leave any container shell
 with `exit`, so you are in a host terminal, and run:
 

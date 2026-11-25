@@ -122,8 +122,10 @@ drafting round; review the project output (R7) before setting grade levels.
   instructor's TODO notes (see Completed); review `docs/setup.md`,
   `docs/quick_start.md`, `docs/troubleshooting.md`, and the trimmed
   `docs/windows.md`/`docs/macos.md` together. The Windows Python route now
-  recommends the Python install manager (`py install 3.13`), which has not
-  yet been tried hands-on.
+  starts with `py -V:3.13 --version` and installs only when 3.13 is missing
+  (install manager if there is no `py`, the classic installer if an older
+  launcher is present); the older-launcher path was tried Nov 25, the install
+  manager path has not been tried hands-on.
 - [ ] **R7. Project** — the [specification](instructor/PROJECT_SPEC_DRAFT.md)
   (with the S1--S3 results table), the [student guide](homework/project/README.md),
   the [scenario files](homework/project/scenarios/), and a live run

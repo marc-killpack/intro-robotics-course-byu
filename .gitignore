@@ -12,6 +12,16 @@ output/pdf/
 release_output/
 tmp/
 
+# LaTeX files left by building a handout in an editor (build_pdfs.py writes to docs/homework/build/)
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+docs/homework/hw*/*.pdf
+
 # ROS 2 / colcon
 student_ws/ros2_ws/build/
 student_ws/ros2_ws/install/

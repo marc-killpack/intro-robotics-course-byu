@@ -16,6 +16,7 @@ as you go:
 - the output of `ros2 topic list` before and after starting the robot demo;
 - the viewer-check window from your own computer's Python;
 - the green "OpenCV test" window on the browser desktop;
+- the line ending in `OK` from the learning-package check;
 - your Docker version and image architecture, from a host terminal:
 
   ```text

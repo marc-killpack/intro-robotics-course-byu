@@ -25,6 +25,7 @@
     "homework/hw01/README.md": "homework/hw01/README.md",
     "homework/hw01/joint_publisher.py": "homework/hw01/joint_publisher.py",
     "homework/hw01/support.py": "homework/hw01/support.py",
+    "homework/hw01/learning_check.py": "homework/hw01/learning_check.py",
     "STUDENT_GUIDE.md": "STUDENT_GUIDE.md",
     "pyproject.toml": "pyproject.toml",
     "src/intro_robotics/__init__.py": "src/intro_robotics/__init__.py",

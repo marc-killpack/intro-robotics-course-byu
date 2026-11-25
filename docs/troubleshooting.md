@@ -172,6 +172,14 @@ browser desktop.
 
 ## Python on your own computer
 
+### Windows: `py install` says `can't open file ...\install`
+
+Your `py` is an older Python launcher, which does not have the `install` (or
+`list`) command and treats the word as a file name. You do not need it:
+follow [Install Python](setup.md#install-python-once), which starts by
+checking whether Python 3.13 is already installed with
+`py -V:3.13 --version`.
+
 ### PowerShell says running scripts is disabled
 
 Windows blocks the `.venv` activation script by default. Run this once, then

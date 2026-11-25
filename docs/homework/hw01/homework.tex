@@ -22,9 +22,9 @@
 
 \begin{document}
 \setlength{\fboxrule}{2pt}\setlength{\fboxsep}{2mm}
-\fcolorbox{black}{white}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{\centering\textbf{Introduction to Robotics Homework \#1 -- Draft}}}
+\fcolorbox{black}{white}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{\centering\textbf{Introduction to Robotics: Homework \#1 -- Draft}}}
 
-\textbf{ROS 2 setup, messages, and motion over time}
+\textbf{Themes:} Setting up ROS 2, message passing with ROS 2, and defining joint motion over time
 
 This assignment checks your environment and introduces a small application:
 ``publishing'' robot joint positions using ROS 2. You do not need prior robotics experience
@@ -33,19 +33,22 @@ simulation. Use the student repository supplied by the instructor \todo{link to 
 
 \begin{enumerate}
 \item \textbf{Complete the setup guide.}
-Work through \emph{all} of \path{docs/setup.md}, starting with the page for
-your operating system that it links to. This includes the Python parts first
-used in HW02 and HW06: completing them now finds problems early. Remember that
+Work through \emph{all} of the steps in \path{docs/setup.md}, starting with the page for
+your operating system that it links to. This includes installing Python libraries first
+used in HW02 and HW06, but completing them now helps you find problems early. Remember that
 you can type \texttt{ctrl+shift+v} in a .md file to view the rendered version
 in VS Code. Submit:
 \begin{enumerate}
 \item A screenshot of RViz showing the robot with its head turned, with the
-Joint State Publisher slider window visible.
+Joint State Publisher slider window visible in the screenshot.
 \item The output of \texttt{ros2 topic list} before and after starting the
 robot demo. In one sentence, explain what changed and why.
 \item A screenshot of the viewer-check window (grid and axes) from Python on
 your own computer.
 \item A screenshot of the green ``OpenCV test'' window on the browser desktop.
+\item The line ending in \texttt{OK} printed by the learning-package check
+(PyTorch, Gymnasium, and Stable-Baselines3) in the container and a 
+screenshot of the cart-pole pendulum simulation window.
 \item Your host operating system, Docker version, and image architecture,
 from these commands in a host terminal:
 \begin{lstlisting}

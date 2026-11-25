@@ -4,6 +4,33 @@ Updated November 23, 2026. This record covers the uncommitted faculty change
 set, not a published semester release. [TASKS.md](../../TASKS.md) distinguishes
 implemented work from faculty approval and further platform validation.
 
+## November 25: learning-package check in setup
+
+Setup's container Python section and HW01 problem 1 now run
+`homework/hw01/learning_check.py`: PPO on Gymnasium's `CartPole-v1` for 8
+rounds of 2048 steps, printing the greedy episode length after each round,
+then a matplotlib animation of the untrained (sampled actions) and trained
+(greedy) networks; the image has no pygame, so the cart and pole are drawn
+with matplotlib. On Windows (x64, Docker 29.9.3, current image), seeds 0, 1,
+and 2 took 38, 18, and 25 s; untrained episodes failed after 22, 15, and 28
+steps and the last round balanced 409, 500, and 500 of 500 (seed 1 is used).
+The final line was `torch 2.15.0+cpu, Gymnasium 1.4.0, SB3 2.9.2: OK`. The
+window opened on the browser desktop with both panels animating (screenshot
+via PIL in the container). An untrained network acting greedily (no
+sampling) balanced all 500 steps by chance with seed 0, which is why the
+untrained run samples its actions. The image
+build already imports these packages, so this check catches runtime failures
+on student machines (ARM64 is still unvalidated). HW01 PDF rebuilt: 3 pages,
+no overfull or underfull boxes.
+
+Windows Python check: with the older Python launcher (3.12.10) and the Store
+Python 3.13, `py install 3.13` and `py list` fail with `can't open file
+...\install` (the launcher passes the word to Python as a script). `py -V:3.13
+--version` prints `Python 3.13.14`, `py -V:3.13 -m venv` creates a 3.13
+environment, and a missing version prints `No suitable Python runtime found`.
+Setup now checks with `py -V:3.13 --version` first and branches on that
+message; troubleshooting has an entry for the `install` error.
+
 ## November 24: desktop-only startup and the rewritten setup documents
 
 Windows/WSL 2 host, Docker 29.9.3, native AMD64 image rebuilt with `tint2`
