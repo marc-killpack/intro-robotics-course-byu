@@ -359,6 +359,9 @@ videos, or instructor-only solutions; software versions, operating-system,
 ROS/simulator dependencies and maintenance status; and the specific proposed
 adaptation, estimated effort, and required attribution.
 
+The textbook choice and the topic-by-topic reading matrix are drafted in
+[readings and outside resources](docs/design/readings.md) (review item R14).
+
 Compare suitable simulator and introductory RL options for ROS 2 Jazzy,
 ARM64/AMD64, Windows, and Linux, including CPU performance and teaching value.
 Present verified facts separately from recommendations, with a topic-by-topic

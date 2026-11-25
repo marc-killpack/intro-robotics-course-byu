@@ -1,6 +1,6 @@
 # Planning and design index
 
-Updated November 23, 2026. This is the **single landing page for faculty
+Updated November 25, 2026. This is the **single landing page for faculty
 planning material**. Open decisions, the review queue, and open work are in
 [TASKS.md](../../TASKS.md); this page says what each other document is for and
 records the decisions already made, with their rationale. It is also meant to
@@ -22,6 +22,7 @@ request in TASKS.md.
 | [Course roadmap](../../COURSE_ROADMAP.md) | Goals, audience, agreed scope, weekly sequence, environment policy, project concept, outside-resource policy | Checking course direction |
 | [Semester integration](semester-integration.md) | 42-session calendar, prerequisite alignment between units, assignment-to-project map | Scheduling; reviewing how units connect |
 | [Lecture outlines](lecture-outlines.md) | 18 timed 50-minute outlines for planning, vision, servoing, ML, RL, and project weeks | Lecture preparation |
+| [Readings and outside resources](readings.md) | Required reading for every student, session by session (mostly Corke, *Robotics, Vision and Control*, Python edition); optional references; faculty-only texts; resource register with access and reuse terms | Writing the syllabus; preparing lectures and homework READMEs; reviewing R14 |
 | **Assignments** | | |
 | [Homework map](../../HOMEWORK_MAP.md) | Exactly which methods students write versus which are supplied, HW01--HW10 | Reviewing any assignment boundary |
 | [Handout sources](../homework/README.md) | LaTeX handouts, per-assignment faculty notes, PDF build commands | Reading or building handouts |

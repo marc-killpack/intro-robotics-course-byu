@@ -1,6 +1,6 @@
 # Course preparation task list
 
-Updated November 24, 2026. **This is the single place for open work:**
+Updated November 25, 2026. **This is the single place for open work:**
 0. [Approach and schedule](#0-approach-and-schedule),
 1. [Decisions](#1-decisions),
 2. [Review queue](#2-review-queue) (drafts awaiting faculty reading), and
@@ -212,6 +212,21 @@ drafting round; review the project output (R7) before setting grade levels.
   it", project role, real-robot counterpart, "reach for it when", and
   "beyond this course" text. Edit the content in `robot_stack.py` and run
   it to regenerate `robot_stack.svg` and `robot_stack.html`.
+- [ ] **R14. Readings and textbook (Nov 25)** — [readings and outside
+  resources](docs/design/readings.md): Corke, *Robotics, Vision and Control*
+  (Python, 3rd ed., free through BYU's SpringerLink) as the primary text, 18
+  required readings in session order (about 100 book pages plus short web
+  pages), optional references by outcome, faculty-only texts (Siciliano et
+  al. and Lynch and Park kept for faculty as graduate level), and a resource
+  register with access and reuse terms. *Decided Nov 25 (instructor):* the
+  syllabus lists Corke as the required text and reminds students it is free
+  through the HBLL's SpringerLink access (suggested wording is in the
+  document); reading points are for completion only, details set by the
+  instructor; the full list of 18 stands for now, with readings 2, 8, 15,
+  and 17 recorded as the first to drop if it proves too long. Still to
+  review: each section choice and page range against the lecture you will
+  give. After approval, copy the Read column into the syllabus and each
+  homework README.
 
 ## 3. Open work
 
