@@ -27,8 +27,11 @@ class JointPublisher(Node):
         # HW01: begin with a fixed pose, then make the angles vary smoothly.
         # The provided URDF's bounds are listed in support.py.
         # BEGIN SOLUTION
-        phase = 2 * math.pi * elapsed / 5.0
-        return [0.7 * math.sin(phase), 0.2 * math.sin(phase), -0.2 * math.sin(phase)]
+        head_angle = 1.5 * math.sin(elapsed*2*math.pi*0.25)  # head moves back and forth
+        left_leg_angle = 0.5 * math.sin(elapsed * 2 * math.pi)  # left leg moves up and down
+        right_leg_angle = -0.5 * math.sin(elapsed * 2 * math.pi)  # right leg moves opposite to left leg
+
+        return [head_angle, left_leg_angle, right_leg_angle]
         # END SOLUTION
         raise NotImplementedError("HW01: implement joint_positions(elapsed)")
 
@@ -51,17 +54,43 @@ class JointPublisher(Node):
 
 
 def main():
+    # The steps below are the standard pattern for starting and stopping
+    # almost every Python ROS 2 node. Expect to see this same shape in
+    # future assignments; usually only the node class name changes.
+
+    # 1. Start ROS. This connects this program to the ROS system so it can
+    #    talk to other nodes. It must run before any node is created.
     rclpy.init()
+
+    # 2. Create our node. Running __init__ above sets up the publisher and
+    #    the timer, but nothing is published yet.
     node = JointPublisher()
+
     try:
+        # 3. Hand control to ROS. spin() waits for events (here, the timer
+        #    firing every 0.1 s based on the defintion in the __init__ method) 
+        # and calls the matching method each time.
+        #    It keeps running until the program is stopped, which is why
+        #    our own code never needs a while loop.
         rclpy.spin(node)
-    except (KeyboardInterrupt, ExternalShutdownException):  # Ctrl+C
+    except (KeyboardInterrupt, ExternalShutdownException):
+        # 4. Pressing Ctrl+C (KeyboardInterrupt), or ROS being shut down
+        #    from outside (ExternalShutdownException), stops spin().
+        #    These are normal ways to quit, so we ignore them instead of
+        #    printing an error.
         pass
     finally:
+        # 5. Clean up. The finally block always runs, even after an error,
+        #    so the node is removed and ROS is shut down properly.
         node.destroy_node()
+        # rclpy.ok() is True while ROS is still running. Checking it first
+        # avoids shutting ROS down twice if it was already stopped.
         if rclpy.ok():
             rclpy.shutdown()
 
 
+# Standard Python (not ROS-specific): this is True only when the file is run
+# directly, e.g. "python3 joint_publisher.py". If another file imports this
+# one (for example, a grading test), main() does not start automatically.
 if __name__ == "__main__":
     main()

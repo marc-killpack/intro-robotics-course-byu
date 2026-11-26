@@ -126,6 +126,19 @@ cylinder (whose length runs along its local Z) along X; show why with
 $\operatorname{Rot}_y$.
 \item TF frame \texttt{arm\_link3} sits at joint 3. Which FK frame has the
 same origin, and why do their orientations differ when $q_3\neq 0$?
+\item The launch file starts three nodes: the slider window
+(\texttt{joint\_state\_publisher\_gui}), \texttt{robot\_state\_publisher},
+and RViz. Explain this chain in your own words:
+\begin{center}\small
+sliders $\longrightarrow$
+\texttt{/joint\_states} $\longrightarrow$
+\texttt{robot\_state\_publisher} $\longrightarrow$
+\texttt{/tf} $\longrightarrow$ RViz.
+\end{center}
+What does each topic carry, and what does \texttt{robot\_state\_publisher}
+need from your URDF to turn joint angles into \texttt{/tf}? In HW01, your
+own node took the sliders' place in this chain; why did RViz still show the
+robot moving?
 \end{enumerate}
 The pyqtgraph slider viewer (\texttt{python -m homework.hw04.play\_arm})
 remains available for exploring your FK.

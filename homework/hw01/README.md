@@ -67,46 +67,87 @@ Use radians and stay within the supplied joint limits. A function named
 uses those states and the URDF to generate `/tf`; RViz displays the result.
 This exercise animates a kinematic model; no motor controller is involved.
 
-## 3. Inspect your messages
+## 3. Check that the fixed pose holds
 
-Open a **third** VS Code terminal and a third container shell. While your
-publisher runs:
+With your fixed-pose node running, RViz should show the robot holding your
+chosen pose. Check the messages too: open a **third** VS Code terminal and a
+third container shell, and run these one at a time:
 
 ```bash
 ros2 topic echo /joint_states --once
+ros2 topic echo /joint_states --once
+ros2 topic echo /joint_states --field position
 ros2 topic hz /joint_states
 ros2 topic info /joint_states --verbose
 ```
 
-Stop the rate display with Ctrl+C. Approximately 10 Hz is expected; browser
-rendering and host load can affect what you observe. Check that your node is
-the **only publisher** on `/joint_states`. RViz and robot-state-publisher are
-subscribers. If the robot jumps between poses, a second publisher is running
-(for example a slider window from an earlier launch).
+Running `--once` twice gives two messages a moment apart; compare which
+fields changed. `--field position` prints only the positions, about ten per
+second; stop it, and the rate display, with Ctrl+C. Approximately 10 Hz is
+expected; browser rendering and host load can affect what you observe. Check
+that your node is the **only publisher** on `/joint_states`. RViz and
+robot-state-publisher are subscribers. If the robot jumps between poses, a
+second publisher is running (for example a slider window from an earlier
+launch). Keep this third shell open.
 
-Then plot the motion over time with PlotJuggler, in the same third shell:
+## 4. Make it move, then check again
+
+Change `joint_positions(elapsed)` so the head moves smoothly back and forth,
+then stop and rerun your node. In the third shell, run the same five
+commands again and compare with the fixed pose: what changed in the
+messages, and did the rate change?
+
+Make a 10–20 second screen recording of RViz while the head moves:
+
+- **Windows 11:** open **Snipping Tool**, click its video-camera (Record)
+  button, then **New**; drag a rectangle around RViz and click **Start**.
+  Click the red stop button when done and save the video.
+- **macOS:** press Cmd+Shift+5, choose **Record Selected Portion**, drag
+  around RViz, and click **Record**. Click the stop button in the menu bar
+  when done; the video is saved to your Desktop.
+
+## 5. Plot the motion with PlotJuggler
+
+With your moving node still running, stop any command in the third shell
+with Ctrl+C and run:
 
 ```bash
 ros2 run plotjuggler plotjuggler
 ```
 
-In its window on the browser desktop:
+A splash screen appears, then the PlotJuggler window opens on the browser
+desktop. If its bottom is cut off, double-click the title bar to maximize it.
+Close any "New release available" notice; do not update. A "Telemetry reply
+error" line in the terminal is expected: the course container blocks
+PlotJuggler's usage report.
 
-1. Set **Buffer** to 30 seconds, so the plot keeps at least two periods.
-2. Under **Streaming**, choose **ROS2 Topic Subscriber** and click **Start**.
-3. Select `/joint_states` and click **OK**.
-4. Drag `/joint_states/head_yaw/position` from the list on the left into the
-   plot area.
+**Steps 1–3:** in the **Streaming** panel, choose **ROS2 Topic Subscriber**,
+set **Buffer** to 30 (type 30, press Enter) so the plot keeps at least two
+periods, and click **Start**.
 
-Read the period and amplitude from the plot and compare them with your
-`joint_positions` function. A "Telemetry reply error" line in the terminal
-is expected: the course container blocks PlotJuggler's usage report.
+![PlotJuggler Streaming panel with steps 1 to 3 marked](../../docs/images/hw01-plotjuggler-1-streaming.png)
 
-Explain how names correspond to positions, what the timestamp means, and why
-a timer is used. The provided scaffold handles setup and shutdown so the
-student work stays focused on message contents and motion over time.
+**Steps 4–5:** in the window that opens, click `/joint_states` and click
+**OK**. If `/joint_states` is missing, your node is not running.
 
-## 4. Finish and stop
+![PlotJuggler topic selection window with steps 4 and 5 marked](../../docs/images/hw01-plotjuggler-2-topic.png)
+
+**Steps 6–7:** in the **Timeseries List**, expand `joint_states`, then
+`head_yaw`, and drag `position` into the plot area.
+
+![PlotJuggler head-angle plot with steps 6 and 7 marked](../../docs/images/hw01-plotjuggler-3-plot.png)
+
+The example above is not your answer; your curve has the period and
+amplitude you chose. Click the pause button (two bars, next to **Stop**) to
+freeze the plot, read the period (peak to peak) and amplitude (zero to
+peak), and compare them with your `joint_positions` function.
+
+Finally, explain how names correspond to positions, what the timestamp
+means, and why a timer is used. The provided scaffold handles setup and
+shutdown so the student work stays focused on message contents and motion
+over time.
+
+## 6. Finish and stop
 
 Press Ctrl+C in each container shell to stop PlotJuggler, your node, and the
 launch, then type `exit` in each to return to a host terminal. Run:

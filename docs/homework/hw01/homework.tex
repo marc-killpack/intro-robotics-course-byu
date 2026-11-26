@@ -2,7 +2,8 @@
 \documentclass[12pt,letterpaper]{article}
 \usepackage{mathptmx}
 \usepackage[T1]{fontenc}
-\usepackage{xcolor,amsmath,amssymb,xurl,listings,enumitem}
+\usepackage{xcolor,amsmath,amssymb,xurl,listings,enumitem,graphicx}
+\graphicspath{{../../images/}}
 \textwidth=6.5in
 \textheight=9in
 \oddsidemargin=0in
@@ -24,7 +25,7 @@
 \setlength{\fboxrule}{2pt}\setlength{\fboxsep}{2mm}
 \fcolorbox{black}{white}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{\centering\textbf{Introduction to Robotics: Homework \#1 -- Draft}}}
 
-\textbf{Themes:} Setting up ROS 2, message passing with ROS 2, and defining joint motion over time
+\textbf{Themes:} Setting up ROS 2, message passing with ROS 2, and defining and viewing joint motion over time
 
 This assignment checks your environment and introduces a small application:
 ``publishing'' robot joint positions using ROS 2. You do not need prior robotics experience
@@ -34,16 +35,16 @@ simulation. Use the student repository supplied by the instructor \todo{link to 
 \begin{enumerate}
 \item \textbf{Complete the setup guide.}
 Work through \emph{all} of the steps in \path{docs/setup.md}, starting with the page for
-your operating system that it links to. This includes installing Python libraries first
-used in HW02 and HW06, but completing them now helps you find problems early. Remember that
+your operating system that it links to. This includes installing Python libraries that 
+will be used in HW02 and HW06, but completing them now helps you find problems early. Remember that
 you can type \texttt{ctrl+shift+v} in a .md file to view the rendered version
-in VS Code. Submit:
+in VS Code. Submit the following evidence of a successful setup:
 \begin{enumerate}
 \item A screenshot of RViz showing the robot with its head turned, with the
 Joint State Publisher slider window visible in the screenshot.
 \item The output of \texttt{ros2 topic list} before and after starting the
 robot demo. In one sentence, explain what changed and why.
-\item A screenshot of the viewer-check window (grid and axes) from Python on
+\item A screenshot of the 3D viewer-check window (grid and RGB coordinate axes) from Python on
 your own computer.
 \item A screenshot of the green ``OpenCV test'' window on the browser desktop.
 \item The line ending in \texttt{OK} printed by the learning-package check
@@ -56,42 +57,63 @@ docker version
 docker image inspect intro-robotics-course:jazzy --format '{{.Os}}/{{.Architecture}}'
 \end{lstlisting}
 An Apple Silicon image should be \texttt{linux/arm64}; an x64 Windows image
-should be \texttt{linux/amd64}. Report setup difficulties and resolutions.
+should be \texttt{linux/amd64}. Report any setup difficulties to the instructor or the TA.
 \end{enumerate}
 \end{enumerate}
 
 \newpage
 \begin{enumerate}[start=2]
 \item \textbf{Publish a fixed joint pose from Python.}
-Your node replaces the slider window as the publisher of joint positions.
-With the container running, open a container shell
+The new node or program that you will write replaces the slider window as the publisher of joint positions.
+With the Linux container running, open a container shell/terminal
 (\texttt{docker compose exec course bash}) and start RViz and
-\texttt{robot\_state\_publisher} without the slider window:
+\texttt{robot\_state\_publisher} without the slider window by running the following:
 \begin{lstlisting}
 ros2 launch r2d2_demo view_r2d2.launch.py use_joint_gui:=false
 \end{lstlisting}
 Leave it running. Robot links may not appear until your first valid
-joint-state message; missing-transform messages before that are expected.
-In a \emph{second} container shell, run:
+joint-state message and missing-transform messages before that are expected.
+In a \emph{second} Linux container shell, run:
 \begin{lstlisting}
 cd /workspace
 python3 homework/hw01/joint_publisher.py
 \end{lstlisting}
-The starter intentionally raises a homework-labeled
-\texttt{NotImplementedError}. Edit it using your host editor. Stop the node
-with Ctrl+C and rerun after edits; this Python file needs no image rebuild.
+The starter script for this problem intentionally raises a homework-labeled
+\texttt{NotImplementedError}. Edit it using your host editor (likely VS code on your computer). Stop the node
+with Ctrl+C and rerun after edits. Running this Python file does \emph{not}
+require `colcon build' or a docker image rebuild.
 
 The supplied \texttt{JointPublisher} class owns a publisher, a start time,
 and a timer. Complete these two methods:
 \begin{enumerate}
-\item \texttt{joint\_positions(elapsed)}: initially return a fixed list
-of three joint angles in radians, in the supplied joint-name order. Choose
+\item \texttt{joint\_positions(elapsed)}: initially return a list
+of three fixed (or static) joint angles in radians, in the supplied joint-name order. Choose
 a visibly changed head pose and keep both legs within their limits.
 \item \texttt{publish\_joint\_state()}: create a \texttt{JointState}
 message, fill its timestamp, joint names, and positions, and publish it with
 \texttt{self.publisher}. The provided variables are \texttt{now},
-\texttt{positions}, and \texttt{JOINT\_NAMES}. For the timestamp use the
-ROS message form of \texttt{now}; consult the linked ROS tutorial.
+\texttt{positions}, and \texttt{JOINT\_NAMES}.
+
+\emph{Hint:} a ROS message is a Python object. Create an empty one by
+calling its class, then assign each field with a dot, as with any object
+attribute. For example, this creates the message and fills the joint names:
+\begin{lstlisting}
+message = JointState()
+message.name = JOINT_NAMES
+\end{lstlisting}
+You still need to fill two fields. 
+\begin{itemize}
+\item \texttt{message.position} is the list of
+angles, in the same order as the names.
+\item \texttt{message.header.stamp} is the
+time: \texttt{stamp} sits inside the \texttt{header} field, so it takes two
+dots.
+\item \texttt{now} is a ROS time object, and \texttt{now.to\_msg()} converts
+it to the form a message field expects. 
+\end{itemize}  
+
+The publishing step in the linked ROS
+tutorial shows how to send the finished message with \texttt{self.publisher}.
 \end{enumerate}
 \texttt{support.py} supplies names and the explained
 \texttt{check\_joint\_positions} utility. You do not need to implement it.
@@ -108,56 +130,143 @@ Position in list & Joint name & Allowed angle (radians) \\
 \end{tabular}
 \end{center}
 
-\item \textbf{Make the motion depend on time.}
-The provided timer calls your publishing method every 0.1 seconds.
-\begin{enumerate}
-\item Confirm that repeatedly publishing a fixed pose holds the same pose.
-Then change \texttt{joint\_positions(elapsed)} so the head moves smoothly
-back and forth with a period between 4 and 10 seconds. Keep all angles
-within their limits. Moving the legs smoothly is an optional extension.
-\item Compute positions from elapsed time; keep the timer callback short.
-Do not add a blocking \texttt{while} loop or a sleep inside that callback.
-Save a short screen recording, or two time-labeled screenshots with message
-evidence, showing different poses while the same node continues running.
-\end{enumerate}
-\end{enumerate}
-
-\newpage
-\begin{enumerate}[start=4]
-\item \textbf{Inspect messages and explain what is happening.}
-While your node runs, open a third host terminal in the repository folder
-and enter a third container shell with \texttt{docker compose exec course bash}.
-Run the following \emph{inside} that third shell:
+\begin{enumerate}[start=3]
+\item \textbf{Check that the fixed pose holds.}
+Your node now publishes the same pose every 0.1~s. Once it runs without
+errors, RViz should show the robot in your chosen pose, holding still.
+Confirm this from the messages directly by opening a \emph{third} host terminal
+in the repository folder. Enter a third Linux container shell with
+\texttt{docker compose exec course bash}, and run these commands inside it,
+one at a time, while your joint\_publisher node is running:
 \begin{lstlisting}
 ros2 topic echo /joint_states --once
+ros2 topic echo /joint_states --once
+ros2 topic echo /joint_states --field position
 ros2 topic hz /joint_states
 ros2 topic info /joint_states --verbose
 \end{lstlisting}
-Stop the rate display with Ctrl+C. Save one message and the measured rate
-(about 10 Hz; report what you measure), and check that your node is the only
-publisher of \texttt{/joint\_states}. Answer briefly:
+Each \texttt{-{}-once} command prints one complete message and exits, so
+running it twice gives you two messages a moment apart. The
+\texttt{-{}-field position} command prints only the \texttt{position} list of
+each message (shown as \texttt{array('d', [...])}), about ten per second;
+press Ctrl+C after a few lines. Stop the rate display (\texttt{hz}) with
+Ctrl+C after a few lines as well. Keep this third shell open for
+Problems~3 and~4. Submit:
+\begin{itemize}
+\item a screenshot of RViz showing your fixed pose;
+\item the two \texttt{-{}-once} messages and the rate you measure (about 10~Hz;
+report what you measure though);
+\item the \texttt{info} output, which should show that your node is the
+\emph{only} publisher of this topic (RViz and
+\texttt{robot\_state\_publisher} are subscribers);
+\end{itemize}
+\end{enumerate}
+
+\item \textbf{Make the motion depend on time.}
+The provided timer calls \texttt{publish\_joint\_state()} every 0.1 seconds,
+and that method passes the elapsed time, in seconds, to
+\texttt{joint\_positions}.
 \begin{enumerate}
-\item How do the joint names correspond to the values in \texttt{position}?
-What are the position units? What does the message timestamp represent?
-\item Why does repeated publishing of an unchanged position not produce
-motion? How does your time-dependent function change that?
-\item What does the timer do, and what does \texttt{rclpy.spin(node)} do?
-Describe one use of \texttt{self} in the provided class.
-\item Explain this chain in your own words:
-\begin{center}\small
-\texttt{/joint\_states} $\longrightarrow$
-\texttt{robot\_state\_publisher} $\longrightarrow$
-\texttt{/tf} $\longrightarrow$ RViz.
-\end{center}
-\item Plot your motion over time. In the third shell, run:
+\item Change \texttt{joint\_positions(elapsed)} so the head moves smoothly
+back and forth with a reasonable period. Keep all angles
+within their limits. Moving the legs smoothly is an optional extension, but should be easy
+once you understand how to implement it.
+Compute positions from elapsed time.
+Do not add a blocking \texttt{while} loop or a sleep inside that callback.
+Stop your node with Ctrl+C and rerun it.
+\item \textbf{Inspect the moving messages.} In your third shell, run the
+same five commands from Problem~2(c) again. In two or three sentences, compare with
+Problem~2(c): what changed in the messages, what stayed the same, and did
+the message rate change?
+\item \textbf{Record the motion.} Make a short screen recording (10--20~s)
+of RViz on the browser desktop showing the head moving while your node runs.
+Record only the RViz part of the screen to keep the file small.
+\begin{itemize}
+\item \emph{Windows 11:} open \textbf{Snipping Tool} from the Start menu,
+click its video-camera (Record) button, then \textbf{New}. Drag a rectangle
+around RViz and click \textbf{Start}. Click the red stop button when done,
+then save the video from the preview window.
+\item \emph{macOS:} press \texttt{Cmd+Shift+5}, choose \textbf{Record
+Selected Portion}, drag around RViz, and click \textbf{Record}. Click the
+stop button in the menu bar when done; the video is saved to your Desktop.
+\end{itemize}
+If you cannot record your screen, submit instead two screenshots taken a few
+seconds apart. Place the browser and VS Code side by side so that each
+screenshot shows both RViz and a terminal running the
+\texttt{-{}-field position} command from Problem~2(c). The robot should be
+in a different pose in each, with different printed positions.
+\end{enumerate}
+
+\item \textbf{Plot the motion over time with PlotJuggler.}
+PlotJuggler plots values from ROS messages as they arrive. With your moving
+node still running, press Ctrl+C to stop any command in the third shell, then
+run:
 \begin{lstlisting}
 ros2 run plotjuggler plotjuggler
 \end{lstlisting}
-Set \textbf{Buffer} to 30~s, choose \textbf{ROS2 Topic Subscriber} under Streaming, click \textbf{Start},
-select \texttt{/joint\_states}, and click OK. Drag
-\texttt{/joint\_states/head\_yaw/position} into the plot. Save a screenshot
-of at least two periods; compare the period and amplitude you read with your
-\texttt{joint\_positions} function.
+A splash screen appears, then the PlotJuggler window opens on the browser
+desktop. If the bottom of the window is cut off, double-click its title bar
+to maximize it. If a ``New release available'' notice appears in a corner,
+close it with its \texttt{x}; do not update. A ``Telemetry reply error'' line
+in the terminal is expected and harmless. Then follow the numbered steps in
+Figures~1--3.
+\begin{enumerate}
+\item \textbf{Start streaming (Figure 1, steps 1--3).} In the
+\textbf{Streaming} panel on the left, open the drop-down list (it may first
+show \textbf{Foxglove ROS2 Bridge}) and choose \textbf{ROS2 Topic
+Subscriber}. Click in the \textbf{Buffer} box, type 30, and press Enter; the
+plot will then keep the most recent 30 seconds, enough for at least two
+periods. Click \textbf{Start}.
+
+\begin{center}
+\includegraphics[width=0.78\linewidth]{hw01-plotjuggler-1-streaming.png}\\[2pt]
+\small\textbf{Figure 1.} The Streaming panel, at the upper left of the
+PlotJuggler window.
+\end{center}
+
+\item \textbf{Choose the topic (Figure 2, steps 4--5).} A \textbf{Select ROS
+messages} window lists the topics being published right now. Click
+\texttt{/joint\_states} so that its row is highlighted, leave the other
+settings unchanged, and click \textbf{OK}. If \texttt{/joint\_states} is
+missing, your node is not running; start it and click \textbf{Start} again.
+
+\begin{center}
+\includegraphics[width=0.8\linewidth]{hw01-plotjuggler-2-topic.png}\\[2pt]
+\small\textbf{Figure 2.} The topic selection window that opens after you
+click Start.
+\end{center}
+
+\item \textbf{Plot the head angle (Figure 3, steps 6--7).} The
+\textbf{Timeseries List} on the left now shows \texttt{joint\_states}. Click
+the small triangle beside \texttt{joint\_states}, then the one beside
+\texttt{head\_yaw}, to show \texttt{position}. Press and hold on
+\texttt{position}, drag it into the large plot area, and release. The plot
+shows the head angle (radians) against time (seconds) and scrolls as new
+messages arrive.
+
+\begin{center}
+\includegraphics[width=\linewidth]{hw01-plotjuggler-3-plot.png}\\[2pt]
+\small\textbf{Figure 3.} An example head-angle plot. Your curve will have
+the period and amplitude you chose.
+\end{center}
+
+\item \textbf{Read the plot.} Click the pause button (two vertical bars,
+next to \textbf{Stop}) to freeze the plot, and click it again to resume.
+Read the period (the time between two neighboring peaks) and the amplitude
+(the angle from zero to a peak), as marked in Figure~3. Submit a screenshot
+showing at least two periods, and compare the period and amplitude you read
+with the values in your \texttt{joint\_positions} function.
+\end{enumerate}
+
+\item \textbf{Explain what is happening.} Answer briefly:
+\begin{enumerate}
+\item How do the joint names correspond to the values in \texttt{position}?
+What are the position units? What does the message timestamp represent?
+\item Using what you saw in Problems~2(c) and~3(b), why does repeated
+publishing of an unchanged position not produce motion? How does your
+time-dependent function change that?
+\item What does the timer do, and what does \texttt{rclpy.spin(node)} do?
+Describe one use of \texttt{self} in the provided class.
 \end{enumerate}
 
 \item \textbf{Stop and restart safely.}
@@ -168,16 +277,18 @@ stop the course container with:
 docker compose down
 \end{lstlisting}
 Closing only the browser tab does not stop the container; your files remain
-in the repository folder. To see the original sliders later, start the
+in the repository folder. To see the original sliders for joint control again, 
+start the
 container and run \texttt{ros2 launch r2d2\_demo view\_r2d2.launch.py}
 without the launch argument.
 \end{enumerate}
 
-\textbf{Submit:} your completed Python file; the problem 1 setup evidence; fixed-pose and timed-motion evidence; one joint-state message and
-measured rate; the PlotJuggler plot of the head angle; the short explanations
-above; and a statement of AI use
-(including ``none'' if applicable). We will review correct behavior,
-readable code, and your understanding of the provided tools. Follow the instructor's submission destination and deadline.
+\textbf{Submit:} your completed Python file; the Problem~1 setup evidence;
+the fixed-pose screenshot, messages, rate, and comparison (Problem~2(c));
+the moving-pose messages, comparison, and screen recording (Problem~3); the
+PlotJuggler screenshot and comparison (Problem~4); the short explanations
+(Problem~5); and a statement of AI usage for this homework in the assignment report
+(including ``none'' if applicable). 
 
 \textbf{References and troubleshooting:} copyable commands and
 troubleshooting notes are in \path{docs/setup.md},
